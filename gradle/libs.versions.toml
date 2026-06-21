@@ -12,6 +12,7 @@ hiltNavigationCompose = "1.2.0"
 room = "2.6.1"
 datastore = "1.1.1"
 coroutines = "1.9.0"
+playServicesWallet = "19.4.0"
 junit = "4.13.2"
 androidxJunit = "1.2.1"
 espresso = "3.6.1"
@@ -49,6 +50,9 @@ androidx-datastore-preferences = { group = "androidx.datastore", name = "datasto
 
 # Coroutines
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
+
+# Google Pay (PaymentsClient)
+play-services-wallet = { group = "com.google.android.gms", name = "play-services-wallet", version.ref = "playServicesWallet" }
 
 # Test
 junit = { group = "junit", name = "junit", version.ref = "junit" }

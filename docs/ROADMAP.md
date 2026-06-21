@@ -50,15 +50,18 @@ Dados são mock e serão substituídos nos épicos E3 (Apps), E7 (Statistics) e 
 ## E1 — Camada de dados & domínio (persistência)
 **Objetivo:** base de dados e contratos de domínio prontos.
 
-**Entregáveis**
-- Room: entidades `MonitoredApp`, `DailyUsage`, `BlockEvent`, `UnlockEvent`, `UserStats`;
-  DAOs; `DollarBlockDatabase`.
-- DataStore: flags de app (onboarding concluído, prefs).
-- Modelos de domínio + mappers entity↔domain.
-- Interfaces de repositório (em `domain`) + implementações (em `data`) + módulos Hilt.
-- Casos de uso base (CRUD de apps monitorados, leitura de uso/eventos).
+**Entregue (fatia — histórico de eventos):**
+- Room: `DollarBlockDatabase` + `BlockEventEntity`/`UnlockEventEntity` + `EventDao`.
+- Domínio: `RecentEvent`, `EventsRepository` (interface) + impl + módulos Hilt
+  (`DatabaseModule`/`RepositoryModule`).
+- Registro real: o serviço grava bloqueios; `BlockActivity` grava desbloqueios pagos
+  (valor + método). Home "Recent Events" exibe o histórico real.
 
-**Aceite:** testes de DAO passam; repositórios injetáveis expõem `Flow`. **Depende de E0.**
+**Restante:**
+- Entidades `MonitoredApp` (hoje em DataStore), `DailyUsage`, `UserStats` + DAOs.
+- Mappers/casos de uso adicionais; testes de DAO (Room in-memory).
+
+**Aceite (fatia atual):** bloqueios e pagamentos aparecem em "Recent Events". ✅ **Validado.** **Depende de E0.**
 
 ---
 
@@ -156,15 +159,23 @@ tela do DollarBlock; desabilitar libera o acesso. ✅ **Validado.**
 
 ---
 
-## E9 — Hooks para cobrança futura
-**Objetivo:** preparar terreno para cobrança/recompensas/depósitos sem implementar pagamento real.
+## E9 — Pagamento (Google Pay) & desbloqueio
 
-**Entregáveis**
-- Abstração `PaymentGateway` (impl no-op) no domínio.
-- Modelos stub de saldo/depósito/transação; `UnlockEvent` já carrega valor de penalidade.
+**Entregue (fatia mínima — Google Pay em TESTE):**
+- Botão **"Pagar com Google Pay"** na tela de bloqueio (`PaymentsClient`, `ENVIRONMENT_TEST`,
+  gateway `"example"` — sem PSP/keys) + fallback **"Simular pagamento (teste)"**.
+- Pagamento OK → `BlockPreferences.grantUnlock(pkg, janela)` libera o app por
+  `UNLOCK_WINDOW_MINUTES` (15 min) e reabre o app. Após a janela, volta a bloquear.
+- Config em `feature/blocking/payment/GooglePayConfig.kt`. Tutorial em
+  [`PAYMENTS_SETUP.md`](./PAYMENTS_SETUP.md) (teste, PSP e produção).
 
-**Aceite:** desbloqueio passa por uma `PaymentGateway` simulada, sem acoplar UI a pagamento real.
-**Depende de E5.**
+**Restante (produção / depende de E1):**
+- Integração com PSP real (Stripe/Adyen/…) + backend para a cobrança (chave secreta no servidor).
+- `merchantInfo.merchantId` (Google Pay & Wallet Console) + `ENVIRONMENT_PRODUCTION`.
+- Botão oficial `com.google.pay.button` (diretrizes de marca).
+- Registrar `UnlockEvent`/`penaltyAmount` em Room; modelos de saldo/depósito/transação.
+
+**Aceite (fatia atual):** pagar (ou simular) na tela de bloqueio libera o app pela janela. ✅ **Validado.**
 
 ---
 

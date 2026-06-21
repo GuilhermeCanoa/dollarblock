@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.dollarblock.data.apps.InstalledApp
 import com.dollarblock.data.apps.InstalledAppsProvider
 import com.dollarblock.data.local.prefs.BlockPreferences
+import com.dollarblock.domain.model.RecentEvent
+import com.dollarblock.domain.repository.EventsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -20,12 +22,14 @@ data class HomeUiState(
     val blockedPackages: Set<String> = emptySet(),
     val selectedPackage: String? = null,
     val loadingApps: Boolean = true,
+    val recentEvents: List<RecentEvent> = emptyList(),
 )
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val installedAppsProvider: InstalledAppsProvider,
     private val blockPreferences: BlockPreferences,
+    eventsRepository: EventsRepository,
 ) : ViewModel() {
 
     private val installedApps = MutableStateFlow<List<InstalledApp>>(emptyList())
@@ -37,12 +41,14 @@ class HomeViewModel @Inject constructor(
         blockPreferences.blockedPackages,
         selected,
         loading,
-    ) { apps, blocked, selectedPkg, isLoading ->
+        eventsRepository.recentEvents(RECENT_EVENTS_LIMIT),
+    ) { apps, blocked, selectedPkg, isLoading, events ->
         HomeUiState(
             installedApps = apps,
             blockedPackages = blocked,
             selectedPackage = selectedPkg,
             loadingApps = isLoading,
+            recentEvents = events,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -62,8 +68,10 @@ class HomeViewModel @Inject constructor(
     }
 
     fun setBlocked(packageName: String, blocked: Boolean) {
-        viewModelScope.launch {
-            blockPreferences.setBlocked(packageName, blocked)
-        }
+        blockPreferences.setBlocked(packageName, blocked)
+    }
+
+    private companion object {
+        const val RECENT_EVENTS_LIMIT = 8
     }
 }

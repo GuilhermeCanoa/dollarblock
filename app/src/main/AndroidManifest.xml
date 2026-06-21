@@ -20,6 +20,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.DollarBlock">
 
+        <!-- Habilita a Google Pay API. -->
+        <meta-data
+            android:name="com.google.android.gms.wallet.api.enabled"
+            android:value="true" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

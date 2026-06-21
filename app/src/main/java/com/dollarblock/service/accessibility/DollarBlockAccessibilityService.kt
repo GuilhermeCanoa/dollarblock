@@ -6,6 +6,7 @@ import android.os.SystemClock
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import com.dollarblock.data.local.prefs.BlockPreferences
+import com.dollarblock.domain.repository.EventsRepository
 import com.dollarblock.feature.blocking.BlockActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -16,8 +17,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * Detecta o app em primeiro plano. Se ele estiver na lista de bloqueados,
- * abre a [BlockActivity] do DollarBlock por cima — efetivando o bloqueio.
+ * Detecta o app em primeiro plano. Se ele estiver bloqueado e fora de uma janela de
+ * desbloqueio ativa, abre a [BlockActivity] do DollarBlock por cima.
  */
 @AndroidEntryPoint
 class DollarBlockAccessibilityService : AccessibilityService() {
@@ -25,19 +26,16 @@ class DollarBlockAccessibilityService : AccessibilityService() {
     @Inject
     lateinit var blockPreferences: BlockPreferences
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    @Inject
+    lateinit var eventsRepository: EventsRepository
 
-    @Volatile
-    private var blockedPackages: Set<String> = emptySet()
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private var lastBlockedPackage: String? = null
     private var lastBlockAt = 0L
 
     override fun onServiceConnected() {
         super.onServiceConnected()
-        scope.launch {
-            blockPreferences.blockedPackages.collect { blockedPackages = it }
-        }
         Log.i(TAG, "Service connected")
     }
 
@@ -45,7 +43,7 @@ class DollarBlockAccessibilityService : AccessibilityService() {
         if (event?.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
         val packageName = event.packageName?.toString() ?: return
         if (packageName == getPackageName()) return
-        if (!blockedPackages.contains(packageName)) return
+        if (!blockPreferences.shouldBlock(packageName)) return
 
         // Evita relançar a tela de bloqueio repetidamente para o mesmo app.
         val now = SystemClock.elapsedRealtime()
@@ -65,6 +63,7 @@ class DollarBlockAccessibilityService : AccessibilityService() {
             putExtra(BlockActivity.EXTRA_PACKAGE, packageName)
         }
         startActivity(intent)
+        scope.launch { eventsRepository.recordBlock(packageName, label) }
         Log.i(TAG, "Blocked $packageName ($label)")
     }
 

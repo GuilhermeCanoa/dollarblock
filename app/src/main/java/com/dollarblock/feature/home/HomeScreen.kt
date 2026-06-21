@@ -3,6 +3,7 @@ package com.dollarblock.feature.home
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -21,6 +23,7 @@ import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Timer
@@ -45,6 +48,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -62,8 +66,13 @@ import com.dollarblock.core.designsystem.components.PrimaryActionButton
 import com.dollarblock.core.designsystem.components.ScreenHeader
 import com.dollarblock.core.designsystem.components.SectionHeader
 import com.dollarblock.data.apps.InstalledApp
+import com.dollarblock.domain.model.PaymentMethod
+import com.dollarblock.domain.model.RecentEvent
 import com.dollarblock.service.accessibility.accessibilitySettingsIntent
 import com.dollarblock.service.accessibility.isAccessibilityServiceEnabled
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 /**
  * Home — painel diário + controle de bloqueio de apps (E5).
@@ -126,9 +135,90 @@ fun HomeScreen(
         )
 
         SectionHeader(text = stringResource(R.string.home_recent_events))
-        EmptyEventsCard()
+        if (uiState.recentEvents.isEmpty()) {
+            EmptyEventsCard()
+        } else {
+            RecentEventsCard(events = uiState.recentEvents)
+        }
     }
 }
+
+@Composable
+private fun RecentEventsCard(
+    events: List<RecentEvent>,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+    ) {
+        Column(modifier = Modifier.padding(vertical = 4.dp)) {
+            events.forEach { event -> RecentEventRow(event) }
+        }
+    }
+}
+
+@Composable
+private fun RecentEventRow(event: RecentEvent) {
+    val unlocked = event is RecentEvent.Unlocked
+    val accent = if (unlocked) DollarBlockTheme.colors.success else MaterialTheme.colorScheme.primary
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(accent.copy(alpha = 0.15f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = if (unlocked) Icons.Filled.LockOpen else Icons.Filled.Lock,
+                contentDescription = null,
+                tint = accent,
+                modifier = Modifier.size(18.dp),
+            )
+        }
+        Spacer(Modifier.size(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = stringResource(
+                    if (unlocked) R.string.home_event_unlocked else R.string.home_event_blocked,
+                    event.appLabel,
+                ),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            if (event is RecentEvent.Unlocked) {
+                val method = if (event.method == PaymentMethod.GOOGLE_PAY) {
+                    stringResource(R.string.pay_method_google)
+                } else {
+                    stringResource(R.string.pay_method_simulated)
+                }
+                Text(
+                    text = stringResource(R.string.home_event_unlock_detail, event.amount, method),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        Spacer(Modifier.size(8.dp))
+        Text(
+            text = formatEventTime(event.timestamp),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+private fun formatEventTime(epochMillis: Long): String =
+    Instant.ofEpochMilli(epochMillis)
+        .atZone(ZoneId.systemDefault())
+        .format(DateTimeFormatter.ofPattern("HH:mm"))
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable

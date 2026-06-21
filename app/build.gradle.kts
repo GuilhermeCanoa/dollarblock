@@ -73,8 +73,16 @@ dependencies {
     // Lifecycle (Compose) — collectAsStateWithLifecycle / LifecycleEventEffect
     implementation(libs.androidx.lifecycle.runtime.compose)
 
+    // Room — persistência de eventos (histórico)
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
+
     // DataStore — preferências (apps bloqueados)
     implementation(libs.androidx.datastore.preferences)
+
+    // Google Pay — pagamento para desbloqueio
+    implementation(libs.play.services.wallet)
 
     // Tooling / debug
     debugImplementation(libs.androidx.ui.tooling)

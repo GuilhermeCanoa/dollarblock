@@ -16,6 +16,11 @@
     <string name="home_active_limits">Active Limits</string>
     <string name="home_recent_events">Recent Events</string>
     <string name="home_no_events">Nenhum bloqueio hoje. Continue assim.</string>
+    <string name="home_event_blocked">Bloqueou %1$s</string>
+    <string name="home_event_unlocked">Liberou %1$s</string>
+    <string name="home_event_unlock_detail">R$ %1$s · %2$s</string>
+    <string name="pay_method_google">Google Pay</string>
+    <string name="pay_method_simulated">Pagamento simulado</string>
 
     <!-- Tom de voz (mensagens-chave do treinador de disciplina) -->
     <string name="msg_goal_met">Meta cumprida.</string>
@@ -99,9 +104,19 @@
 
     <!-- Tela de bloqueio -->
     <string name="block_screen_title">Acesso bloqueado</string>
-    <string name="block_screen_message">Você bloqueou este app no DollarBlock. Para usá-lo, desative o bloqueio no app.</string>
+    <string name="block_screen_message">Para liberar este app agora, faça o pagamento. O acesso fica liberado por %1$d minutos.</string>
     <string name="block_screen_home">Voltar ao início</string>
     <string name="block_screen_open_app">Abrir DollarBlock</string>
+
+    <!-- Pagamento / desbloqueio -->
+    <string name="pay_with_google">Pagar com Google Pay</string>
+    <string name="pay_simulate">Simular pagamento (teste)</string>
+    <string name="pay_info">R$ %1$s · libera por %2$d min</string>
+    <string name="pay_processing">Processando…</string>
+    <string name="pay_unavailable">Google Pay indisponível neste dispositivo.</string>
+    <string name="pay_error">Não foi possível concluir o pagamento.</string>
+    <string name="pay_cancelled">Pagamento cancelado.</string>
+    <string name="pay_unlocked">Acesso liberado por %1$d min.</string>
 
     <!-- Comum -->
     <string name="unlock">Unlock</string>

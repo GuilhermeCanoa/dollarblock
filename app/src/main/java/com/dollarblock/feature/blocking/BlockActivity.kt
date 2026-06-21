@@ -1,11 +1,16 @@
 package com.dollarblock.feature.blocking
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts.StartIntentSenderForResult
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,11 +26,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,20 +48,67 @@ import com.dollarblock.R
 import com.dollarblock.core.designsystem.DollarBlockTheme
 import com.dollarblock.core.designsystem.DollarGreenDark
 import com.dollarblock.core.designsystem.NeutralWhite
+import androidx.lifecycle.lifecycleScope
+import com.dollarblock.data.local.prefs.BlockPreferences
+import com.dollarblock.domain.model.PaymentMethod
+import com.dollarblock.domain.repository.EventsRepository
+import com.dollarblock.feature.blocking.payment.GooglePayConfig
+import kotlinx.coroutines.launch
+import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.wallet.AutoResolveHelper
+import com.google.android.gms.wallet.IsReadyToPayRequest
+import com.google.android.gms.wallet.PaymentData
+import com.google.android.gms.wallet.PaymentDataRequest
+import com.google.android.gms.wallet.PaymentsClient
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.MutableStateFlow
+import javax.inject.Inject
 
 /**
- * Tela exibida quando o usuário abre um app bloqueado. No MVP apenas informa e
- * devolve o usuário ao início; o desbloqueio com penalidade chega em épicos futuros.
+ * Tela exibida quando o usuário abre um app bloqueado. Oferece pagamento via Google Pay
+ * (ambiente de TESTE) para liberar o app por uma janela de tempo. Em dispositivos sem
+ * Google Pay, um botão de simulação permite testar o fluxo de desbloqueio.
  */
+@AndroidEntryPoint
 class BlockActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var blockPreferences: BlockPreferences
+
+    @Inject
+    lateinit var eventsRepository: EventsRepository
+
+    private lateinit var paymentsClient: PaymentsClient
+    private var targetPackage: String = ""
+    private var appLabel: String = ""
+
+    private val readyToPay = MutableStateFlow(false)
+    private val paymentInProgress = MutableStateFlow(false)
+
+    private val paymentLauncher =
+        registerForActivityResult(StartIntentSenderForResult()) { result ->
+            paymentInProgress.value = false
+            when (result.resultCode) {
+                Activity.RESULT_OK -> {
+                    // Token (mock) disponível em PaymentData.getFromIntent(...).toJson().
+                    result.data?.let { PaymentData.getFromIntent(it) }
+                    onPaymentSuccess(PaymentMethod.GOOGLE_PAY)
+                }
+                Activity.RESULT_CANCELED -> toast(R.string.pay_cancelled)
+                AutoResolveHelper.RESULT_ERROR -> toast(R.string.pay_error)
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        val appLabel = intent.getStringExtra(EXTRA_LABEL) ?: getString(R.string.app_name)
+        targetPackage = intent.getStringExtra(EXTRA_PACKAGE).orEmpty()
+        appLabel = intent.getStringExtra(EXTRA_LABEL) ?: getString(R.string.app_name)
+        paymentsClient = GooglePayConfig.paymentsClient(this)
+        checkReadyToPay()
 
-        // Voltar não deve retornar ao app bloqueado.
         onBackPressedDispatcher.addCallback(
             this,
             object : OnBackPressedCallback(true) {
@@ -62,12 +118,76 @@ class BlockActivity : ComponentActivity() {
 
         setContent {
             DollarBlockTheme {
+                val ready by readyToPay.collectAsState()
+                val processing by paymentInProgress.collectAsState()
                 BlockScreen(
                     appLabel = appLabel,
+                    googlePayReady = ready,
+                    paymentInProgress = processing,
+                    onPayWithGooglePay = ::startPayment,
+                    onSimulatePayment = { onPaymentSuccess(PaymentMethod.SIMULATED) },
                     onGoHome = ::goHome,
-                    onOpenDollarBlock = ::openDollarBlock,
                 )
             }
+        }
+    }
+
+    private fun checkReadyToPay() {
+        val request = IsReadyToPayRequest.fromJson(GooglePayConfig.isReadyToPayRequest().toString())
+        paymentsClient.isReadyToPay(request).addOnCompleteListener { task ->
+            readyToPay.value = runCatching { task.getResult(ApiException::class.java) }.getOrDefault(false)
+        }
+    }
+
+    private fun startPayment() {
+        paymentInProgress.value = true
+        val request = PaymentDataRequest.fromJson(GooglePayConfig.paymentDataRequest().toString())
+        paymentsClient.loadPaymentData(request).addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                paymentInProgress.value = false
+                onPaymentSuccess(PaymentMethod.GOOGLE_PAY)
+            } else {
+                when (val exception = task.exception) {
+                    is ResolvableApiException ->
+                        paymentLauncher.launch(
+                            IntentSenderRequest.Builder(exception.resolution.intentSender).build(),
+                        )
+                    else -> {
+                        paymentInProgress.value = false
+                        toast(R.string.pay_error)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun onPaymentSuccess(method: String) {
+        if (targetPackage.isNotEmpty()) {
+            blockPreferences.grantUnlock(targetPackage, GooglePayConfig.UNLOCK_WINDOW_MS)
+            lifecycleScope.launch {
+                eventsRepository.recordUnlock(
+                    packageName = targetPackage,
+                    appLabel = appLabel,
+                    amount = GooglePayConfig.PRICE,
+                    currency = GooglePayConfig.CURRENCY_CODE,
+                    method = method,
+                )
+            }
+        }
+        toast(
+            getString(R.string.pay_unlocked, GooglePayConfig.UNLOCK_WINDOW_MINUTES),
+        )
+        openTargetApp()
+    }
+
+    private fun openTargetApp() {
+        val launchIntent = packageManager.getLaunchIntentForPackage(targetPackage)
+        if (launchIntent != null) {
+            launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(launchIntent)
+            finish()
+        } else {
+            goHome()
         }
     }
 
@@ -80,6 +200,13 @@ class BlockActivity : ComponentActivity() {
         finish()
     }
 
+    private fun toast(message: String) =
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+
+    private fun toast(resId: Int) =
+        Toast.makeText(this, resId, Toast.LENGTH_SHORT).show()
+
+    @Suppress("unused")
     private fun openDollarBlock() {
         startActivity(
             Intent(this, MainActivity::class.java)
@@ -97,8 +224,11 @@ class BlockActivity : ComponentActivity() {
 @Composable
 private fun BlockScreen(
     appLabel: String,
+    googlePayReady: Boolean,
+    paymentInProgress: Boolean,
+    onPayWithGooglePay: () -> Unit,
+    onSimulatePayment: () -> Unit,
     onGoHome: () -> Unit,
-    onOpenDollarBlock: () -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -144,41 +274,88 @@ private fun BlockScreen(
             )
             Spacer(Modifier.height(16.dp))
             Text(
-                text = stringResource(R.string.block_screen_message),
+                text = stringResource(
+                    R.string.block_screen_message,
+                    GooglePayConfig.UNLOCK_WINDOW_MINUTES,
+                ),
                 style = MaterialTheme.typography.bodyLarge,
                 color = NeutralWhite.copy(alpha = 0.85f),
                 textAlign = TextAlign.Center,
             )
-            Spacer(Modifier.height(40.dp))
-            Button(
-                onClick = onGoHome,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = NeutralWhite,
-                    contentColor = DollarGreenDark,
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = stringResource(
+                    R.string.pay_info,
+                    GooglePayConfig.PRICE,
+                    GooglePayConfig.UNLOCK_WINDOW_MINUTES,
                 ),
-            ) {
+                style = MaterialTheme.typography.labelLarge,
+                color = NeutralWhite,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(32.dp))
+
+            if (paymentInProgress) {
+                CircularProgressIndicator(color = NeutralWhite)
+                Spacer(Modifier.height(12.dp))
                 Text(
-                    text = stringResource(R.string.block_screen_home),
-                    style = MaterialTheme.typography.labelLarge,
+                    text = stringResource(R.string.pay_processing),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = NeutralWhite,
                 )
-            }
-            Spacer(Modifier.height(12.dp))
-            OutlinedButton(
-                onClick = onOpenDollarBlock,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = NeutralWhite),
-                border = androidx.compose.foundation.BorderStroke(1.dp, NeutralWhite.copy(alpha = 0.5f)),
-            ) {
-                Text(
-                    text = stringResource(R.string.block_screen_open_app),
-                    style = MaterialTheme.typography.labelLarge,
-                )
+            } else {
+                if (googlePayReady) {
+                    GooglePayButton(onClick = onPayWithGooglePay)
+                } else {
+                    Text(
+                        text = stringResource(R.string.pay_unavailable),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = NeutralWhite.copy(alpha = 0.85f),
+                        textAlign = TextAlign.Center,
+                    )
+                }
+                Spacer(Modifier.height(12.dp))
+                OutlinedButton(
+                    onClick = onSimulatePayment,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = NeutralWhite),
+                    border = BorderStroke(1.dp, NeutralWhite.copy(alpha = 0.5f)),
+                ) {
+                    Text(
+                        text = stringResource(R.string.pay_simulate),
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                }
+                Spacer(Modifier.height(8.dp))
+                TextButton(onClick = onGoHome) {
+                    Text(
+                        text = stringResource(R.string.block_screen_home),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = NeutralWhite.copy(alpha = 0.85f),
+                    )
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun GooglePayButton(onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(52.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color.Black,
+            contentColor = Color.White,
+        ),
+    ) {
+        Text(
+            text = stringResource(R.string.pay_with_google),
+            style = MaterialTheme.typography.labelLarge,
+        )
     }
 }
