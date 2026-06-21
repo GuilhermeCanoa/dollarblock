@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Tema base usado apenas para o chrome da janela (sem ActionBar e barras
+      transparentes para edge-to-edge). As cores reais da UI vêm do
+      DollarBlockTheme (Compose / Material 3).
+    -->
+    <style name="Theme.DollarBlock" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/db_window_background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+</resources>

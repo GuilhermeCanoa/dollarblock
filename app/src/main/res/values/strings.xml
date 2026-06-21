@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">DollarBlock</string>
+    <string name="app_slogan">Your Number One App for Time Management</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_apps">Apps</string>
+    <string name="nav_statistics">Statistics</string>
+    <string name="nav_profile">Profile</string>
+
+    <!-- Home -->
+    <string name="home_title">Home</string>
+    <string name="home_daily_score">Daily Score</string>
+    <string name="home_time_saved">Time Saved</string>
+    <string name="home_active_limits">Active Limits</string>
+    <string name="home_recent_events">Recent Events</string>
+    <string name="home_no_events">Nenhum bloqueio hoje. Continue assim.</string>
+
+    <!-- Tom de voz (mensagens-chave do treinador de disciplina) -->
+    <string name="msg_goal_met">Meta cumprida.</string>
+    <string name="msg_limit_reached">Limite atingido.</string>
+    <string name="msg_unlock_needed">Desbloqueio necessário.</string>
+    <string name="msg_on_track">Você está no caminho certo.</string>
+    <string name="msg_time_saved_today">Você economizou %1$d minutos hoje.</string>
+
+    <!-- Apps -->
+    <string name="apps_title">Apps</string>
+    <string name="apps_subtitle">Escolha o que monitorar e defina limites diários.</string>
+
+    <!-- Statistics -->
+    <string name="statistics_title">Statistics</string>
+    <string name="statistics_subtitle">Acompanhe seu uso diário, semanal e mensal.</string>
+
+    <!-- Profile -->
+    <string name="profile_title">Profile</string>
+    <string name="profile_subtitle">Permissões, preferências e sua jornada de disciplina.</string>
+
+    <!-- Apps (preview E0.5) -->
+    <string name="apps_monitored_count">%1$d apps monitorados</string>
+    <string name="apps_limit_label">Limite diário</string>
+    <string name="apps_used_of_limit">%1$s de %2$s</string>
+    <string name="apps_monitoring_on">Monitorando</string>
+    <string name="apps_monitoring_off">Pausado</string>
+
+    <!-- Statistics (preview E0.5) -->
+    <string name="stat_period_daily">Diário</string>
+    <string name="stat_period_weekly">Semanal</string>
+    <string name="stat_period_monthly">Mensal</string>
+    <string name="stat_total_time">Tempo total</string>
+    <string name="stat_most_used">Mais usado</string>
+    <string name="stat_blocks">Bloqueios</string>
+    <string name="stat_usage_overview">Visão geral de uso</string>
+
+    <!-- Profile (preview E0.5) -->
+    <string name="profile_user_name">Você</string>
+    <string name="profile_user_tagline">Construindo disciplina, um dia de cada vez.</string>
+    <string name="profile_streak">Sequência</string>
+    <string name="profile_saved">Economizado</string>
+    <string name="profile_goals">Metas</string>
+    <string name="profile_permissions">Permissões</string>
+    <string name="profile_preferences">Preferências</string>
+    <string name="perm_usage">Acesso de uso</string>
+    <string name="perm_usage_desc">Medir o tempo de uso dos apps</string>
+    <string name="perm_accessibility">Acessibilidade</string>
+    <string name="perm_accessibility_desc">Detectar o app em primeiro plano e bloquear</string>
+    <string name="perm_overlay">Sobreposição</string>
+    <string name="perm_overlay_desc">Exibir a tela de bloqueio sobre o app</string>
+    <string name="perm_notifications">Notificações</string>
+    <string name="perm_notifications_desc">Avisos e serviço de monitoramento</string>
+    <string name="perm_status_granted">Concedida</string>
+    <string name="perm_status_pending">Pendente</string>
+    <string name="pref_theme">Tema</string>
+    <string name="pref_theme_value">Sistema</string>
+    <string name="pref_history">Histórico</string>
+    <string name="pref_history_value">Bloqueios, desbloqueios e metas</string>
+    <string name="pref_about">Sobre o DollarBlock</string>
+
+    <!-- Bloqueio de apps (Home / E5) -->
+    <string name="block_section_title">Bloqueio de aplicativos</string>
+    <string name="block_section_subtitle">Escolha um app e bloqueie o acesso por aqui.</string>
+    <string name="block_select_label">Aplicativo</string>
+    <string name="block_select_placeholder">Selecione um app</string>
+    <string name="block_loading_apps">Carregando apps…</string>
+    <string name="block_enable_button">Bloquear acesso</string>
+    <string name="block_disable_button">Desbloquear acesso</string>
+    <string name="block_blocked_list_title">Apps bloqueados (%1$d)</string>
+    <string name="block_unblock_action">Desbloquear</string>
+
+    <!-- Status do serviço de acessibilidade -->
+    <string name="block_a11y_needed_title">Ative o serviço de bloqueio</string>
+    <string name="block_a11y_needed_desc">O DollarBlock precisa do serviço de Acessibilidade para bloquear apps. Ative em Configurações &gt; Acessibilidade &gt; DollarBlock.</string>
+    <string name="block_a11y_button">Ativar nas Configurações</string>
+    <string name="block_a11y_active">Serviço de bloqueio ativo.</string>
+
+    <!-- Serviço de acessibilidade -->
+    <string name="accessibility_service_label">DollarBlock — Bloqueio de apps</string>
+    <string name="accessibility_service_description">Permite que o DollarBlock detecte qual app está aberto e bloqueie o acesso aos apps que você escolher.</string>
+
+    <!-- Tela de bloqueio -->
+    <string name="block_screen_title">Acesso bloqueado</string>
+    <string name="block_screen_message">Você bloqueou este app no DollarBlock. Para usá-lo, desative o bloqueio no app.</string>
+    <string name="block_screen_home">Voltar ao início</string>
+    <string name="block_screen_open_app">Abrir DollarBlock</string>
+
+    <!-- Comum -->
+    <string name="unlock">Unlock</string>
+    <string name="coming_soon">Em breve nesta versão.</string>
+    <string name="preview_sample_data">Pré-visualização — dados de exemplo.</string>
+</resources>

@@ -1,0 +1,82 @@
+package com.dollarblock.service.accessibility
+
+import android.accessibilityservice.AccessibilityService
+import android.content.Intent
+import android.os.SystemClock
+import android.util.Log
+import android.view.accessibility.AccessibilityEvent
+import com.dollarblock.data.local.prefs.BlockPreferences
+import com.dollarblock.feature.blocking.BlockActivity
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+/**
+ * Detecta o app em primeiro plano. Se ele estiver na lista de bloqueados,
+ * abre a [BlockActivity] do DollarBlock por cima — efetivando o bloqueio.
+ */
+@AndroidEntryPoint
+class DollarBlockAccessibilityService : AccessibilityService() {
+
+    @Inject
+    lateinit var blockPreferences: BlockPreferences
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    @Volatile
+    private var blockedPackages: Set<String> = emptySet()
+
+    private var lastBlockedPackage: String? = null
+    private var lastBlockAt = 0L
+
+    override fun onServiceConnected() {
+        super.onServiceConnected()
+        scope.launch {
+            blockPreferences.blockedPackages.collect { blockedPackages = it }
+        }
+        Log.i(TAG, "Service connected")
+    }
+
+    override fun onAccessibilityEvent(event: AccessibilityEvent?) {
+        if (event?.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
+        val packageName = event.packageName?.toString() ?: return
+        if (packageName == getPackageName()) return
+        if (!blockedPackages.contains(packageName)) return
+
+        // Evita relançar a tela de bloqueio repetidamente para o mesmo app.
+        val now = SystemClock.elapsedRealtime()
+        if (packageName == lastBlockedPackage && now - lastBlockAt < DEBOUNCE_MS) return
+        lastBlockedPackage = packageName
+        lastBlockAt = now
+
+        val label = runCatching {
+            packageManager.getApplicationLabel(
+                packageManager.getApplicationInfo(packageName, 0),
+            ).toString()
+        }.getOrDefault(packageName)
+
+        val intent = Intent(this, BlockActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            putExtra(BlockActivity.EXTRA_LABEL, label)
+            putExtra(BlockActivity.EXTRA_PACKAGE, packageName)
+        }
+        startActivity(intent)
+        Log.i(TAG, "Blocked $packageName ($label)")
+    }
+
+    override fun onInterrupt() = Unit
+
+    override fun onDestroy() {
+        super.onDestroy()
+        scope.cancel()
+    }
+
+    private companion object {
+        const val TAG = "DollarBlockA11y"
+        const val DEBOUNCE_MS = 1500L
+    }
+}
