@@ -99,6 +99,8 @@ dependencies {
 
     // Test
     testImplementation(libs.junit)
+    // org.json is stubbed in JVM unit tests; bring the real impl for StripeToken tests.
+    testImplementation("org.json:json:20231013")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
