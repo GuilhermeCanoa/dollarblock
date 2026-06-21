@@ -144,7 +144,8 @@ return pi.status; // 'succeeded'
 > uma AWS Lambda + API Gateway HTTP API com endpoint `POST /unlock-charge` que cobra via
 > Stripe (chave no Secrets Manager), com validação de valor server-side e idempotência.
 > Depois ajuste o app (GooglePayConfig + BlockActivity) para gateway `stripe` e para só
-> desbloquear após sucesso do backend. Peça autorização de custo AWS antes de criar recursos."
+> desbloquear após sucesso do backend. Peça autorização de custo AWS antes de criar recursos. Mantenha
+> a opção de funcionalidade mockada para fins de teste apenas"
 
 ---
 

@@ -68,14 +68,22 @@ Dados são mock e serão substituídos nos épicos E3 (Apps), E7 (Statistics) e 
 ## E2 — Onboarding & permissões
 **Objetivo:** primeira execução explica o conceito e solicita permissões com clareza.
 
-**Entregáveis**
-- Fluxo de onboarding (conceito DollarBlock, benefícios, "como funciona a penalidade").
-- Solicitação guiada: Usage Access, Accessibility, Overlay, Notifications — cada uma com
-  o **porquê** e atalho para a tela do sistema.
-- Gate de roteamento: 1ª execução → onboarding (flag no DataStore).
+**Entregue (validado no emulador):**
+- Fluxo de onboarding em `feature/onboarding/` (`OnboardingScreen` + `OnboardingViewModel`):
+  `HorizontalPager` com páginas de conceito (DollarBlock como treinador de tempo) e
+  "como funciona a penalidade", indicador de páginas e navegação Continuar/Pular.
+- Solicitação guiada das 4 permissões na última página: Usage Access, Accessibility,
+  Overlay, Notifications — cada uma com ícone, o **porquê** e botão que abre a tela do
+  sistema (ou o runtime permission de Notifications no Android 13+). Status "Concedida"
+  re-checado em `ON_RESUME`. Usage Access é obrigatória para concluir.
+- `data/permissions/PermissionsProvider` agrega checagem + intents das 4 permissões.
+- Gate de roteamento na `MainActivity`: flag `onboarding_completed` em
+  `data/local/prefs/OnboardingPreferences` (DataStore) decide onboarding vs. abas;
+  substitui o antigo gate mínimo de Usage Access.
+- Manifest: `SYSTEM_ALERT_WINDOW` + `POST_NOTIFICATIONS` declaradas.
 
 **Aceite:** usuário novo passa pelo onboarding, concede permissões, chega à Home;
-reabrir o app pula o onboarding. **Depende de E1.**
+reabrir o app pula o onboarding. ✅ **Validado.** **Depende de E1.**
 
 ---
 

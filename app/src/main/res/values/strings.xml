@@ -124,9 +124,21 @@
     <string name="coming_soon">Em breve nesta versão.</string>
     <string name="preview_sample_data">Pré-visualização — dados de exemplo.</string>
 
-    <!-- Gate de permissão: Usage Access (primeira execução) -->
-    <string name="usage_gate_title">Precisamos medir seu tempo de uso</string>
-    <string name="usage_gate_description">O DollarBlock usa o Acesso de Uso do Android para saber quanto tempo você passa em cada app e aplicar seus limites diários. Sem essa permissão, não conseguimos rastrear nada.</string>
-    <string name="usage_gate_button">Conceder acesso de uso</string>
-    <string name="usage_gate_hint">Você será levado à tela de Configurações do Android. Encontre DollarBlock na lista e ative o acesso.</string>
+    <!-- Onboarding (E2 — primeira execução) -->
+    <string name="onb_welcome_title">Disciplina que vale dinheiro</string>
+    <string name="onb_welcome_body">O DollarBlock é seu treinador de tempo. Escolha os apps que te distraem, defina um limite diário e nós cuidamos do resto: passou do limite, o acesso é bloqueado.</string>
+    <string name="onb_penalty_title">Como funciona a penalidade</string>
+    <string name="onb_penalty_body">Precisa muito usar depois do limite? Você pode liberar na hora pagando uma pequena penalidade. Esse custo cria a fricção que te faz pensar duas vezes — e cada minuto economizado conta.</string>
+    <string name="onb_permissions_title">Vamos liberar o essencial</string>
+    <string name="onb_permissions_body">O DollarBlock precisa destas permissões para medir o uso e bloquear apps. Concedemos só o necessário — cada uma abre a tela do sistema correspondente.</string>
+    <string name="onb_perm_usage_why">Mede quanto tempo você passa em cada app, base de tudo.</string>
+    <string name="onb_perm_accessibility_why">Detecta o app em primeiro plano para aplicar o bloqueio.</string>
+    <string name="onb_perm_overlay_why">Exibe a tela de bloqueio por cima do app.</string>
+    <string name="onb_perm_notifications_why">Avisa sobre limites atingidos e o serviço de monitoramento.</string>
+    <string name="onb_perm_required">obrigatória</string>
+    <string name="onb_perm_grant">Conceder</string>
+    <string name="onb_continue">Continuar</string>
+    <string name="onb_skip">Pular para permissões</string>
+    <string name="onb_finish">Começar a usar</string>
+    <string name="onb_finish_blocked_hint">Conceda o Acesso de Uso para começar — sem ele não conseguimos medir nada.</string>
 </resources>

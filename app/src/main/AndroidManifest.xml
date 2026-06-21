@@ -7,6 +7,12 @@
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
 
+    <!-- Sobreposição: exibir a tela de bloqueio por cima do app bloqueado (E2/E5). -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
+    <!-- Notificações (Android 13+): avisos de limite e serviço de monitoramento. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <!-- Visibilidade de pacotes (Android 11+): enxergar apps lançáveis para o seletor. -->
     <queries>
         <intent>

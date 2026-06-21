@@ -71,12 +71,14 @@ Single Gradle module (`:app`) with Clean Architecture packages. Dependency rule:
 | `domain/model` | Pure Kotlin data models (`RecentEvent`, `MonitoredAppUsage`) |
 | `domain/repository` | Repository interfaces (`EventsRepository`, `MonitoredAppRepository`) |
 | `data/local/db` | Room: `DollarBlockDatabase`, DAOs, `@Entity` classes |
-| `data/local/prefs` | `BlockPreferences` (DataStore) — persists the blocked-app set and unlock windows |
+| `data/local/prefs` | `BlockPreferences` (blocked-app set + unlock windows) and `OnboardingPreferences` (onboarding-completed flag) — both DataStore |
+| `data/permissions` | `PermissionsProvider` — checks + builds intents for the 4 permissions (Usage Access, Accessibility, Overlay, Notifications) |
 | `data/repository` | Repository implementations injected via Hilt modules in `di/` |
 | `data/usage` | `UsageStatsProvider` wrapping `UsageStatsManager` |
 | `data/apps` | `InstalledAppsProvider` wrapping `PackageManager` |
 | `service/accessibility` | `DollarBlockAccessibilityService` — detects foreground app, fires blocking |
 | `service/monitoring` | `UsageSyncWorker` + `UsageSyncScheduler` — periodic usage sync via WorkManager |
+| `feature/onboarding` | `OnboardingScreen` (concept pager + guided permission requests) + `OnboardingViewModel` |
 | `feature/blocking` | `BlockActivity` (blocking UI) + `payment/GooglePayConfig` (test-mode Google Pay) |
 | `feature/home` | Dashboard: Daily Score, Time Saved, Active Limits, Recent Events |
 | `feature/apps` | App list with monitoring toggle, limit config, usage bar |
@@ -106,11 +108,12 @@ Both live in `di/`: `DatabaseModule` provides the Room DB and DAOs; `RepositoryM
 
 ---
 
-## Epics status (as of E1 partial)
+## Epics status (as of E2)
 
 - **E0** Foundation + Design System ✅
 - **E0.5** Navigable shell with mock data ✅
 - **E1** Data layer — events history slice ✅; remaining entities (`MonitoredApp`, `DailyUsage`, `UserStats`) + DAO tests pending
+- **E2** Onboarding & permissions ✅ — concept pager + guided requests for the 4 permissions; first-run routing via `OnboardingPreferences` flag (replaces the old Usage Access gate)
 - **E5** Blocking engine — minimum slice (manual on/off per app) ✅; usage-triggered blocking pending (needs E4)
 - **E9** Google Pay — test-mode slice ✅; production PSP pending
 
