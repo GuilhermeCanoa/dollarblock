@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Usage Access (permissão especial, concedida via tela de Configurações do sistema):
+         necessária para medir tempo de uso por app via UsageStatsManager. -->
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions" />
 
     <!-- Visibilidade de pacotes (Android 11+): enxergar apps lançáveis para o seletor. -->
     <queries>
@@ -19,6 +25,20 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.DollarBlock">
+
+        <!-- WorkManager: desabilita a inicialização automática via androidx-startup
+             porque o DollarBlockApp fornece sua própria Configuration.Provider
+             (necessário para o HiltWorkerFactory injetar dependências nos Workers). -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
 
         <activity
             android:name=".MainActivity"

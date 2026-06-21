@@ -40,6 +40,7 @@
     <string name="apps_monitored_count">%1$d apps monitorados</string>
     <string name="apps_limit_label">Limite diário</string>
     <string name="apps_used_of_limit">%1$s de %2$s</string>
+    <string name="apps_used_no_limit">%1$s hoje · sem limite definido</string>
     <string name="apps_monitoring_on">Monitorando</string>
     <string name="apps_monitoring_off">Pausado</string>
 
@@ -107,4 +108,10 @@
     <string name="unlock">Unlock</string>
     <string name="coming_soon">Em breve nesta versão.</string>
     <string name="preview_sample_data">Pré-visualização — dados de exemplo.</string>
+
+    <!-- Gate de permissão: Usage Access (primeira execução) -->
+    <string name="usage_gate_title">Precisamos medir seu tempo de uso</string>
+    <string name="usage_gate_description">O DollarBlock usa o Acesso de Uso do Android para saber quanto tempo você passa em cada app e aplicar seus limites diários. Sem essa permissão, não conseguimos rastrear nada.</string>
+    <string name="usage_gate_button">Conceder acesso de uso</string>
+    <string name="usage_gate_hint">Você será levado à tela de Configurações do Android. Encontre DollarBlock na lista e ative o acesso.</string>
 </resources>
