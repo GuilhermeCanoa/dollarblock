@@ -11,3 +11,6 @@
 local.properties
 *.keystore
 !debug.keystore
+
+# Skills: junctions recriadas por `npx skills add` — não versionar
+.claude/skills/

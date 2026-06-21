@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "skills": {
+    "Stripe Payments": {
+      "source": "claude-office-skills/skills",
+      "sourceType": "github",
+      "skillPath": "stripe-payments/SKILL.md",
+      "computedHash": "3cefdc8cadf053e2a9d3666df9e2d09ea2a0c0f1c3cb05b4ac118f7bc9a5381c"
+    },
+    "android-jetpack-compose": {
+      "source": "thebushidocollective/han",
+      "sourceType": "github",
+      "skillPath": "plugins/specialized/android/skills/jetpack-compose/SKILL.md",
+      "computedHash": "11ab9a1ee4ebfb46cea085b9183539a2a9e5b7d5a897bea544297d42ee1b6fc5"
+    },
+    "jetpack-compose-m3": {
+      "source": "android/skills",
+      "sourceType": "github",
+      "skillPath": "wear/jetpack-compose-m3/SKILL.md",
+      "computedHash": "02a438a1ea5e00cc472d941551b283b89610e19dcd19e48cc43ac53486ce99b7"
+    },
+    "mobile-android-design": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "skillPath": "plugins/ui-design/skills/mobile-android-design/SKILL.md",
+      "computedHash": "143a60d6a0744a5058adf984e3a64b75cd2ef3714a15557f4ff6fd95e39ff23a"
+    }
+  }
+}
