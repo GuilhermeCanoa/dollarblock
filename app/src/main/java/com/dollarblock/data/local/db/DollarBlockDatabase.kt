@@ -7,10 +7,17 @@ import com.dollarblock.data.local.db.entity.BlockEventEntity
 import com.dollarblock.data.local.db.entity.UnlockEventEntity
 
 @Database(
-    entities = [BlockEventEntity::class, UnlockEventEntity::class],
+    entities = [
+        BlockEventEntity::class,
+        UnlockEventEntity::class,
+        MonitoredAppEntity::class,
+        DailyUsageEntity::class,
+    ],
     version = 1,
     exportSchema = false,
 )
 abstract class DollarBlockDatabase : RoomDatabase() {
     abstract fun eventDao(): EventDao
+    abstract fun monitoredAppDao(): MonitoredAppDao
+    abstract fun dailyUsageDao(): DailyUsageDao
 }

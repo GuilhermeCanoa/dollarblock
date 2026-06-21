@@ -67,6 +67,16 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
     ksp(libs.hilt.compiler)
 
+    // Room (persistência local: apps monitorados, uso diário)
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
+
+    // WorkManager (sincronização periódica de tempo de uso via UsageStatsManager)
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.hilt.work)
+    ksp(libs.androidx.hilt.compiler)
+
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
 
