@@ -91,11 +91,17 @@ reabrir o app pula o onboarding. ✅ **Validado.** **Depende de E1.**
 **Objetivo:** usuário escolhe apps e define limites diários.
 
 **Entregáveis**
-- Data source `PackageManager`: apps instalados (ícone, nome, package).
-- Tela Apps: lista, toggle de monitoramento, definição de limite diário, uso atual vs limite.
-- Persistência em `MonitoredApp`.
+- Data source `PackageManager`: apps instalados (ícone, nome, package). ✅
+- Tela Apps: lista, toggle de monitoramento, uso atual vs limite (barra de progresso). ✅
+- **Definição de limite diário pela UI**: toque na linha do app abre `DailyLimitDialog`
+  (campo numérico em minutos, validação > 0, opção "Remover limite"). ✅
+- **Busca por nome**: campo de busca no topo da lista (`AppsSearchField`), filtra em tempo
+  real por `label`, com mensagem de "nenhum resultado" e botão de limpar. ✅
+- Persistência em `MonitoredAppEntity.dailyLimitMinutes` (Room), via
+  `MonitoredAppRepository.setDailyLimit`.
 
-**Aceite:** ativar/desativar e definir limite persiste e reflete na lista. **Depende de E1.**
+**Aceite:** ativar/desativar, definir limite e buscar por nome persistem e refletem na
+lista. ✅ **Validado.** **Depende de E1.**
 
 ---
 
@@ -115,21 +121,34 @@ reabrir o app pula o onboarding. ✅ **Validado.** **Depende de E1.**
 ## E5 — Bloqueio (Blocking Engine)
 **Objetivo:** detectar limite atingido e bloquear o app com tela própria.
 
-**Entregue antecipadamente (fatia mínima — validada no emulador):**
+**Entregue (validado no emulador):**
 - `DollarBlockAccessibilityService` detecta o app em foreground e abre a `BlockActivity`
   (tela de bloqueio DollarBlock) por cima.
 - Controle na Home: **seletor de apps instalados** (`InstalledAppsProvider` via PackageManager)
   + **botão habilitar/desabilitar** bloqueio por app.
 - Conjunto de bloqueados persistido em DataStore (`BlockPreferences`), compartilhado UI↔serviço.
 - Detecção de status do serviço de Acessibilidade na Home + atalho para Configurações.
+- **Disparo por uso ≥ limite**: a cada troca de janela, o serviço também checa de forma
+  assíncrona (`MonitoredAppDao` + `UsageStatsProvider.getTodayUsageMinutes`) se o app é
+  monitorado, tem `dailyLimitMinutes` definido e já atingiu o limite hoje — nesse caso
+  bloqueia igual ao bloqueio manual, respeitando a mesma janela de desbloqueio pago
+  (`BlockPreferences.isUnlockWindowExpired`). ✅
+- **Polling enquanto um app monitorado fica em foreground** (sem trocar de janela, ex.:
+  rolando um feed por minutos): sem isso, nem o uso na tela Apps nem o bloqueio por
+  limite avançavam até o usuário fechar/reabrir o app. Resolvido com um loop de coroutine
+  no próprio `DollarBlockAccessibilityService` que, a cada 3s (`POLL_INTERVAL_MS`), chama
+  `MonitoredAppRepository.syncTodayUsage()` (atualiza Room → UI via Flow) e reavalia o
+  limite. É iniciado/parado por app conforme o foreground muda. ✅
 
-**Restante do E5 (depende de E1/E4):**
-- Disparo por **uso ≥ limite** (em vez de bloqueio binário).
-- Registrar `BlockEvent`; **Unlock** com `UnlockEvent` (`penaltyAmount` simulado) e janela
-  `unlockUntil`. Migrar bloqueado-set para Room.
+**Restante do E5 (depende de E1):**
+- Migrar o conjunto bloqueado-manualmente de DataStore para Room (unificar com
+  `MonitoredAppEntity`).
+- Tipar o motivo do bloqueio no `BlockEvent` (manual vs. limite diário) para exibir
+  diferenciado no histórico (E8).
 
 **Aceite (fatia atual):** app selecionado e bloqueado pela Home → abre bloqueado mostra a
-tela do DollarBlock; desabilitar libera o acesso. ✅ **Validado.**
+tela do DollarBlock; desabilitar libera o acesso. App monitorado que atinge o limite
+diário também é bloqueado automaticamente ao ser aberto. ✅ **Validado.**
 
 ---
 

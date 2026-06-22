@@ -55,12 +55,29 @@ class MonitoredAppRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun syncTodayUsage() {
+    override suspend fun setDailyLimit(packageName: String, dailyLimitMinutes: Int?) {
+        val existing = monitoredAppDao.getByPackage(packageName)
+        if (existing != null) {
+            monitoredAppDao.setDailyLimit(packageName, dailyLimitMinutes)
+        } else {
+            monitoredAppDao.upsert(
+                MonitoredAppEntity(
+                    packageName = packageName,
+                    appName = packageName,
+                    isMonitored = false,
+                    dailyLimitMinutes = dailyLimitMinutes,
+                    createdAt = System.currentTimeMillis(),
+                ),
+            )
+        }
+    }
+
+    override suspend fun syncTodayUsage(foregroundPackage: String?, foregroundSinceMillis: Long?) {
         val today = usageStatsProvider.currentEpochDay()
         val monitoredPackages = monitoredAppDao.getMonitoredPackages().toSet()
         if (monitoredPackages.isEmpty()) return
 
-        val usageByPackage = usageStatsProvider.getTodayUsageByPackage()
+        val usageByPackage = usageStatsProvider.getTodayUsageByPackage(foregroundPackage, foregroundSinceMillis)
         usageByPackage
             .filterKeys { it in monitoredPackages }
             .forEach { (packageName, usedMillis) ->

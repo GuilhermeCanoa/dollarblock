@@ -64,6 +64,15 @@ class BlockPreferences @Inject constructor(
     /** True se o app está bloqueado e fora de uma janela de desbloqueio ativa. */
     fun shouldBlock(packageName: String): Boolean {
         if (!_blockedPackages.value.contains(packageName)) return false
+        return isUnlockWindowExpired(packageName)
+    }
+
+    /**
+     * True se [packageName] não tem uma janela de desbloqueio ativa agora (ou nunca teve).
+     * Usado tanto por [shouldBlock] (bloqueio manual) quanto pelo bloqueio automático por
+     * limite diário no `DollarBlockAccessibilityService` — pagar libera os dois igualmente.
+     */
+    fun isUnlockWindowExpired(packageName: String): Boolean {
         val until = _unlockedUntil.value[packageName] ?: 0L
         return System.currentTimeMillis() >= until
     }
