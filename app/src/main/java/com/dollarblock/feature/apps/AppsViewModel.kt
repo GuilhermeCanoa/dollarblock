@@ -7,11 +7,13 @@ import com.dollarblock.data.apps.InstalledApp
 import com.dollarblock.data.apps.InstalledAppsProvider
 import com.dollarblock.domain.repository.MonitoredAppRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -26,11 +28,11 @@ data class AppUsageRow(
 )
 
 data class AppsUiState(
-    val rows: List<AppUsageRow> = emptyList(),
+    val monitoredRows: List<AppUsageRow> = emptyList(),
+    val searchSuggestions: List<AppUsageRow> = emptyList(),
     val isLoading: Boolean = true,
     val editingLimitFor: AppUsageRow? = null,
     val searchQuery: String = "",
-    val totalMonitoredCount: Int = 0,
 )
 
 @HiltViewModel
@@ -63,17 +65,17 @@ class AppsViewModel @Inject constructor(
                 usedMinutesToday = usage?.usedMinutesToday ?: 0,
             )
         }
-        val filteredRows = if (query.isBlank()) {
-            allRows
-        } else {
-            allRows.filter { it.label.contains(query, ignoreCase = true) }
+        val monitoredRows = allRows.filter { it.isMonitored }
+        val monitoredPackages = monitoredRows.map { it.packageName }.toSet()
+        val suggestions = if (query.isBlank()) emptyList() else {
+            allRows.filter { !monitoredPackages.contains(it.packageName) && it.label.contains(query, ignoreCase = true) }
         }
         AppsUiState(
-            rows = filteredRows,
+            monitoredRows = monitoredRows,
+            searchSuggestions = suggestions,
             isLoading = isLoadingInstalled,
             editingLimitFor = allRows.find { it.packageName == editingPackage },
             searchQuery = query,
-            totalMonitoredCount = allRows.count { it.isMonitored },
         )
     }.stateIn(
         scope = viewModelScope,
@@ -87,6 +89,17 @@ class AppsViewModel @Inject constructor(
             loadingInstalled.value = false
         }
         viewModelScope.launch {
+            while (isActive) {
+                monitoredAppRepository.syncTodayUsage()
+                delay(SYNC_INTERVAL_MS)
+            }
+        }
+    }
+
+    fun addMonitoredFromSearch(packageName: String, appName: String) {
+        searchQuery.value = ""
+        viewModelScope.launch {
+            monitoredAppRepository.setMonitored(packageName, appName, true)
             monitoredAppRepository.syncTodayUsage()
         }
     }
@@ -95,7 +108,6 @@ class AppsViewModel @Inject constructor(
         viewModelScope.launch {
             monitoredAppRepository.setMonitored(packageName, appName, monitored)
             if (monitored) {
-                // garante que o uso de hoje já apareça imediatamente após ativar o toggle
                 monitoredAppRepository.syncTodayUsage()
             }
         }
@@ -122,5 +134,9 @@ class AppsViewModel @Inject constructor(
             monitoredAppRepository.setDailyLimit(packageName, minutes)
         }
         editingLimitForPackage.value = null
+    }
+
+    private companion object {
+        const val SYNC_INTERVAL_MS = 5_000L
     }
 }

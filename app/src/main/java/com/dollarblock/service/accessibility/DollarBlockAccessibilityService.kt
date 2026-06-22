@@ -68,8 +68,9 @@ class DollarBlockAccessibilityService : AccessibilityService() {
     private var lastRecordedPackage: String? = null
     private var lastRecordedAt = 0L
 
-    private var pollingPackage: String? = null
-    private var pollingJob: Job? = null
+    private var lastForegroundPackage: String? = null
+    private var trackedPackage: String? = null
+    private var trackingJob: Job? = null
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -79,84 +80,104 @@ class DollarBlockAccessibilityService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event?.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
         val packageName = event.packageName?.toString() ?: return
-        if (packageName == getPackageName()) {
-            stopPolling()
-            return
-        }
+
+        if (packageName == getPackageName()) return
+
+        // Ignora mudanças internas dentro do mesmo app — só processa quando o package muda.
+        val packageChanged = packageName != lastForegroundPackage
+        lastForegroundPackage = packageName
 
         if (blockPreferences.shouldBlock(packageName)) {
-            stopPolling()
+            stopTracking()
             assertBlock(packageName) { blockPreferences.shouldBlock(packageName) }
             return
         }
 
-        // Momento exato em que esta janela do app apareceu — início da sessão de foreground.
+        if (!packageChanged) return
+
         val enteredForegroundAt = System.currentTimeMillis()
 
-        // Limite diário: requer IO (Room + UsageStatsManager), checado de forma assíncrona.
         scope.launch {
             val app = monitoredAppDao.getByPackage(packageName)
             if (app == null || !app.isMonitored) {
-                handler.post { stopPolling() }
+                handler.post { stopTracking() }
                 return@launch
             }
 
-            if (isOverDailyLimit(app, enteredForegroundAt) && blockPreferences.isUnlockWindowExpired(packageName)) {
+            val usedMillis = effectiveUsageMillis(app, enteredForegroundAt)
+            val limitMillis = (app.dailyLimitMinutes ?: return@launch) * 60_000L
+
+            if (usedMillis >= limitMillis && blockPreferences.isUnlockWindowExpired(packageName)) {
                 handler.post {
-                    stopPolling()
+                    stopTracking()
                     assertBlock(packageName) { blockPreferences.isUnlockWindowExpired(packageName) }
                 }
             } else {
-                // App monitorado, ainda dentro do limite (ou sem limite definido): mantém o
-                // polling enquanto ele continuar em foreground, para pegar o momento exato
-                // em que o limite for cruzado e manter o uso sincronizado em tempo real.
-                handler.post { startPollingIfNeeded(packageName, enteredForegroundAt) }
+                val remainingMillis = if (usedMillis >= limitMillis) {
+                    blockPreferences.unlockWindowRemainingMillis(packageName)
+                } else {
+                    limitMillis - usedMillis
+                }.coerceAtLeast(MIN_CHECK_INTERVAL_MS)
+                handler.post { scheduleTracking(packageName, enteredForegroundAt, remainingMillis) }
             }
         }
     }
 
     /**
-     * [foregroundSinceMillis] é o momento em que [app] entrou em foreground *nesta* sessão
-     * (troca de janela mais recente) — usado para somar o tempo da sessão em andamento ao
-     * uso já fechado em `UsageStatsManager`, que por si só fica defasado enquanto o app
-     * permanece aberto sem trocar de tela.
+     * Uso efetivo em millis = uso bruto via UsageEvents − baseline capturado na ativação.
+     * [foregroundSinceMillis] inclui a sessão em andamento no cálculo.
      */
-    private suspend fun isOverDailyLimit(app: MonitoredAppEntity, foregroundSinceMillis: Long?): Boolean {
-        val limit = app.dailyLimitMinutes ?: return false
-        val usedMinutes = usageStatsProvider.getTodayUsageMinutesIncludingOngoingSession(
+    private suspend fun effectiveUsageMillis(app: MonitoredAppEntity, foregroundSinceMillis: Long?): Long {
+        val raw = usageStatsProvider.getTodayUsageMillisViaEvents(
             packageName = app.packageName,
-            foregroundSinceMillis = foregroundSinceMillis,
+            ongoingSessionSince = foregroundSinceMillis,
         )
-        return usedMinutes >= limit
+        return (raw - app.usageBaselineMillis).coerceAtLeast(0L)
     }
 
-    /** Inicia o polling para [packageName] se ainda não estiver rodando para ele. */
-    private fun startPollingIfNeeded(packageName: String, foregroundSinceMillis: Long) {
-        if (pollingPackage == packageName && pollingJob?.isActive == true) return
-        stopPolling()
-        pollingPackage = packageName
-        pollingJob = scope.launch {
-            while (isActive) {
-                delay(POLL_INTERVAL_MS)
+    /**
+     * Agenda uma verificação de limite daqui a [delayMillis].
+     * Quando o timer dispara, recalcula o uso real via UsageEvents — se ainda não atingiu
+     * o limite (ex.: usuário saiu do app durante o delay), reagenda pelo tempo restante.
+     * Substitui o polling contínuo por um único disparo preciso.
+     */
+    private fun scheduleTracking(packageName: String, foregroundSinceMillis: Long, delayMillis: Long) {
+        stopTracking()
+        trackedPackage = packageName
+        trackingJob = scope.launch {
+            // Sincroniza Room para a UI enquanto espera o limite
+            monitoredAppRepository.syncTodayUsage(packageName, foregroundSinceMillis)
+            delay(delayMillis)
+            if (!isActive) return@launch
+
+            val app = monitoredAppDao.getByPackage(packageName) ?: return@launch
+            if (!app.isMonitored) return@launch
+
+            val usedMillis = effectiveUsageMillis(app, foregroundSinceMillis)
+            val limitMillis = (app.dailyLimitMinutes ?: return@launch) * 60_000L
+
+            if (usedMillis >= limitMillis && blockPreferences.isUnlockWindowExpired(packageName)) {
                 monitoredAppRepository.syncTodayUsage(packageName, foregroundSinceMillis)
-                val app = monitoredAppDao.getByPackage(packageName)
-                if (app != null && app.isMonitored &&
-                    isOverDailyLimit(app, foregroundSinceMillis) &&
-                    blockPreferences.isUnlockWindowExpired(packageName)
-                ) {
-                    handler.post {
-                        assertBlock(packageName) { blockPreferences.isUnlockWindowExpired(packageName) }
-                    }
-                    break
+                handler.post {
+                    assertBlock(packageName) { blockPreferences.isUnlockWindowExpired(packageName) }
                 }
+            } else if (usedMillis >= limitMillis) {
+                // Acima do limite mas dentro da janela de desbloqueio — aguarda a janela expirar
+                val windowRemaining = blockPreferences.unlockWindowRemainingMillis(packageName)
+                    .coerceAtLeast(MIN_CHECK_INTERVAL_MS)
+                handler.post { scheduleTracking(packageName, foregroundSinceMillis, windowRemaining) }
+            } else {
+                // Ainda não atingiu o limite — agenda para quando vai atingir
+                val remaining = (limitMillis - usedMillis).coerceAtLeast(MIN_CHECK_INTERVAL_MS)
+                handler.post { scheduleTracking(packageName, foregroundSinceMillis, remaining) }
             }
         }
     }
 
-    private fun stopPolling() {
-        pollingJob?.cancel()
-        pollingJob = null
-        pollingPackage = null
+    private fun stopTracking() {
+        trackingJob?.cancel()
+        trackingJob = null
+        trackedPackage = null
     }
 
     /**
@@ -215,6 +236,6 @@ class DollarBlockAccessibilityService : AccessibilityService() {
         const val TAG = "DollarBlockA11y"
         const val REASSERT_DELAY_MS = 500L
         const val RECORD_DEDUPE_MS = 5_000L
-        const val POLL_INTERVAL_MS = 3_000L
+        const val MIN_CHECK_INTERVAL_MS = 5_000L
     }
 }

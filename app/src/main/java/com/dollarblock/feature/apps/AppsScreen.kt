@@ -55,9 +55,7 @@ import com.dollarblock.core.designsystem.DollarBlockTheme
 import com.dollarblock.core.designsystem.components.ScreenHeader
 
 /**
- * Apps — lista de apps instalados com uso real (UsageStatsManager → Room),
- * toggle de monitoramento e definição de limite diário (toque na linha de uso
- * abre o diálogo `DailyLimitDialog`), tudo persistido via `MonitoredAppRepository`.
+ * Apps — busca para adicionar apps ao monitoramento; lista apenas os apps já monitorados.
  */
 @Composable
 fun AppsScreen(
@@ -77,46 +75,72 @@ fun AppsScreen(
                 subtitle = stringResource(R.string.apps_subtitle),
             )
         }
+
         item {
             AppsSearchField(
                 query = uiState.searchQuery,
                 onQueryChange = viewModel::setSearchQuery,
             )
         }
-        item {
-            Text(
-                text = stringResource(R.string.apps_monitored_count, uiState.totalMonitoredCount),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        if (uiState.isLoading) {
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 32.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CircularProgressIndicator()
+
+        // Sugestões de busca (apps não monitorados que batem com a query)
+        if (uiState.searchQuery.isNotBlank()) {
+            if (uiState.isLoading) {
+                item {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+                        contentAlignment = Alignment.Center,
+                    ) { CircularProgressIndicator() }
+                }
+            } else if (uiState.searchSuggestions.isEmpty()) {
+                item {
+                    Text(
+                        text = stringResource(R.string.apps_search_empty, uiState.searchQuery),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 12.dp),
+                    )
+                }
+            } else {
+                items(uiState.searchSuggestions, key = { "suggestion_${it.packageName}" }) { row ->
+                    AppSuggestionItem(
+                        row = row,
+                        onAdd = { viewModel.addMonitoredFromSearch(row.packageName, row.label) },
+                    )
                 }
             }
-        } else if (uiState.rows.isEmpty() && uiState.searchQuery.isNotBlank()) {
-            item {
-                Text(
-                    text = stringResource(R.string.apps_search_empty, uiState.searchQuery),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(vertical = 24.dp),
-                )
-            }
-        } else {
-            items(uiState.rows, key = { it.packageName }) { row ->
-                AppListItem(
-                    row = row,
-                    onToggle = { checked -> viewModel.setMonitored(row.packageName, row.label, checked) },
-                    onClickLimit = { viewModel.openLimitEditor(row.packageName) },
-                )
+        }
+
+        // Separador / título dos monitorados (só quando não está pesquisando)
+        if (uiState.searchQuery.isBlank()) {
+            if (uiState.monitoredRows.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 48.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = stringResource(R.string.apps_empty_state),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            } else {
+                item {
+                    Text(
+                        text = stringResource(R.string.apps_monitored_count, uiState.monitoredRows.size),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                items(uiState.monitoredRows, key = { it.packageName }) { row ->
+                    AppListItem(
+                        row = row,
+                        onToggle = { checked -> viewModel.setMonitored(row.packageName, row.label, checked) },
+                        onClickLimit = { viewModel.openLimitEditor(row.packageName) },
+                    )
+                }
             }
         }
     }
@@ -163,6 +187,38 @@ private fun AppsSearchField(
             }
         },
     )
+}
+
+@Composable
+private fun AppSuggestionItem(
+    row: AppUsageRow,
+    onAdd: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth().clickable(onClick = onAdd),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            AppAvatar(icon = row.icon, letter = row.label.firstOrNull() ?: '?')
+            Spacer(Modifier.size(12.dp))
+            Text(
+                text = row.label,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f),
+            )
+            Icon(
+                imageVector = Icons.Filled.Search,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+            )
+        }
+    }
 }
 
 @Composable

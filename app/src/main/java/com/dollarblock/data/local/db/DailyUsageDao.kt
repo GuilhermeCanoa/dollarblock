@@ -13,22 +13,15 @@ interface DailyUsageDao {
     @Query("SELECT * FROM daily_usage WHERE packageName = :packageName AND epochDay = :epochDay LIMIT 1")
     suspend fun getForDay(packageName: String, epochDay: Long): DailyUsageEntity?
 
-    /**
-     * Insere ou atualiza o uso de um app em um dia. Como `id` é autogerado, fazemos
-     * upsert manual via INSERT OR REPLACE usando o id existente (se houver) para
-     * respeitar o índice único (packageName, epochDay).
-     */
-    @Query(
-        """
-        INSERT INTO daily_usage (id, packageName, epochDay, usedMillis, updatedAt)
-        VALUES (
-            COALESCE((SELECT id FROM daily_usage WHERE packageName = :packageName AND epochDay = :epochDay), 0),
-            :packageName, :epochDay, :usedMillis, :updatedAt
-        )
-        ON CONFLICT(packageName, epochDay) DO UPDATE SET
-            usedMillis = :usedMillis,
-            updatedAt = :updatedAt
-        """,
-    )
-    suspend fun upsertUsage(packageName: String, epochDay: Long, usedMillis: Long, updatedAt: Long)
+    @Query("UPDATE daily_usage SET usedMillis = :usedMillis, updatedAt = :updatedAt WHERE packageName = :packageName AND epochDay = :epochDay")
+    suspend fun updateUsage(packageName: String, epochDay: Long, usedMillis: Long, updatedAt: Long): Int
+
+    @Query("INSERT OR IGNORE INTO daily_usage (packageName, epochDay, usedMillis, updatedAt) VALUES (:packageName, :epochDay, :usedMillis, :updatedAt)")
+    suspend fun insertIfNotExists(packageName: String, epochDay: Long, usedMillis: Long, updatedAt: Long)
+
+    suspend fun upsertUsage(packageName: String, epochDay: Long, usedMillis: Long, updatedAt: Long) {
+        if (updateUsage(packageName, epochDay, usedMillis, updatedAt) == 0) {
+            insertIfNotExists(packageName, epochDay, usedMillis, updatedAt)
+        }
+    }
 }

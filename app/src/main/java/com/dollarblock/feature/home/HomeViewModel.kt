@@ -9,6 +9,7 @@ import com.dollarblock.domain.model.RecentEvent
 import com.dollarblock.domain.repository.EventsRepository
 import com.dollarblock.domain.repository.MonitoredAppRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.math.roundToInt
@@ -38,7 +40,7 @@ data class HomeUiState(
 class HomeViewModel @Inject constructor(
     private val installedAppsProvider: InstalledAppsProvider,
     private val blockPreferences: BlockPreferences,
-    monitoredAppRepository: MonitoredAppRepository,
+    private val monitoredAppRepository: MonitoredAppRepository,
     eventsRepository: EventsRepository,
 ) : ViewModel() {
 
@@ -101,6 +103,12 @@ class HomeViewModel @Inject constructor(
             installedApps.value = installedAppsProvider.getLaunchableApps()
             loading.value = false
         }
+        viewModelScope.launch {
+            while (isActive) {
+                monitoredAppRepository.syncTodayUsage()
+                delay(SYNC_INTERVAL_MS)
+            }
+        }
     }
 
     fun selectApp(packageName: String) {
@@ -113,5 +121,6 @@ class HomeViewModel @Inject constructor(
 
     private companion object {
         const val RECENT_EVENTS_LIMIT = 8
+        const val SYNC_INTERVAL_MS = 5_000L
     }
 }

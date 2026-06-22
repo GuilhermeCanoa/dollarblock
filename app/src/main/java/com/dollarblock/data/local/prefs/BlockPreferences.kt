@@ -77,6 +77,12 @@ class BlockPreferences @Inject constructor(
         return System.currentTimeMillis() >= until
     }
 
+    /** Millis restantes na janela de desbloqueio ativa, ou 0 se já expirou. */
+    fun unlockWindowRemainingMillis(packageName: String): Long {
+        val until = _unlockedUntil.value[packageName] ?: 0L
+        return (until - System.currentTimeMillis()).coerceAtLeast(0L)
+    }
+
     private fun persist() {
         val blocked = _blockedPackages.value
         val unlocks = _unlockedUntil.value
