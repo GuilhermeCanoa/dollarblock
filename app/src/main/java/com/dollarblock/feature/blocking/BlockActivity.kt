@@ -3,6 +3,7 @@ package com.dollarblock.feature.blocking
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
@@ -43,6 +44,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.dollarblock.BuildConfig
 import com.dollarblock.MainActivity
 import com.dollarblock.R
 import com.dollarblock.core.designsystem.DollarBlockTheme
@@ -53,6 +55,8 @@ import com.dollarblock.data.local.prefs.BlockPreferences
 import com.dollarblock.domain.model.PaymentMethod
 import com.dollarblock.domain.repository.EventsRepository
 import com.dollarblock.feature.blocking.payment.GooglePayConfig
+import com.dollarblock.feature.blocking.payment.PaymentApiClient
+import com.dollarblock.feature.blocking.payment.StripeToken
 import kotlinx.coroutines.launch
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.ResolvableApiException
@@ -63,13 +67,10 @@ import com.google.android.gms.wallet.PaymentDataRequest
 import com.google.android.gms.wallet.PaymentsClient
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
+import org.json.JSONObject
+import java.util.UUID
 import javax.inject.Inject
 
-/**
- * Tela exibida quando o usuário abre um app bloqueado. Oferece pagamento via Google Pay
- * (ambiente de TESTE) para liberar o app por uma janela de tempo. Em dispositivos sem
- * Google Pay, um botão de simulação permite testar o fluxo de desbloqueio.
- */
 @AndroidEntryPoint
 class BlockActivity : ComponentActivity() {
 
@@ -88,15 +89,26 @@ class BlockActivity : ComponentActivity() {
 
     private val paymentLauncher =
         registerForActivityResult(StartIntentSenderForResult()) { result ->
-            paymentInProgress.value = false
             when (result.resultCode) {
                 Activity.RESULT_OK -> {
-                    // Token (mock) disponível em PaymentData.getFromIntent(...).toJson().
-                    result.data?.let { PaymentData.getFromIntent(it) }
-                    onPaymentSuccess(PaymentMethod.GOOGLE_PAY)
+                    val paymentData = result.data?.let { PaymentData.getFromIntent(it) }
+                    if (paymentData != null) {
+                        handlePaymentData(paymentData)
+                    } else {
+                        paymentInProgress.value = false
+                        toast(R.string.pay_error)
+                    }
                 }
-                Activity.RESULT_CANCELED -> toast(R.string.pay_cancelled)
-                AutoResolveHelper.RESULT_ERROR -> toast(R.string.pay_error)
+                Activity.RESULT_CANCELED -> {
+                    paymentInProgress.value = false
+                    toast(R.string.pay_cancelled)
+                }
+                AutoResolveHelper.RESULT_ERROR -> {
+                    val status = AutoResolveHelper.getStatusFromIntent(result.data)
+                    Log.e(TAG, "Google Pay sheet error: $status")
+                    paymentInProgress.value = false
+                    toast(R.string.pay_error)
+                }
             }
         }
 
@@ -124,6 +136,7 @@ class BlockActivity : ComponentActivity() {
                     appLabel = appLabel,
                     googlePayReady = ready,
                     paymentInProgress = processing,
+                    showDebugSimulate = BuildConfig.DEBUG,
                     onPayWithGooglePay = ::startPayment,
                     onSimulatePayment = { onPaymentSuccess(PaymentMethod.SIMULATED) },
                     onGoHome = ::goHome,
@@ -144,8 +157,13 @@ class BlockActivity : ComponentActivity() {
         val request = PaymentDataRequest.fromJson(GooglePayConfig.paymentDataRequest().toString())
         paymentsClient.loadPaymentData(request).addOnCompleteListener { task ->
             if (task.isSuccessful) {
-                paymentInProgress.value = false
-                onPaymentSuccess(PaymentMethod.GOOGLE_PAY)
+                val paymentData = task.result
+                if (paymentData != null) {
+                    handlePaymentData(paymentData)
+                } else {
+                    paymentInProgress.value = false
+                    toast(R.string.pay_error)
+                }
             } else {
                 when (val exception = task.exception) {
                     is ResolvableApiException ->
@@ -153,11 +171,54 @@ class BlockActivity : ComponentActivity() {
                             IntentSenderRequest.Builder(exception.resolution.intentSender).build(),
                         )
                     else -> {
+                        Log.e(TAG, "loadPaymentData failed", exception)
                         paymentInProgress.value = false
                         toast(R.string.pay_error)
                     }
                 }
             }
+        }
+    }
+
+    // Extracts the raw Stripe tokenization token from the Google Pay PaymentData JSON.
+    // For the stripe gateway this is a JSON-stringified Stripe token object; the actual
+    // tok_/pm_ id is pulled out later via StripeToken.extractId(). Returns null if the
+    // token is missing (malformed response from Google Pay).
+    private fun extractToken(paymentData: PaymentData): String? = runCatching {
+        JSONObject(paymentData.toJson())
+            .getJSONObject("paymentMethodData")
+            .getJSONObject("tokenizationData")
+            .getString("token")
+    }.getOrNull()
+
+    private fun handlePaymentData(paymentData: PaymentData) {
+        val rawToken = extractToken(paymentData)
+        val token = StripeToken.extractId(rawToken)
+        if (token == null) {
+            Log.e(TAG, "No usable Stripe token in Google Pay response (raw=${rawToken?.take(40)})")
+            paymentInProgress.value = false
+            toast(R.string.pay_error)
+            return
+        }
+        Log.d(TAG, "Charging pkg=$targetPackage tokenId=${token.take(8)}… (rawLen=${rawToken?.length})")
+        val idempotencyKey = UUID.randomUUID().toString()
+        lifecycleScope.launch {
+            val result = PaymentApiClient.charge(targetPackage, token, idempotencyKey)
+            paymentInProgress.value = false
+            result.fold(
+                onSuccess = { charge ->
+                    Log.d(TAG, "Charge result status=${charge.status} pi=${charge.paymentIntentId}")
+                    if (charge.status == "succeeded") {
+                        onPaymentSuccess(PaymentMethod.GOOGLE_PAY)
+                    } else {
+                        toast(R.string.pay_error)
+                    }
+                },
+                onFailure = {
+                    Log.e(TAG, "Charge failed", it)
+                    toast(R.string.pay_error)
+                },
+            )
         }
     }
 
@@ -174,9 +235,7 @@ class BlockActivity : ComponentActivity() {
                 )
             }
         }
-        toast(
-            getString(R.string.pay_unlocked, GooglePayConfig.UNLOCK_WINDOW_MINUTES),
-        )
+        toast(getString(R.string.pay_unlocked, GooglePayConfig.UNLOCK_WINDOW_MINUTES))
         openTargetApp()
     }
 
@@ -216,6 +275,7 @@ class BlockActivity : ComponentActivity() {
     }
 
     companion object {
+        private const val TAG = "DollarBlockPay"
         const val EXTRA_LABEL = "extra_label"
         const val EXTRA_PACKAGE = "extra_package"
     }
@@ -226,6 +286,7 @@ private fun BlockScreen(
     appLabel: String,
     googlePayReady: Boolean,
     paymentInProgress: Boolean,
+    showDebugSimulate: Boolean,
     onPayWithGooglePay: () -> Unit,
     onSimulatePayment: () -> Unit,
     onGoHome: () -> Unit,
@@ -314,19 +375,21 @@ private fun BlockScreen(
                         textAlign = TextAlign.Center,
                     )
                 }
-                Spacer(Modifier.height(12.dp))
-                OutlinedButton(
-                    onClick = onSimulatePayment,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = NeutralWhite),
-                    border = BorderStroke(1.dp, NeutralWhite.copy(alpha = 0.5f)),
-                ) {
-                    Text(
-                        text = stringResource(R.string.pay_simulate),
-                        style = MaterialTheme.typography.labelLarge,
-                    )
+                if (showDebugSimulate) {
+                    Spacer(Modifier.height(12.dp))
+                    OutlinedButton(
+                        onClick = onSimulatePayment,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = NeutralWhite),
+                        border = BorderStroke(1.dp, NeutralWhite.copy(alpha = 0.5f)),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.pay_simulate),
+                            style = MaterialTheme.typography.labelLarge,
+                        )
+                    }
                 }
                 Spacer(Modifier.height(8.dp))
                 TextButton(onClick = onGoHome) {

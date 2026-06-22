@@ -11,8 +11,9 @@ import java.util.concurrent.TimeUnit
 /**
  * Configuração da Google Pay API para o DollarBlock.
  *
- * Ambiente: TESTE (`ENVIRONMENT_TEST`) com gateway `"example"` — não exige conta de PSP
- * nem chaves, e não realiza cobrança real. Para produção, ver `docs/PAYMENTS_SETUP.md`.
+ * Ambiente: TESTE (`ENVIRONMENT_TEST`) com gateway `"stripe"` — tokeniza via Stripe,
+ * cobra no backend Lambda. Para produção, trocar pk_test_ por pk_live_ e ENVIRONMENT_TEST
+ * por ENVIRONMENT_PRODUCTION.
  */
 object GooglePayConfig {
 
@@ -70,9 +71,9 @@ object GooglePayConfig {
                     put(
                         "parameters",
                         JSONObject().apply {
-                            // Gateway de teste do Google — devolve token fake, sem PSP real.
-                            put("gateway", "example")
-                            put("gatewayMerchantId", "exampleGatewayMerchantId")
+                            put("gateway", "stripe")
+                            put("stripe:version", "2020-08-27")
+                            put("stripe:publishableKey", "pk_test_51SnkcBGcK4ie5x8ZDLCPxuBt0GB8Gq1osG9Kgw3tuO3rLPU6hSc7pKZrJgkJ9aKg2NlLexyrXNu1UFG69ngoVy47006ZKV9wHp")
                         },
                     )
                 },
