@@ -104,7 +104,37 @@ use `git push --no-verify` (evite; explique no PR por que pulou).
 
 ---
 
-## 7. Commits
+## 7. Skills do projeto (Claude Code)
+
+Duas skills automatizam a disciplina deste guia. O **conteúdo** vive versionado em
+`.agents/skills/<nome>/SKILL.md`; a descoberta acontece via `.claude/skills/` (essa pasta é
+gitignorada — recriada localmente, como as skills externas).
+
+- **`feature-scaffold`** — gera o esqueleto de uma feature nova no padrão anti-conflito
+  (pacote `feature/<nome>` + Screen + ViewModel + `<Nome>Navigation.kt` + módulo Hilt próprio
+  + teste da lógica pura). Use ao iniciar uma tela/épico novo (ver seção 5).
+- **`pre-pr`** — antes de abrir um PR: rebase em `origin/master`, build, testes e checagem dos
+  arquivos compartilhados (hotspots), com resumo pronto pro PR. Não dá push nem abre o PR.
+
+### Ativar as skills num clone novo
+A pasta `.claude/skills/` não é versionada. Após clonar, recrie as entradas locais apontando
+para o conteúdo versionado em `.agents/skills/` (uma vez por clone):
+
+```bash
+# Linux/macOS — symlinks
+ln -s "$PWD/.agents/skills/feature-scaffold" .claude/skills/feature-scaffold
+ln -s "$PWD/.agents/skills/pre-pr"           .claude/skills/pre-pr
+
+# Windows (PowerShell, como administrador ou com Developer Mode)
+New-Item -ItemType SymbolicLink -Path .claude\skills\feature-scaffold -Target .agents\skills\feature-scaffold
+New-Item -ItemType SymbolicLink -Path .claude\skills\pre-pr           -Target .agents\skills\pre-pr
+```
+
+> Se editar uma skill, edite sempre o arquivo em `.agents/skills/...` (a fonte versionada).
+
+---
+
+## 8. Commits
 
 - Mensagens em português, no imperativo, referenciando o épico quando aplicável
   (ex.: `E7: gráfico de barras com dados reais`).
