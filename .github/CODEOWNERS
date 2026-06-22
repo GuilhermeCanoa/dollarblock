@@ -1,0 +1,43 @@
+# CODEOWNERS — DollarBlock
+#
+# Mapa de donos por área. O GitHub usa este arquivo para atribuir reviewers
+# automaticamente e deixar explícito quem é responsável por cada parte.
+#
+# COMO USAR: substitua @dev-a / @dev-b pelos usernames reais do GitHub dos dois devs.
+# Regras posteriores vencem as anteriores (a última linha que casa define o dono).
+#
+# Sugestão de divisão por feature vertical (ver CONTRIBUTING.md seção 1):
+#   Dev A: bloqueio + serviços + onboarding/permissões + pagamento
+#   Dev B: home + statistics + apps + profile + camada de dados/Room
+
+# ----- Default: qualquer arquivo precisa de review de alguém do time -----
+*                                           @dev-a @dev-b
+
+# ----- Dev A: motor de bloqueio, serviços, onboarding, pagamento -----
+/app/src/main/java/com/dollarblock/feature/blocking/      @dev-a
+/app/src/main/java/com/dollarblock/feature/onboarding/    @dev-a
+/app/src/main/java/com/dollarblock/feature/permission/    @dev-a
+/app/src/main/java/com/dollarblock/service/               @dev-a
+/app/src/main/java/com/dollarblock/data/permissions/      @dev-a
+/docs/PAYMENTS_SETUP.md                                   @dev-a
+/docs/BACKEND_STRIPE.md                                   @dev-a
+
+# ----- Dev B: dashboard, estatísticas, apps, perfil, camada de dados -----
+/app/src/main/java/com/dollarblock/feature/home/          @dev-b
+/app/src/main/java/com/dollarblock/feature/statistics/    @dev-b
+/app/src/main/java/com/dollarblock/feature/apps/          @dev-b
+/app/src/main/java/com/dollarblock/feature/profile/       @dev-b
+/app/src/main/java/com/dollarblock/data/local/            @dev-b
+/app/src/main/java/com/dollarblock/data/repository/       @dev-b
+/app/src/main/java/com/dollarblock/data/usage/            @dev-b
+/app/src/main/java/com/dollarblock/data/apps/             @dev-b
+
+# ----- Compartilhado: exige review dos DOIS (pare e avise antes) -----
+/app/src/main/AndroidManifest.xml                         @dev-a @dev-b
+/gradle/libs.versions.toml                                @dev-a @dev-b
+/app/build.gradle.kts                                     @dev-a @dev-b
+/app/src/main/java/com/dollarblock/data/local/db/DollarBlockDatabase.kt   @dev-a @dev-b
+/app/src/main/java/com/dollarblock/core/                  @dev-a @dev-b
+/app/src/main/res/values/strings.xml                      @dev-a @dev-b
+/docs/ROADMAP.md                                          @dev-a @dev-b
+/docs/ARCHITECTURE.md                                     @dev-a @dev-b

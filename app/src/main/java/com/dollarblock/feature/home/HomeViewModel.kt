@@ -18,7 +18,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.math.roundToInt
 
 data class HomeUiState(
     val installedApps: List<InstalledApp> = emptyList(),
@@ -61,24 +60,8 @@ class HomeViewModel @Inject constructor(
         eventsRepository.recentEvents(RECENT_EVENTS_LIMIT),
         monitoredAppRepository.observeMonitoredAppsUsage(),
     ) { (apps, isLoading), blocked, selectedPkg, events, monitoredUsage ->
-        // Apenas apps monitorados COM limite diário definido contam para as métricas do
-        // dia — sem uma meta para comparar, não há "economia" nem "score" para calcular.
-        val withLimit = monitoredUsage.filter { it.isMonitored && it.dailyLimitMinutes != null }
-
-        val timeSaved = withLimit.sumOf { app ->
-            val limit = app.dailyLimitMinutes ?: 0
-            (limit - app.usedMinutesToday).coerceAtLeast(0)
-        }
-
-        val dailyScore = if (withLimit.isEmpty()) {
-            null
-        } else {
-            val perAppRatios = withLimit.map { app ->
-                val limit = app.dailyLimitMinutes ?: 1
-                ((limit - app.usedMinutesToday).toFloat() / limit).coerceIn(0f, 1f)
-            }
-            (perAppRatios.average() * 100).roundToInt()
-        }
+        // Cálculo das métricas do dia é lógica pura testável — ver HomeMetrics / HomeMetricsTest.
+        val metrics = HomeMetrics.compute(monitoredUsage)
 
         HomeUiState(
             installedApps = apps,
@@ -86,9 +69,9 @@ class HomeViewModel @Inject constructor(
             selectedPackage = selectedPkg,
             loadingApps = isLoading,
             recentEvents = events,
-            dailyScore = dailyScore,
-            timeSavedMinutes = timeSaved,
-            activeLimitsCount = withLimit.size,
+            dailyScore = metrics.score,
+            timeSavedMinutes = metrics.timeSavedMinutes,
+            activeLimitsCount = metrics.activeLimitsCount,
         )
     }.stateIn(
         scope = viewModelScope,

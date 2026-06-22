@@ -235,6 +235,26 @@ para mais adiante se fizer sentido.
 - Testes: unit (use cases), DAO (Room in-memory); smoke manual do fluxo de bloqueio.
 - Config de build release.
 
+**Entregue (fatia — fluxo de trabalho paralelo & testes):**
+- **Colaboração 2 devs:** `CONTRIBUTING.md` (branches, rebase, divisão por feature),
+  `.github/CODEOWNERS` (donos por área + auto-review), `docs/MERGE_HOTSPOTS.md`
+  (técnicas anti-conflito nos arquivos compartilhados).
+- **DI por feature:** `DatabaseModule` agora provê só o DB; `EventsModule` e
+  `MonitoredAppModule` provêm DAO + binding de cada feature (substituem o antigo
+  `RepositoryModule`) — dois devs raramente tocam o mesmo arquivo de DI.
+- **Navegação por feature:** rota + `NavGraphBuilder` extension no pacote de cada feature
+  (`<Nome>Navigation.kt`); `DollarBlockNavHost` apenas as compõe.
+- **Testabilidade:** cálculo das métricas da Home extraído para `HomeMetrics` (puro) com
+  `HomeMetricsTest`; padrão "lógica testável fora de ViewModel/Composable" documentado.
+- **Gate de qualidade:** git hook `.githooks/pre-push` (versionado) roda
+  `:app:testDebugUnitTest` e aborta o push se falhar. Ativar com
+  `git config core.hooksPath .githooks`.
+
+**Restante:**
+- Estados loading/erro/vazio padronizados; acessibilidade; revisão de tom de voz.
+- Testes de DAO (Room in-memory) e de ViewModels; smoke manual do fluxo de bloqueio.
+- Config de build release; (futuro) CI rodando os mesmos testes no PR.
+
 **Aceite:** suíte de testes verde; fluxo principal validado manualmente.
 
 ---

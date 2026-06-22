@@ -4,15 +4,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import com.dollarblock.feature.apps.AppsScreen
-import com.dollarblock.feature.home.HomeScreen
-import com.dollarblock.feature.profile.ProfileScreen
-import com.dollarblock.feature.statistics.StatisticsScreen
+import com.dollarblock.feature.apps.appsScreen
+import com.dollarblock.feature.home.HOME_ROUTE
+import com.dollarblock.feature.home.homeScreen
+import com.dollarblock.feature.profile.profileScreen
+import com.dollarblock.feature.statistics.statisticsScreen
 
 /**
- * Grafo de navegação principal do DollarBlock. As telas são placeholders no E0
- * e serão preenchidas com dados reais nos épicos seguintes.
+ * Grafo de navegação principal do DollarBlock. Cada tela é registrada por uma extension
+ * `NavGraphBuilder` declarada no próprio pacote da feature (`feature/<nome>/<Nome>Navigation.kt`),
+ * para que adicionar/editar uma rota não exija mexer neste arquivo compartilhado.
+ * Ver docs/MERGE_HOTSPOTS.md seção 5.
  */
 @Composable
 fun DollarBlockNavHost(
@@ -21,12 +23,12 @@ fun DollarBlockNavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = TopLevelDestination.HOME.route,
+        startDestination = HOME_ROUTE,
         modifier = modifier,
     ) {
-        composable(TopLevelDestination.HOME.route) { HomeScreen() }
-        composable(TopLevelDestination.APPS.route) { AppsScreen() }
-        composable(TopLevelDestination.STATISTICS.route) { StatisticsScreen() }
-        composable(TopLevelDestination.PROFILE.route) { ProfileScreen() }
+        homeScreen()
+        appsScreen()
+        statisticsScreen()
+        profileScreen()
     }
 }
