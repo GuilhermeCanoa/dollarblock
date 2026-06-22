@@ -5,8 +5,8 @@ import androidx.room.PrimaryKey
 
 /**
  * App selecionado pelo usuário para monitoramento de tempo de uso.
- * O limite diário (`dailyLimitMinutes`) ainda não possui UI de edição; fica nulo
- * até a tela/diálogo de definição de limite ser implementada (próxima etapa).
+ * `dailyLimitMinutes` é definido pelo diálogo de limite na tela Apps
+ * (`DailyLimitDialog`); fica nulo enquanto nenhum limite foi configurado.
  */
 @Entity(tableName = "monitored_apps")
 data class MonitoredAppEntity(

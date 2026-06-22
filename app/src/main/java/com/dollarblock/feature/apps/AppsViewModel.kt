@@ -28,6 +28,9 @@ data class AppUsageRow(
 data class AppsUiState(
     val rows: List<AppUsageRow> = emptyList(),
     val isLoading: Boolean = true,
+    val editingLimitFor: AppUsageRow? = null,
+    val searchQuery: String = "",
+    val totalMonitoredCount: Int = 0,
 )
 
 @HiltViewModel
@@ -38,14 +41,18 @@ class AppsViewModel @Inject constructor(
 
     private val installedApps = MutableStateFlow<List<InstalledApp>>(emptyList())
     private val loadingInstalled = MutableStateFlow(true)
+    private val editingLimitForPackage = MutableStateFlow<String?>(null)
+    private val searchQuery = MutableStateFlow("")
 
     val uiState: StateFlow<AppsUiState> = combine(
         installedApps,
         monitoredAppRepository.observeMonitoredAppsUsage(),
         loadingInstalled,
-    ) { installed, monitoredUsage, isLoadingInstalled ->
+        editingLimitForPackage,
+        searchQuery,
+    ) { installed, monitoredUsage, isLoadingInstalled, editingPackage, query ->
         val usageByPackage = monitoredUsage.associateBy { it.packageName }
-        val rows = installed.map { app ->
+        val allRows = installed.map { app ->
             val usage = usageByPackage[app.packageName]
             AppUsageRow(
                 packageName = app.packageName,
@@ -56,7 +63,18 @@ class AppsViewModel @Inject constructor(
                 usedMinutesToday = usage?.usedMinutesToday ?: 0,
             )
         }
-        AppsUiState(rows = rows, isLoading = isLoadingInstalled)
+        val filteredRows = if (query.isBlank()) {
+            allRows
+        } else {
+            allRows.filter { it.label.contains(query, ignoreCase = true) }
+        }
+        AppsUiState(
+            rows = filteredRows,
+            isLoading = isLoadingInstalled,
+            editingLimitFor = allRows.find { it.packageName == editingPackage },
+            searchQuery = query,
+            totalMonitoredCount = allRows.count { it.isMonitored },
+        )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -81,5 +99,28 @@ class AppsViewModel @Inject constructor(
                 monitoredAppRepository.syncTodayUsage()
             }
         }
+    }
+
+    /** Atualiza o termo de busca usado para filtrar a lista de apps por nome. */
+    fun setSearchQuery(query: String) {
+        searchQuery.value = query
+    }
+
+    /** Abre o diálogo de definição de limite diário para o app informado. */
+    fun openLimitEditor(packageName: String) {
+        editingLimitForPackage.value = packageName
+    }
+
+    /** Fecha o diálogo sem salvar alterações. */
+    fun dismissLimitEditor() {
+        editingLimitForPackage.value = null
+    }
+
+    /** Salva o novo limite diário (em minutos) e fecha o diálogo. Use null para remover o limite. */
+    fun confirmDailyLimit(packageName: String, minutes: Int?) {
+        viewModelScope.launch {
+            monitoredAppRepository.setDailyLimit(packageName, minutes)
+        }
+        editingLimitForPackage.value = null
     }
 }

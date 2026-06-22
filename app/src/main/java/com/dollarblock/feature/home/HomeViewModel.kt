@@ -7,7 +7,9 @@ import com.dollarblock.data.apps.InstalledAppsProvider
 import com.dollarblock.data.local.prefs.BlockPreferences
 import com.dollarblock.domain.model.RecentEvent
 import com.dollarblock.domain.repository.EventsRepository
+import com.dollarblock.domain.repository.MonitoredAppRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,12 +25,19 @@ data class HomeUiState(
     val selectedPackage: String? = null,
     val loadingApps: Boolean = true,
     val recentEvents: List<RecentEvent> = emptyList(),
+    /** Número de 0 a 100, ou null se nenhum app monitorado tem limite definido hoje. */
+    val dailyScore: Int? = null,
+    /** Minutos economizados hoje (soma de limite − usado, só quando positivo). */
+    val timeSavedMinutes: Int = 0,
+    /** Quantidade de apps monitorados com limite diário definido. */
+    val activeLimitsCount: Int = 0,
 )
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val installedAppsProvider: InstalledAppsProvider,
     private val blockPreferences: BlockPreferences,
+    monitoredAppRepository: MonitoredAppRepository,
     eventsRepository: EventsRepository,
 ) : ViewModel() {
 
@@ -36,19 +45,33 @@ class HomeViewModel @Inject constructor(
     private val loading = MutableStateFlow(true)
     private val selected = MutableStateFlow<String?>(null)
 
+    /**
+     * `combine` com lambda tipada só existe nativamente até 5 flows; agrupamos
+     * `installedApps`+`loading` (ambos sobre o mesmo carregamento) em um único flow
+     * auxiliar primeiro, para caber nesse limite sem recorrer a casts de `Array<*>`.
+     */
+    private val installedAppsState: Flow<Pair<List<InstalledApp>, Boolean>> =
+        combine(installedApps, loading) { apps, isLoading -> apps to isLoading }
+
     val uiState: StateFlow<HomeUiState> = combine(
-        installedApps,
+        installedAppsState,
         blockPreferences.blockedPackages,
         selected,
-        loading,
         eventsRepository.recentEvents(RECENT_EVENTS_LIMIT),
-    ) { apps, blocked, selectedPkg, isLoading, events ->
+        monitoredAppRepository.observeMonitoredAppsUsage(),
+    ) { (apps, isLoading), blocked, selectedPkg, events, monitoredUsage ->
+        // Cálculo das métricas do dia é lógica pura testável — ver HomeMetrics / HomeMetricsTest.
+        val metrics = HomeMetrics.compute(monitoredUsage)
+
         HomeUiState(
             installedApps = apps,
             blockedPackages = blocked,
             selectedPackage = selectedPkg,
             loadingApps = isLoading,
             recentEvents = events,
+            dailyScore = metrics.score,
+            timeSavedMinutes = metrics.timeSavedMinutes,
+            activeLimitsCount = metrics.activeLimitsCount,
         )
     }.stateIn(
         scope = viewModelScope,

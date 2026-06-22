@@ -91,11 +91,17 @@ reabrir o app pula o onboarding. ✅ **Validado.** **Depende de E1.**
 **Objetivo:** usuário escolhe apps e define limites diários.
 
 **Entregáveis**
-- Data source `PackageManager`: apps instalados (ícone, nome, package).
-- Tela Apps: lista, toggle de monitoramento, definição de limite diário, uso atual vs limite.
-- Persistência em `MonitoredApp`.
+- Data source `PackageManager`: apps instalados (ícone, nome, package). ✅
+- Tela Apps: lista, toggle de monitoramento, uso atual vs limite (barra de progresso). ✅
+- **Definição de limite diário pela UI**: toque na linha do app abre `DailyLimitDialog`
+  (campo numérico em minutos, validação > 0, opção "Remover limite"). ✅
+- **Busca por nome**: campo de busca no topo da lista (`AppsSearchField`), filtra em tempo
+  real por `label`, com mensagem de "nenhum resultado" e botão de limpar. ✅
+- Persistência em `MonitoredAppEntity.dailyLimitMinutes` (Room), via
+  `MonitoredAppRepository.setDailyLimit`.
 
-**Aceite:** ativar/desativar e definir limite persiste e reflete na lista. **Depende de E1.**
+**Aceite:** ativar/desativar, definir limite e buscar por nome persistem e refletem na
+lista. ✅ **Validado.** **Depende de E1.**
 
 ---
 
@@ -115,32 +121,61 @@ reabrir o app pula o onboarding. ✅ **Validado.** **Depende de E1.**
 ## E5 — Bloqueio (Blocking Engine)
 **Objetivo:** detectar limite atingido e bloquear o app com tela própria.
 
-**Entregue antecipadamente (fatia mínima — validada no emulador):**
+**Entregue (validado no emulador):**
 - `DollarBlockAccessibilityService` detecta o app em foreground e abre a `BlockActivity`
   (tela de bloqueio DollarBlock) por cima.
 - Controle na Home: **seletor de apps instalados** (`InstalledAppsProvider` via PackageManager)
   + **botão habilitar/desabilitar** bloqueio por app.
 - Conjunto de bloqueados persistido em DataStore (`BlockPreferences`), compartilhado UI↔serviço.
 - Detecção de status do serviço de Acessibilidade na Home + atalho para Configurações.
+- **Disparo por uso ≥ limite**: a cada troca de janela, o serviço também checa de forma
+  assíncrona (`MonitoredAppDao` + `UsageStatsProvider.getTodayUsageMinutes`) se o app é
+  monitorado, tem `dailyLimitMinutes` definido e já atingiu o limite hoje — nesse caso
+  bloqueia igual ao bloqueio manual, respeitando a mesma janela de desbloqueio pago
+  (`BlockPreferences.isUnlockWindowExpired`). ✅
+- **Polling enquanto um app monitorado fica em foreground** (sem trocar de janela, ex.:
+  rolando um feed por minutos): sem isso, nem o uso na tela Apps nem o bloqueio por
+  limite avançavam até o usuário fechar/reabrir o app. Resolvido com um loop de coroutine
+  no próprio `DollarBlockAccessibilityService` que, a cada 3s (`POLL_INTERVAL_MS`), chama
+  `MonitoredAppRepository.syncTodayUsage()` (atualiza Room → UI via Flow) e reavalia o
+  limite. É iniciado/parado por app conforme o foreground muda. ✅
 
-**Restante do E5 (depende de E1/E4):**
-- Disparo por **uso ≥ limite** (em vez de bloqueio binário).
-- Registrar `BlockEvent`; **Unlock** com `UnlockEvent` (`penaltyAmount` simulado) e janela
-  `unlockUntil`. Migrar bloqueado-set para Room.
+**Restante do E5 (depende de E1):**
+- Migrar o conjunto bloqueado-manualmente de DataStore para Room (unificar com
+  `MonitoredAppEntity`).
+- Tipar o motivo do bloqueio no `BlockEvent` (manual vs. limite diário) para exibir
+  diferenciado no histórico (E8).
 
 **Aceite (fatia atual):** app selecionado e bloqueado pela Home → abre bloqueado mostra a
-tela do DollarBlock; desabilitar libera o acesso. ✅ **Validado.**
+tela do DollarBlock; desabilitar libera o acesso. App monitorado que atinge o limite
+diário também é bloqueado automaticamente ao ser aberto. ✅ **Validado.**
 
 ---
 
 ## E6 — Home (dashboard)
 **Objetivo:** painel diário motivador.
 
-**Entregáveis**
-- Daily Score, Time Saved (hoje), Active Limits (qtd monitorada), Recent Events (últimos bloqueios).
-- ViewModel agregando repositórios via `Flow`; estados loading/vazio/erro.
+**Entregue (validado):**
+- `HomeViewModel` combina `MonitoredAppRepository.observeMonitoredAppsUsage()` com os
+  demais flows da Home para calcular, em tempo real, somente sobre apps monitorados
+  **com `dailyLimitMinutes` definido** (apps sem limite não entram em nenhuma das 3 métricas):
+  - **Active Limits**: contagem desses apps.
+  - **Time Saved (hoje)**: soma de `max(0, limite − usado)` entre eles, em minutos.
+  - **Daily Score** (0–100): média entre apps de `(limite − usado)/limite`, cada termo
+    limitado a [0, 1] antes da média (um app muito acima do limite contribui com 0,
+    nunca negativo, para não arrastar a média injustamente). `null` (exibido como “—”)
+    se nenhum app monitorado tem limite definido ainda.
+  - Pagamentos (`BlockPreferences.grantUnlock`) não alteram `dailyLimitMinutes` — só criam
+    uma janela de trégua onde o bloqueio é ignorado — entao o tempo usado durante essa
+    janela continua contando contra o limite normalmente nas 3 métricas, sem lógica extra.
+- Daily Score / Time Saved / Active Limits exibidos na Home com dados reais.
+- Recent Events (já entregue no E1) permanece.
 
-**Aceite:** Home reflete dados reais de uso, limites e eventos. **Depende de E1, E4, E5.**
+**Restante:** nenhum por ora — ViewModel/UI prontos. Streak/histórico de scores fica
+para mais adiante se fizer sentido.
+
+**Aceite:** Home reflete dados reais de uso, limites e eventos. ✅ **Validado.**
+**Depende de E1, E4, E5.**
 
 ---
 
@@ -150,6 +185,11 @@ tela do DollarBlock; desabilitar libera o acesso. ✅ **Validado.**
 **Entregáveis**
 - Agregações diário / semanal / mensal sobre `DailyUsage`.
 - Gráficos simples (Compose Canvas ou lib leve).
+- **Score semanal por app** (ideia definida em 23/06): para cada app monitorado *com*
+  `dailyLimitMinutes` definido, média dos últimos 7 dias de `(limite − usado)/limite`
+  (mesma lógica de pontuação do Daily Score do E6, porém por app e numa janela semanal).
+  Apps sem limite não entram. Precisa de histórico mínimo acumulado em `DailyUsageEntity`
+  para fazer sentido visualmente.
 
 **Aceite:** gráficos renderizam com dados reais nos três períodos. **Depende de E1, E4.**
 
@@ -194,6 +234,26 @@ tela do DollarBlock; desabilitar libera o acesso. ✅ **Validado.**
 - Estados loading/erro/vazio padronizados; acessibilidade; revisão de tom de voz.
 - Testes: unit (use cases), DAO (Room in-memory); smoke manual do fluxo de bloqueio.
 - Config de build release.
+
+**Entregue (fatia — fluxo de trabalho paralelo & testes):**
+- **Colaboração 2 devs:** `CONTRIBUTING.md` (branches, rebase, divisão por feature),
+  `.github/CODEOWNERS` (donos por área + auto-review), `docs/MERGE_HOTSPOTS.md`
+  (técnicas anti-conflito nos arquivos compartilhados).
+- **DI por feature:** `DatabaseModule` agora provê só o DB; `EventsModule` e
+  `MonitoredAppModule` provêm DAO + binding de cada feature (substituem o antigo
+  `RepositoryModule`) — dois devs raramente tocam o mesmo arquivo de DI.
+- **Navegação por feature:** rota + `NavGraphBuilder` extension no pacote de cada feature
+  (`<Nome>Navigation.kt`); `DollarBlockNavHost` apenas as compõe.
+- **Testabilidade:** cálculo das métricas da Home extraído para `HomeMetrics` (puro) com
+  `HomeMetricsTest`; padrão "lógica testável fora de ViewModel/Composable" documentado.
+- **Gate de qualidade:** git hook `.githooks/pre-push` (versionado) roda
+  `:app:testDebugUnitTest` e aborta o push se falhar. Ativar com
+  `git config core.hooksPath .githooks`.
+
+**Restante:**
+- Estados loading/erro/vazio padronizados; acessibilidade; revisão de tom de voz.
+- Testes de DAO (Room in-memory) e de ViewModels; smoke manual do fluxo de bloqueio.
+- Config de build release; (futuro) CI rodando os mesmos testes no PR.
 
 **Aceite:** suíte de testes verde; fluxo principal validado manualmente.
 

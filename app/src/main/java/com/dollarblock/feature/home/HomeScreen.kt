@@ -75,8 +75,9 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 /**
- * Home — painel diário + controle de bloqueio de apps (E5).
- * O card de bloqueio é funcional; os demais cartões ainda usam placeholders.
+ * Home — painel diário + controle de bloqueio de apps (E5/E6).
+ * Os 3 cards de métrica (Daily Score, Time Saved, Active Limits) e o card de bloqueio
+ * usam dados reais, derivados de `MonitoredAppRepository` e `BlockPreferences`.
  */
 @Composable
 fun HomeScreen(
@@ -114,14 +115,14 @@ fun HomeScreen(
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             MetricCard(
                 title = stringResource(R.string.home_daily_score),
-                value = "—",
+                value = uiState.dailyScore?.toString() ?: "—",
                 icon = Icons.Filled.Bolt,
-                subtitle = stringResource(R.string.coming_soon),
+                subtitle = if (uiState.dailyScore == null) stringResource(R.string.coming_soon) else null,
                 modifier = Modifier.weight(1f),
             )
             MetricCard(
                 title = stringResource(R.string.home_time_saved),
-                value = "0m",
+                value = formatSavedMinutes(uiState.timeSavedMinutes),
                 icon = Icons.Filled.Savings,
                 modifier = Modifier.weight(1f),
             )
@@ -129,7 +130,7 @@ fun HomeScreen(
 
         MetricCard(
             title = stringResource(R.string.home_active_limits),
-            value = uiState.blockedPackages.size.toString(),
+            value = uiState.activeLimitsCount.toString(),
             icon = Icons.Filled.Timer,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -141,6 +142,13 @@ fun HomeScreen(
             RecentEventsCard(events = uiState.recentEvents)
         }
     }
+}
+
+/** Formata minutos economizados como "1h 20m" (ou "45m" se for menos de 1h). */
+private fun formatSavedMinutes(totalMinutes: Int): String {
+    val hours = totalMinutes / 60
+    val minutes = totalMinutes % 60
+    return if (hours > 0) "${hours}h ${minutes}m" else "${minutes}m"
 }
 
 @Composable

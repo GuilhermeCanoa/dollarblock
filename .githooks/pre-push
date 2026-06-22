@@ -1,0 +1,37 @@
+#!/bin/sh
+#
+# DollarBlock — pre-push hook (versionado).
+# Roda os testes unitários antes de cada push e aborta se algum falhar,
+# protegendo master e as branches de integração. Ver CONTRIBUTING.md seção 6.
+#
+# Ative uma vez por clone:  git config core.hooksPath .githooks
+# Push emergencial (evite):  git push --no-verify
+
+echo "[pre-push] Rodando testes unitários antes do push…"
+
+# Aponta JAVA_HOME para a JBR do Android Studio se não houver JDK no PATH.
+if [ -z "$JAVA_HOME" ]; then
+  if [ -d "/c/Program Files/Android/Android Studio/jbr" ]; then
+    export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
+  elif [ -d "$HOME/android-studio/jbr" ]; then
+    export JAVA_HOME="$HOME/android-studio/jbr"
+  fi
+fi
+
+# Seleciona o wrapper correto por plataforma.
+case "$(uname -s)" in
+  MINGW* | MSYS* | CYGWIN*) GRADLEW="./gradlew.bat" ;;
+  *)                        GRADLEW="./gradlew" ;;
+esac
+
+"$GRADLEW" :app:testDebugUnitTest --console=plain --no-daemon
+STATUS=$?
+
+if [ "$STATUS" -ne 0 ]; then
+  echo "[pre-push] ❌ Testes falharam — push abortado. Corrija antes de enviar."
+  echo "[pre-push]    (emergência documentada: git push --no-verify)"
+  exit 1
+fi
+
+echo "[pre-push] ✅ Testes passaram — seguindo com o push."
+exit 0

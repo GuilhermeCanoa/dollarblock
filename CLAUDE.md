@@ -104,7 +104,15 @@ Single Gradle module (`:app`) with Clean Architecture packages. Dependency rule:
 
 ### Hilt modules
 
-Both live in `di/`: `DatabaseModule` provides the Room DB and DAOs; `RepositoryModule` binds interfaces to implementations.
+Split **per feature** in `di/` to minimize merge conflicts between parallel devs (see `docs/MERGE_HOTSPOTS.md`): `DatabaseModule` provides only the `DollarBlockDatabase`; `EventsModule` provides `EventDao` + binds `EventsRepository`; `MonitoredAppModule` provides `MonitoredAppDao`/`DailyUsageDao` + binds `MonitoredAppRepository`. Add a new feature's DI in its own module file — don't edit another feature's module.
+
+### Navigation (per feature)
+
+Each feature owns a `feature/<name>/<Name>Navigation.kt` declaring its route constant (e.g. `HOME_ROUTE`) and a `NavGraphBuilder.<name>Screen()` extension. `DollarBlockNavHost` just composes them (`homeScreen()`, `appsScreen()`, …) and `TopLevelDestination` references the route constants. Adding a screen is a one-line, conflict-free change.
+
+### Parallel-dev workflow
+
+Two devs work in parallel. `CONTRIBUTING.md` defines the workflow (feature-vertical ownership, rebase-before-PR, shared-file etiquette); `.github/CODEOWNERS` maps owners; `docs/MERGE_HOTSPOTS.md` lists conflict-prone files and anti-conflict techniques. A versioned `.githooks/pre-push` runs `:app:testDebugUnitTest` before every push (activate with `git config core.hooksPath .githooks`). Put business logic in pure functions (e.g. `feature/home/HomeMetrics.kt`) with JVM unit tests — not inside ViewModel `combine {}` or Composables.
 
 ---
 
@@ -116,5 +124,7 @@ Both live in `di/`: `DatabaseModule` provides the Room DB and DAOs; `RepositoryM
 - **E2** Onboarding & permissions ✅ — concept pager + guided requests for the 4 permissions; first-run routing via `OnboardingPreferences` flag (replaces the old Usage Access gate)
 - **E5** Blocking engine — minimum slice (manual on/off per app) ✅; usage-triggered blocking pending (needs E4)
 - **E9** Google Pay — test-mode slice ✅; production PSP pending
+- **E10** Quality (transversal) — parallel-dev workflow + per-feature DI/Navigation + unit-test
+  scaffolding (`HomeMetrics`) + pre-push test gate ✅; DAO/ViewModel tests + CI pending
 
 Docs: `docs/ROADMAP.md` (epics + acceptance criteria), `docs/ARCHITECTURE.md` (ADRs + data model).

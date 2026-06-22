@@ -43,6 +43,13 @@ class UsageStatsProvider @Inject constructor(
     /**
      * Retorna o tempo de uso (em millis) de cada app, agregado desde a meia-noite
      * local (epochDay do dispositivo) até agora.
+     *
+     * IMPORTANTE: `UsageStats.totalTimeInForeground` só contabiliza sessões já
+     * *fechadas* (quando o app sai do foreground) — o app atualmente em foreground
+     * ainda não teve sua sessão em andamento contabilizada aqui. Use a sobrecarga
+     * [getTodayUsageByPackage] com `foregroundPackage`/`foregroundSinceMillis` para
+     * incluir esse tempo (o `DollarBlockAccessibilityService` conhece o momento exato
+     * em que o app monitorado entrou em foreground).
      */
     suspend fun getTodayUsageByPackage(): Map<String, Long> = withContext(Dispatchers.IO) {
         if (!hasUsageAccess()) return@withContext emptyMap()
@@ -56,6 +63,84 @@ class UsageStatsProvider @Inject constructor(
             .filterValues { it > 0L }
     }
 
+    /**
+     * Versão de [getTodayUsageByPackage] que soma, ao agregado já fechado, o tempo da
+     * sessão em andamento de [foregroundPackage] (se informado), contado a partir de
+     * [foregroundSinceMillis] (epoch millis de quando esse app entrou em foreground).
+     * Use esta versão quando houver um app monitorado atualmente aberto, para que o
+     * uso sincronizado em Room (e refletido na tela Apps) não fique "congelado" até
+     * o usuário sair do app.
+     */
+    suspend fun getTodayUsageByPackage(
+        foregroundPackage: String?,
+        foregroundSinceMillis: Long?,
+    ): Map<String, Long> = withContext(Dispatchers.IO) {
+        if (!hasUsageAccess()) return@withContext emptyMap()
+
+        val zone = ZoneId.systemDefault()
+        val startOfDay = LocalDate.now(zone).atStartOfDay(zone).toInstant().toEpochMilli()
+        val now = System.currentTimeMillis()
+
+        val closed = usageStatsManager.queryAndAggregateUsageStats(startOfDay, now)
+            .mapValues { (_, stats) -> stats.totalTimeInForeground }
+            .filterValues { it > 0L }
+
+        if (foregroundPackage == null || foregroundSinceMillis == null || foregroundSinceMillis !in startOfDay..now) {
+            return@withContext closed
+        }
+
+        val ongoingMillis = now - foregroundSinceMillis
+        closed + (foregroundPackage to (closed[foregroundPackage] ?: 0L) + ongoingMillis)
+    }
+
     /** epochDay local consistente com o usado nas entidades Room. */
     fun currentEpochDay(): Long = LocalDate.now(ZoneId.systemDefault()).toEpochDay()
+
+    /**
+     * Tempo de uso de hoje (em minutos) de um único app, desde a meia-noite local.
+     * Usado pelo `DollarBlockAccessibilityService` para decidir bloqueio em tempo real,
+     * sem precisar agregar o uso de todos os apps instalados a cada troca de janela.
+     *
+     * IMPORTANTE: `UsageStats.totalTimeInForeground` só contabiliza sessões já *fechadas*
+     * (quando o app sai do foreground) — enquanto o app permanece aberto, esse valor fica
+     * "congelado" no que já era verdade quando ele abriu. Para refletir o tempo em tempo
+     * real, use [getTodayUsageMinutesIncludingOngoingSession].
+     */
+    suspend fun getTodayUsageMinutes(packageName: String): Int = withContext(Dispatchers.IO) {
+        if (!hasUsageAccess()) return@withContext 0
+
+        val zone = ZoneId.systemDefault()
+        val startOfDay = LocalDate.now(zone).atStartOfDay(zone).toInstant().toEpochMilli()
+        val now = System.currentTimeMillis()
+
+        val usedMillis = usageStatsManager.queryAndAggregateUsageStats(startOfDay, now)[packageName]
+            ?.totalTimeInForeground ?: 0L
+        (usedMillis / 60_000L).toInt()
+    }
+
+    /**
+     * Tempo de uso de hoje (em minutos) de [packageName], somando o agregado já fechado
+     * (`totalTimeInForeground`) com a sessão atual em andamento, caso [foregroundSinceMillis]
+     * seja informado (epoch millis de quando o app entrou em foreground agora). Isso evita a
+     * defasagem de [getTodayUsageMinutes] enquanto o app permanece aberto sem trocar de janela.
+     */
+    suspend fun getTodayUsageMinutesIncludingOngoingSession(
+        packageName: String,
+        foregroundSinceMillis: Long?,
+    ): Int = withContext(Dispatchers.IO) {
+        if (!hasUsageAccess()) return@withContext 0
+
+        val zone = ZoneId.systemDefault()
+        val startOfDay = LocalDate.now(zone).atStartOfDay(zone).toInstant().toEpochMilli()
+        val now = System.currentTimeMillis()
+
+        val closedMillis = usageStatsManager.queryAndAggregateUsageStats(startOfDay, now)[packageName]
+            ?.totalTimeInForeground ?: 0L
+        val ongoingMillis = if (foregroundSinceMillis != null && foregroundSinceMillis in startOfDay..now) {
+            now - foregroundSinceMillis
+        } else {
+            0L
+        }
+        ((closedMillis + ongoingMillis) / 60_000L).toInt()
+    }
 }
