@@ -155,11 +155,27 @@ diário também é bloqueado automaticamente ao ser aberto. ✅ **Validado.**
 ## E6 — Home (dashboard)
 **Objetivo:** painel diário motivador.
 
-**Entregáveis**
-- Daily Score, Time Saved (hoje), Active Limits (qtd monitorada), Recent Events (últimos bloqueios).
-- ViewModel agregando repositórios via `Flow`; estados loading/vazio/erro.
+**Entregue (validado):**
+- `HomeViewModel` combina `MonitoredAppRepository.observeMonitoredAppsUsage()` com os
+  demais flows da Home para calcular, em tempo real, somente sobre apps monitorados
+  **com `dailyLimitMinutes` definido** (apps sem limite não entram em nenhuma das 3 métricas):
+  - **Active Limits**: contagem desses apps.
+  - **Time Saved (hoje)**: soma de `max(0, limite − usado)` entre eles, em minutos.
+  - **Daily Score** (0–100): média entre apps de `(limite − usado)/limite`, cada termo
+    limitado a [0, 1] antes da média (um app muito acima do limite contribui com 0,
+    nunca negativo, para não arrastar a média injustamente). `null` (exibido como “—”)
+    se nenhum app monitorado tem limite definido ainda.
+  - Pagamentos (`BlockPreferences.grantUnlock`) não alteram `dailyLimitMinutes` — só criam
+    uma janela de trégua onde o bloqueio é ignorado — entao o tempo usado durante essa
+    janela continua contando contra o limite normalmente nas 3 métricas, sem lógica extra.
+- Daily Score / Time Saved / Active Limits exibidos na Home com dados reais.
+- Recent Events (já entregue no E1) permanece.
 
-**Aceite:** Home reflete dados reais de uso, limites e eventos. **Depende de E1, E4, E5.**
+**Restante:** nenhum por ora — ViewModel/UI prontos. Streak/histórico de scores fica
+para mais adiante se fizer sentido.
+
+**Aceite:** Home reflete dados reais de uso, limites e eventos. ✅ **Validado.**
+**Depende de E1, E4, E5.**
 
 ---
 
@@ -169,6 +185,11 @@ diário também é bloqueado automaticamente ao ser aberto. ✅ **Validado.**
 **Entregáveis**
 - Agregações diário / semanal / mensal sobre `DailyUsage`.
 - Gráficos simples (Compose Canvas ou lib leve).
+- **Score semanal por app** (ideia definida em 23/06): para cada app monitorado *com*
+  `dailyLimitMinutes` definido, média dos últimos 7 dias de `(limite − usado)/limite`
+  (mesma lógica de pontuação do Daily Score do E6, porém por app e numa janela semanal).
+  Apps sem limite não entram. Precisa de histórico mínimo acumulado em `DailyUsageEntity`
+  para fazer sentido visualmente.
 
 **Aceite:** gráficos renderizam com dados reais nos três períodos. **Depende de E1, E4.**
 
