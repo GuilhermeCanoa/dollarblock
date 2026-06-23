@@ -81,7 +81,13 @@ class DollarBlockAccessibilityService : AccessibilityService() {
         if (event?.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
         val packageName = event.packageName?.toString() ?: return
 
-        if (packageName == getPackageName()) return
+        if (packageName == getPackageName()) {
+            // DollarBlock entrou em foreground — cancela rastreamento do app anterior
+            // para não disparar bloqueio por cima do próprio app.
+            lastForegroundPackage = packageName
+            stopTracking()
+            return
+        }
 
         // Ignora mudanças internas dentro do mesmo app — só processa quando o package muda.
         val packageChanged = packageName != lastForegroundPackage

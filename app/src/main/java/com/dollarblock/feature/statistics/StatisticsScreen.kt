@@ -16,42 +16,42 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.dollarblock.R
 import com.dollarblock.core.designsystem.DollarBlockTheme
 import com.dollarblock.core.designsystem.components.MetricCard
-import com.dollarblock.core.designsystem.components.PreviewBanner
 import com.dollarblock.core.designsystem.components.ScreenHeader
 import com.dollarblock.core.designsystem.components.SectionHeader
 
-/**
- * Statistics — uso por período com gráfico simples e resumo.
- * No E0.5 usa dados mock; o E7 substitui por agregações reais de DailyUsage.
- */
 @Composable
-fun StatisticsScreen(modifier: Modifier = Modifier) {
-    var period by remember { mutableStateOf(StatPeriod.WEEKLY) }
-    val data = previewData.getValue(period)
+fun StatisticsScreen(
+    modifier: Modifier = Modifier,
+    viewModel: StatisticsViewModel = hiltViewModel(),
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    val period by viewModel.period.collectAsState()
 
     Column(
         modifier = modifier
@@ -64,13 +64,12 @@ fun StatisticsScreen(modifier: Modifier = Modifier) {
             title = stringResource(R.string.statistics_title),
             subtitle = stringResource(R.string.statistics_subtitle),
         )
-        PreviewBanner()
 
         SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
             StatPeriod.entries.forEachIndexed { index, entry ->
                 SegmentedButton(
                     selected = period == entry,
-                    onClick = { period = entry },
+                    onClick = { viewModel.period.value = entry },
                     shape = SegmentedButtonDefaults.itemShape(index, StatPeriod.entries.size),
                 ) {
                     Text(stringResource(entry.labelRes))
@@ -79,27 +78,41 @@ fun StatisticsScreen(modifier: Modifier = Modifier) {
         }
 
         SectionHeader(text = stringResource(R.string.stat_usage_overview))
-        UsageChartCard(values = data.values, labels = data.labels)
+
+        if (uiState.chartValues.isEmpty()) {
+            // Diário sem nenhum app monitorado ainda
+            EmptyChartCard()
+        } else {
+            // Barras com altura zero quando sem uso — preenchem de baixo para cima conforme o uso cresce
+            UsageChartCard(values = uiState.chartValues, labels = uiState.chartLabels)
+        }
 
         MetricCard(
             title = stringResource(R.string.stat_most_used),
-            value = data.mostUsed,
+            value = uiState.mostUsed,
             icon = Icons.Filled.EmojiEvents,
             modifier = Modifier.fillMaxWidth(),
         )
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             MetricCard(
                 title = stringResource(R.string.stat_total_time),
-                value = data.totalTime,
+                value = uiState.totalTime,
                 icon = Icons.Filled.Schedule,
                 modifier = Modifier.weight(1f),
             )
             MetricCard(
                 title = stringResource(R.string.stat_blocks),
-                value = data.blocks.toString(),
+                value = uiState.blocks.toString(),
                 icon = Icons.Filled.Block,
                 modifier = Modifier.weight(1f),
             )
+        }
+
+        if (uiState.weeklyScores.isNotEmpty()) {
+            SectionHeader(text = stringResource(R.string.stat_weekly_score))
+            uiState.weeklyScores.forEach { appScore ->
+                AppScoreCard(appScore = appScore)
+            }
         }
     }
 }
@@ -132,14 +145,12 @@ private fun UsageChartCard(
                 values.forEachIndexed { index, value ->
                     val barHeight = (value / maxValue) * size.height
                     val left = index * slot + (slot - barWidth) / 2f
-                    // trilho de fundo
                     drawRoundRect(
                         color = trackColor,
                         topLeft = Offset(left, 0f),
                         size = Size(barWidth, size.height),
                         cornerRadius = radius,
                     )
-                    // barra
                     drawRoundRect(
                         color = if (value >= maxValue) highlightColor else barColor,
                         topLeft = Offset(left, size.height - barHeight),
@@ -156,6 +167,8 @@ private fun UsageChartCard(
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -164,43 +177,77 @@ private fun UsageChartCard(
     }
 }
 
-private enum class StatPeriod(@StringRes val labelRes: Int) {
-    DAILY(R.string.stat_period_daily),
-    WEEKLY(R.string.stat_period_weekly),
-    MONTHLY(R.string.stat_period_monthly),
+@Composable
+private fun EmptyChartCard(modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.stat_no_data),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(32.dp),
+        )
+    }
 }
 
-private data class StatData(
-    val values: List<Float>,
-    val labels: List<String>,
-    val totalTime: String,
-    val mostUsed: String,
-    val blocks: Int,
-)
+@Composable
+private fun AppScoreCard(appScore: AppScore, modifier: Modifier = Modifier) {
+    val scoreColor = when {
+        appScore.score >= 0.7f -> DollarBlockTheme.colors.success
+        appScore.score >= 0.4f -> DollarBlockTheme.colors.alert
+        else -> DollarBlockTheme.colors.penalty
+    }
 
-private val previewData: Map<StatPeriod, StatData> = mapOf(
-    StatPeriod.DAILY to StatData(
-        values = listOf(10f, 25f, 18f, 42f, 30f, 55f),
-        labels = listOf("0h", "4h", "8h", "12h", "16h", "20h"),
-        totalTime = "3h 10m",
-        mostUsed = "Instagram",
-        blocks = 2,
-    ),
-    StatPeriod.WEEKLY to StatData(
-        values = listOf(45f, 60f, 38f, 72f, 90f, 120f, 80f),
-        labels = listOf("Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"),
-        totalTime = "8h 25m",
-        mostUsed = "TikTok",
-        blocks = 9,
-    ),
-    StatPeriod.MONTHLY to StatData(
-        values = listOf(320f, 410f, 280f, 500f),
-        labels = listOf("Sem 1", "Sem 2", "Sem 3", "Sem 4"),
-        totalTime = "25h 10m",
-        mostUsed = "YouTube",
-        blocks = 31,
-    ),
-)
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    text = appScore.appName,
+                    style = MaterialTheme.typography.titleSmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                LinearProgressIndicator(
+                    progress = { appScore.score },
+                    modifier = Modifier.fillMaxWidth(),
+                    color = scoreColor,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                )
+                Text(
+                    text = "${appScore.usedMinutes}m / ${appScore.limitMinutes}m hoje",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Text(
+                text = "${(appScore.score * 100).toInt()}",
+                style = MaterialTheme.typography.headlineSmall,
+                color = scoreColor,
+            )
+        }
+    }
+}
+
+private val StatPeriod.labelRes: Int
+    @StringRes get() = when (this) {
+        StatPeriod.DAILY -> R.string.stat_period_daily
+        StatPeriod.WEEKLY -> R.string.stat_period_weekly
+        StatPeriod.MONTHLY -> R.string.stat_period_monthly
+    }
 
 @Preview(showBackground = true)
 @Composable
