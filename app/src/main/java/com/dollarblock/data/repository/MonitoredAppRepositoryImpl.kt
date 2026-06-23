@@ -1,5 +1,6 @@
 package com.dollarblock.data.repository
 
+import android.util.Log
 import com.dollarblock.data.local.db.DailyUsageDao
 import com.dollarblock.data.local.db.MonitoredAppDao
 import com.dollarblock.data.local.db.MonitoredAppEntity
@@ -26,7 +27,8 @@ class MonitoredAppRepositoryImpl @Inject constructor(
         ) { apps, usageToday ->
             val usageByPackage = usageToday.associateBy { it.packageName }
             apps.map { app ->
-                val usedMillis = usageByPackage[app.packageName]?.usedMillis ?: 0L
+                val rawMillis = usageByPackage[app.packageName]?.usedMillis ?: 0L
+                val usedMillis = (rawMillis - app.usageBaselineMillis).coerceAtLeast(0L)
                 MonitoredAppUsage(
                     packageName = app.packageName,
                     appName = app.appName,
@@ -38,11 +40,22 @@ class MonitoredAppRepositoryImpl @Inject constructor(
         }
     }
 
+    private companion object { const val TAG = "DollarBlockRepo" }
+
     override suspend fun setMonitored(packageName: String, appName: String, isMonitored: Boolean) {
         val existing = monitoredAppDao.getByPackage(packageName)
         if (existing != null) {
             monitoredAppDao.setMonitored(packageName, isMonitored)
+            if (isMonitored && existing.usageBaselineMillis == 0L) {
+                val baseline = usageStatsProvider.getTodayUsageMillisViaEvents(packageName)
+                monitoredAppDao.setUsageBaseline(packageName, baseline)
+            }
         } else {
+            val baseline = if (isMonitored) {
+                usageStatsProvider.getTodayUsageMillisViaEvents(packageName)
+            } else {
+                0L
+            }
             monitoredAppDao.upsert(
                 MonitoredAppEntity(
                     packageName = packageName,
@@ -50,6 +63,7 @@ class MonitoredAppRepositoryImpl @Inject constructor(
                     isMonitored = isMonitored,
                     dailyLimitMinutes = null,
                     createdAt = System.currentTimeMillis(),
+                    usageBaselineMillis = baseline,
                 ),
             )
         }
@@ -77,16 +91,27 @@ class MonitoredAppRepositoryImpl @Inject constructor(
         val monitoredPackages = monitoredAppDao.getMonitoredPackages().toSet()
         if (monitoredPackages.isEmpty()) return
 
-        val usageByPackage = usageStatsProvider.getTodayUsageByPackage(foregroundPackage, foregroundSinceMillis)
-        usageByPackage
-            .filterKeys { it in monitoredPackages }
-            .forEach { (packageName, usedMillis) ->
-                dailyUsageDao.upsertUsage(
-                    packageName = packageName,
-                    epochDay = today,
-                    usedMillis = usedMillis,
-                    updatedAt = System.currentTimeMillis(),
-                )
+        val usageByPackage = usageStatsProvider.getTodayUsageMillisViaEvents(
+            packages = monitoredPackages,
+            ongoingPackage = foregroundPackage,
+            ongoingSessionSince = foregroundSinceMillis,
+        )
+        Log.d(TAG, "syncTodayUsage: events=$usageByPackage fg=$foregroundPackage")
+        val now = System.currentTimeMillis()
+        monitoredPackages.forEach { packageName ->
+            val rawMillis = usageByPackage[packageName] ?: return@forEach
+            val app = monitoredAppDao.getByPackage(packageName)
+            if (app != null && rawMillis < app.usageBaselineMillis) {
+                // Baseline desatualizado (capturado com método diferente) — corrige para o raw atual
+                monitoredAppDao.setUsageBaseline(packageName, rawMillis)
+                Log.d(TAG, "baseline reset for $packageName: was=${app.usageBaselineMillis} raw=$rawMillis")
             }
+            dailyUsageDao.upsertUsage(
+                packageName = packageName,
+                epochDay = today,
+                usedMillis = rawMillis,
+                updatedAt = now,
+            )
+        }
     }
 }

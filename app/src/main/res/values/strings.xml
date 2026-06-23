@@ -34,7 +34,8 @@
     <string name="apps_subtitle">Escolha o que monitorar e defina limites diários.</string>
     <string name="apps_search_placeholder">Buscar app…</string>
     <string name="apps_search_clear">Limpar busca</string>
-    <string name="apps_search_empty">Nenhum app encontrado para “%1$s”.</string>
+    <string name="apps_search_empty">Nenhum app encontrado para %1$s.</string>
+    <string name="apps_empty_state">Pesquise um app acima para comecar a monitorar.</string>
     <string name="apps_limit_dialog_title">Limite diário · %1$s</string>
     <string name="apps_limit_dialog_body">Defina por quantos minutos por dia este app pode ser usado antes de bloquear.</string>
     <string name="apps_limit_dialog_minutes_label">Minutos por dia</string>

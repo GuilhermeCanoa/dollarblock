@@ -1,6 +1,7 @@
 package com.dollarblock.data.usage
 
 import android.app.AppOpsManager
+import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.Intent
@@ -91,6 +92,98 @@ class UsageStatsProvider @Inject constructor(
 
         val ongoingMillis = now - foregroundSinceMillis
         closed + (foregroundPackage to (closed[foregroundPackage] ?: 0L) + ongoingMillis)
+    }
+
+    /**
+     * Calcula o tempo de uso de [packageName] hoje via eventos individuais
+     * (ACTIVITY_RESUMED / ACTIVITY_PAUSED), somando cada sessão fechada.
+     * Se [ongoingSessionSince] for informado, inclui também o tempo da sessão em andamento.
+     * Retorna milissegundos totais de uso desde a meia-noite local.
+     */
+    suspend fun getTodayUsageMillisViaEvents(
+        packageName: String,
+        ongoingSessionSince: Long? = null,
+    ): Long = withContext(Dispatchers.IO) {
+        if (!hasUsageAccess()) return@withContext 0L
+
+        val zone = ZoneId.systemDefault()
+        val startOfDay = LocalDate.now(zone).atStartOfDay(zone).toInstant().toEpochMilli()
+        val now = System.currentTimeMillis()
+
+        val events = usageStatsManager.queryEvents(startOfDay, now)
+        var totalMillis = 0L
+        var resumeTime = -1L
+        val event = UsageEvents.Event()
+
+        while (events.hasNextEvent()) {
+            events.getNextEvent(event)
+            if (event.packageName != packageName) continue
+            when (event.eventType) {
+                UsageEvents.Event.ACTIVITY_RESUMED -> resumeTime = event.timeStamp
+                UsageEvents.Event.ACTIVITY_PAUSED,
+                UsageEvents.Event.ACTIVITY_STOPPED -> {
+                    if (resumeTime >= 0L) {
+                        totalMillis += event.timeStamp - resumeTime
+                        resumeTime = -1L
+                    }
+                }
+            }
+        }
+
+        // Sessão em andamento (fornecida pelo serviço de acessibilidade)
+        val sessionStart = ongoingSessionSince ?: if (resumeTime >= 0L) resumeTime else -1L
+        if (sessionStart in startOfDay..now) {
+            totalMillis += now - sessionStart
+        }
+
+        totalMillis
+    }
+
+    /**
+     * Versão multi-app de [getTodayUsageMillisViaEvents]: percorre os eventos uma única vez
+     * e acumula o uso de todos os apps em [packages]. [ongoingPackage]/[ongoingSessionSince]
+     * adicionam a sessão em andamento do app atualmente em foreground.
+     */
+    suspend fun getTodayUsageMillisViaEvents(
+        packages: Set<String>,
+        ongoingPackage: String? = null,
+        ongoingSessionSince: Long? = null,
+    ): Map<String, Long> = withContext(Dispatchers.IO) {
+        if (!hasUsageAccess() || packages.isEmpty()) return@withContext emptyMap()
+
+        val zone = ZoneId.systemDefault()
+        val startOfDay = LocalDate.now(zone).atStartOfDay(zone).toInstant().toEpochMilli()
+        val now = System.currentTimeMillis()
+
+        val totals = mutableMapOf<String, Long>()
+        val resumes = mutableMapOf<String, Long>()
+        val events = usageStatsManager.queryEvents(startOfDay, now)
+        val event = UsageEvents.Event()
+
+        while (events.hasNextEvent()) {
+            events.getNextEvent(event)
+            val pkg = event.packageName
+            if (pkg !in packages) continue
+            when (event.eventType) {
+                UsageEvents.Event.ACTIVITY_RESUMED -> resumes[pkg] = event.timeStamp
+                UsageEvents.Event.ACTIVITY_PAUSED,
+                UsageEvents.Event.ACTIVITY_STOPPED -> {
+                    val start = resumes.remove(pkg) ?: continue
+                    totals[pkg] = (totals[pkg] ?: 0L) + (event.timeStamp - start)
+                }
+            }
+        }
+
+        // Sessão em andamento do app em foreground
+        if (ongoingPackage != null && ongoingSessionSince != null && ongoingPackage in packages) {
+            val sessionStart = if (ongoingSessionSince in startOfDay..now) ongoingSessionSince
+                              else resumes[ongoingPackage] ?: -1L
+            if (sessionStart >= startOfDay) {
+                totals[ongoingPackage] = (totals[ongoingPackage] ?: 0L) + (now - sessionStart)
+            }
+        }
+
+        totals
     }
 
     /** epochDay local consistente com o usado nas entidades Room. */

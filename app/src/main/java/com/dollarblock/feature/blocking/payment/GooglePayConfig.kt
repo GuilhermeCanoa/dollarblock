@@ -22,7 +22,7 @@ object GooglePayConfig {
     const val CURRENCY_CODE = "BRL"
 
     /** Duração da liberação após o pagamento. */
-    const val UNLOCK_WINDOW_MINUTES = 15
+    const val UNLOCK_WINDOW_MINUTES = 5
     val UNLOCK_WINDOW_MS: Long = TimeUnit.MINUTES.toMillis(UNLOCK_WINDOW_MINUTES.toLong())
 
     private const val ENVIRONMENT = WalletConstants.ENVIRONMENT_TEST
