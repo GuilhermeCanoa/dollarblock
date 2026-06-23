@@ -100,7 +100,10 @@ class DollarBlockAccessibilityService : AccessibilityService() {
         scope.launch {
             val app = monitoredAppDao.getByPackage(packageName)
             if (app == null || !app.isMonitored) {
-                handler.post { stopTracking() }
+                // Só cancela o rastreamento se o app monitorado foi realmente substituído
+                // (não cancela por overlays/IME, que não disparam novo evento ao fechar).
+                // scheduleTracking já cuida disso: se outro app monitorado entrar em foreground,
+                // ele chama stopTracking() explicitamente.
                 return@launch
             }
 
@@ -113,12 +116,7 @@ class DollarBlockAccessibilityService : AccessibilityService() {
                     assertBlock(packageName) { blockPreferences.isUnlockWindowExpired(packageName) }
                 }
             } else {
-                val remainingMillis = if (usedMillis >= limitMillis) {
-                    blockPreferences.unlockWindowRemainingMillis(packageName)
-                } else {
-                    limitMillis - usedMillis
-                }.coerceAtLeast(MIN_CHECK_INTERVAL_MS)
-                handler.post { scheduleTracking(packageName, enteredForegroundAt, remainingMillis) }
+                handler.post { scheduleTracking(packageName, enteredForegroundAt) }
             }
         }
     }
@@ -136,40 +134,39 @@ class DollarBlockAccessibilityService : AccessibilityService() {
     }
 
     /**
-     * Agenda uma verificação de limite daqui a [delayMillis].
-     * Quando o timer dispara, recalcula o uso real via UsageEvents — se ainda não atingiu
-     * o limite (ex.: usuário saiu do app durante o delay), reagenda pelo tempo restante.
-     * Substitui o polling contínuo por um único disparo preciso.
+     * Polling adaptativo: verifica uso e limite a cada [MIN_POLL_INTERVAL_MS]–[MAX_POLL_INTERVAL_MS].
+     * Intervalo reduz conforme o limite se aproxima. Robusto contra overlays/IME que cancelavam
+     * o timer one-shot anterior: mesmo que um evento de outro pacote cancele este job, o próximo
+     * evento do app monitorado reinicia o rastreamento (via onAccessibilityEvent).
      */
-    private fun scheduleTracking(packageName: String, foregroundSinceMillis: Long, delayMillis: Long) {
+    private fun scheduleTracking(packageName: String, foregroundSinceMillis: Long) {
         stopTracking()
         trackedPackage = packageName
         trackingJob = scope.launch {
-            // Sincroniza Room para a UI enquanto espera o limite
-            monitoredAppRepository.syncTodayUsage(packageName, foregroundSinceMillis)
-            delay(delayMillis)
-            if (!isActive) return@launch
+            while (isActive) {
+                val app = monitoredAppDao.getByPackage(packageName) ?: break
+                if (!app.isMonitored) break
+                val limitMillis = (app.dailyLimitMinutes ?: break) * 60_000L
 
-            val app = monitoredAppDao.getByPackage(packageName) ?: return@launch
-            if (!app.isMonitored) return@launch
-
-            val usedMillis = effectiveUsageMillis(app, foregroundSinceMillis)
-            val limitMillis = (app.dailyLimitMinutes ?: return@launch) * 60_000L
-
-            if (usedMillis >= limitMillis && blockPreferences.isUnlockWindowExpired(packageName)) {
+                val usedMillis = effectiveUsageMillis(app, foregroundSinceMillis)
                 monitoredAppRepository.syncTodayUsage(packageName, foregroundSinceMillis)
-                handler.post {
-                    assertBlock(packageName) { blockPreferences.isUnlockWindowExpired(packageName) }
+
+                if (usedMillis >= limitMillis && blockPreferences.isUnlockWindowExpired(packageName)) {
+                    handler.post {
+                        assertBlock(packageName) { blockPreferences.isUnlockWindowExpired(packageName) }
+                    }
+                    break
                 }
-            } else if (usedMillis >= limitMillis) {
-                // Acima do limite mas dentro da janela de desbloqueio — aguarda a janela expirar
-                val windowRemaining = blockPreferences.unlockWindowRemainingMillis(packageName)
-                    .coerceAtLeast(MIN_CHECK_INTERVAL_MS)
-                handler.post { scheduleTracking(packageName, foregroundSinceMillis, windowRemaining) }
-            } else {
-                // Ainda não atingiu o limite — agenda para quando vai atingir
-                val remaining = (limitMillis - usedMillis).coerceAtLeast(MIN_CHECK_INTERVAL_MS)
-                handler.post { scheduleTracking(packageName, foregroundSinceMillis, remaining) }
+
+                val sleepMs = when {
+                    usedMillis >= limitMillis -> {
+                        // Dentro da janela de desbloqueio — aguarda expirar
+                        blockPreferences.unlockWindowRemainingMillis(packageName)
+                            .coerceIn(MIN_POLL_INTERVAL_MS, MAX_POLL_INTERVAL_MS)
+                    }
+                    else -> (limitMillis - usedMillis).coerceIn(MIN_POLL_INTERVAL_MS, MAX_POLL_INTERVAL_MS)
+                }
+                delay(sleepMs)
             }
         }
     }
@@ -236,6 +233,7 @@ class DollarBlockAccessibilityService : AccessibilityService() {
         const val TAG = "DollarBlockA11y"
         const val REASSERT_DELAY_MS = 500L
         const val RECORD_DEDUPE_MS = 5_000L
-        const val MIN_CHECK_INTERVAL_MS = 5_000L
+        const val MIN_POLL_INTERVAL_MS = 3_000L
+        const val MAX_POLL_INTERVAL_MS = 30_000L
     }
 }
