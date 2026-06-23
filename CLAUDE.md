@@ -141,3 +141,15 @@ Two devs work in parallel. `CONTRIBUTING.md` defines the workflow (feature-verti
   scaffolding (`HomeMetrics`) + pre-push test gate ✅; DAO/ViewModel tests + CI pending
 
 Docs: `docs/ROADMAP.md` (epics + acceptance criteria), `docs/ARCHITECTURE.md` (ADRs + data model).
+
+---
+
+## Project State (leia antes de implementar)
+
+- **Status dos épicos:** `docs/ROADMAP.md`
+- **Specs detalhados de pendências:** `docs/specs/` — um arquivo por épico/tarefa não-trivial pendente
+- **Log de mudanças funcionais:** `docs/CHANGELOG.md` — atualize sempre que entregar algo significativo
+- **Template de spec:** `docs/specs/TEMPLATE.md`
+- **Próximo passo sugerido:** E8 está ✅ segundo o CLAUDE.md acima; verificar specs em `docs/specs/` para pendências reais de E1, E5, E7, E10
+
+> Antes de implementar qualquer feature ou mudança de regra não-trivial: crie ou atualize o spec em `docs/specs/`. Ao concluir: marque tarefas no spec, atualize o status para `done` e adicione entrada no `docs/CHANGELOG.md`.

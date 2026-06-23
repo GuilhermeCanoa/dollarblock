@@ -1,0 +1,75 @@
+# DollarBlock — Changelog Funcional
+
+Registro cronológico de mudanças funcionais significativas: features entregues, mudanças de regra de negócio, refactors com impacto comportamental e decisões técnicas relevantes. Atualize sempre que implementar algo que não seja correção trivial de bug.
+
+**Formato:**
+```
+## [YYYY-MM-DD] — Título curto
+**Tipo:** feature | bugfix | regra | refactor | config
+**Épico:** E[N] ou adhoc
+Descrição funcional.
+```
+
+---
+
+## [2026-06-23] — Cobrança Stripe real via backend AWS (modo teste)
+**Tipo:** feature
+**Épico:** E9
+
+O desbloqueio pago deixou de usar gateway `"example"` (mock) e passou a enviar o token do Google Pay para `POST /unlock-charge` em AWS API Gateway + Lambda. O desbloqueio só é concedido quando o backend responde `status: "succeeded"`. Idempotência por UUID por requisição. Janela de desbloqueio: 5 minutos (`UNLOCK_WINDOW_MINUTES = 5`). Backend documentado em `docs/BACKEND_STRIPE.md`.
+
+---
+
+## [2026-06-23] — Polling de uso enquanto app fica em foreground
+**Tipo:** feature / bugfix
+**Épico:** E5
+
+Sem esta mudança, o uso na aba Apps e o disparo de bloqueio por limite não avançavam enquanto o usuário ficava no mesmo app sem trocar de janela (ex.: rolando um feed). Corrigido com loop de coroutine no `DollarBlockAccessibilityService` que a cada 3s (`POLL_INTERVAL_MS`) chama `syncTodayUsage()` e reavalia o limite. O loop é iniciado/parado conforme o foreground muda.
+
+---
+
+## [2026-06-23] — Baseline de uso por app no dia de adição
+**Tipo:** regra
+**Épico:** E7
+
+Ao adicionar um app ao monitoramento, o uso acumulado até aquele momento no dia é salvo em `MonitoredAppEntity.usageBaselineMillis`. A tela de Statistics subtrai esse baseline do uso do dia de adição, evitando que o histórico pré-DollarBlock contamine as métricas. Nos dias seguintes, `DailyUsageEntity` já parte de zero à meia-noite sem ajuste.
+
+---
+
+## [2026-06-23] — Bloqueio por limite diário (disparo automático)
+**Tipo:** feature
+**Épico:** E5
+
+O `DollarBlockAccessibilityService` passou a checar, a cada `TYPE_WINDOW_STATE_CHANGED`, se o app em foreground é monitorado, tem `dailyLimitMinutes` definido e já atingiu o limite hoje via `UsageStatsProvider.getTodayUsageMinutes`. Se sim, bloqueia igual ao bloqueio manual, respeitando a janela de desbloqueio pago.
+
+---
+
+## [2026-06-23] — Daily Score com lógica de média por app
+**Tipo:** regra
+**Épico:** E6
+
+Daily Score (0–100) é calculado como média de `(limite − usado)/limite` entre apps monitorados com limite definido. Cada termo é limitado a [0, 1] antes da média — um app muito acima do limite contribui com 0, nunca negativo. Apps sem limite não entram. Exibido como "—" se nenhum app tem limite definido.
+
+---
+
+## [2026-06-23] — Workflow parallel-dev: DI por feature + navegação por feature
+**Tipo:** config / refactor
+**Épico:** E10
+
+`DatabaseModule` passou a prover apenas o `DollarBlockDatabase`; `EventsModule` e `MonitoredAppModule` provêem DAOs + bindings de cada feature. Cada feature tem seu próprio `<Nome>Navigation.kt` com rota e extensão de `NavGraphBuilder`. Objetivo: dois devs raramente tocam o mesmo arquivo de DI ou navegação ao adicionar features em paralelo.
+
+---
+
+## [2026-06-23] — Onboarding com 4 permissões guiadas
+**Tipo:** feature
+**Épico:** E2
+
+Substituiu o antigo gate mínimo de Usage Access por um fluxo de onboarding completo (`HorizontalPager`) que explica o conceito e solicita as 4 permissões (Usage Access, Accessibility, Overlay, Notifications) com contexto e botão direto à tela do sistema. Flag `onboarding_completed` em DataStore controla o roteamento na `MainActivity`.
+
+---
+
+## [2026-06-23] — Busca por nome na aba Apps
+**Tipo:** feature
+**Épico:** E3
+
+Campo de busca (`AppsSearchField`) no topo da lista de apps filtra em tempo real por `label`, com mensagem de "nenhum resultado" e botão de limpar. Implementado em `feature/apps/`.

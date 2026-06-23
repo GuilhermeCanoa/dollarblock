@@ -134,7 +134,28 @@ New-Item -ItemType SymbolicLink -Path .claude\skills\pre-pr           -Target .a
 
 ---
 
-## 8. Commits
+## 8. Specs e CHANGELOG
+
+Antes de implementar qualquer feature ou mudança de regra não-trivial, crie (ou atualize) o spec correspondente em `docs/specs/`.
+
+**Quando criar um spec:**
+- Feature nova ou épico novo
+- Mudança de regra de negócio (ex.: lógica de score, janela de desbloqueio, baseline)
+- Refactor com impacto comportamental (ex.: migrar DataStore → Room)
+- Qualquer coisa que outra sessão do Claude Code precisaria entender para continuar
+
+**Como criar:** copie `docs/specs/TEMPLATE.md` para `docs/specs/<epico>-<descricao>.md` e preencha. Coloque status `in-progress` ao começar e `done` ao terminar. Você também pode usar `/spec` (skill instalada globalmente) para criar specs guiados.
+
+**Quando atualizar o `docs/CHANGELOG.md`:**
+- Feature entregue (mesmo parcial)
+- Mudança de regra de negócio ou comportamento observável
+- Decisão técnica relevante que não está em ARCHITECTURE.md
+
+Não registrar no CHANGELOG: bugfixes triviais, typos, ajustes de estilo, reordenação de imports.
+
+---
+
+## 9. Commits
 
 - Mensagens em português, no imperativo, referenciando o épico quando aplicável
   (ex.: `E7: gráfico de barras com dados reais`).
