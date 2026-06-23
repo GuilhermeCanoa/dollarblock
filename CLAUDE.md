@@ -79,25 +79,33 @@ Single Gradle module (`:app`) with Clean Architecture packages. Dependency rule:
 | `service/accessibility` | `DollarBlockAccessibilityService` — detects foreground app, fires blocking |
 | `service/monitoring` | `UsageSyncWorker` + `UsageSyncScheduler` — periodic usage sync via WorkManager |
 | `feature/onboarding` | `OnboardingScreen` (concept pager + guided permission requests) + `OnboardingViewModel` |
-| `feature/blocking` | `BlockActivity` (blocking UI) + `payment/GooglePayConfig` (test-mode Google Pay) |
+| `feature/blocking` | `BlockActivity` (blocking UI) + `payment/` (Google Pay + Stripe charge via AWS backend) |
 | `feature/home` | Dashboard: Daily Score, Time Saved, Active Limits, Recent Events |
 | `feature/apps` | App list with monitoring toggle, limit config, usage bar |
 | `feature/statistics` | Period selector + bar chart (Compose Canvas) |
-| `feature/profile` | Permission status, preferences, history links |
+| `feature/profile` | Real permission status + today's stats header; `HistoryScreen` (full block/unlock timeline) on a nested `HISTORY_ROUTE` |
 
 ### Blocking mechanism (ADR-001)
 
 `UsageStatsManager` measures daily usage; `DollarBlockAccessibilityService` detects the foreground app in real time and calls `startActivity(BlockActivity)` when a limit is reached. To survive the target app's cold-start re-raise (~40 ms), the service re-asserts the block on every `TYPE_WINDOW_STATE_CHANGED` event with an additional delayed re-assertion (~500 ms). Debounce only the *registration* of the event, not the launch.
 
-### Payment (E9 — test mode only)
+### Payment (E9 — real Stripe charge, test mode)
 
-`GooglePayConfig.kt` uses `ENVIRONMENT_TEST` and gateway `"example"` (no PSP keys). On successful payment, `BlockPreferences.grantUnlock(pkg, window)` frees the app for `UNLOCK_WINDOW_MINUTES` (15 min) then re-blocks. Production integration (Stripe + backend) is not yet wired. See `docs/PAYMENTS_SETUP.md` and `docs/BACKEND_STRIPE.md`.
+`feature/blocking/payment/` wires a **real Stripe charge through an AWS backend**, in Stripe *test* mode:
+- `GooglePayConfig.kt` — `ENVIRONMENT_TEST`, gateway `"stripe"` with a `pk_test_` publishable key. `UNLOCK_WINDOW_MINUTES` = 5.
+- `BlockActivity.handlePaymentData` extracts the Google Pay token, isolates the Stripe token `id` via `StripeToken.extractId`, and calls `PaymentApiClient.charge()` → `POST /unlock-charge` (live API Gateway + Lambda + Stripe). Unlock is granted **only** on `status == "succeeded"`; idempotency via a per-request UUID.
+- On success, `BlockPreferences.grantUnlock(pkg, window)` frees the app for the window, then re-blocks; the unlock is logged through `EventsRepository.recordUnlock`.
+- A debug-only "Simular pagamento" fallback bypasses the charge.
+
+Production (`pk_live_`/`sk_live_`, `ENVIRONMENT_PRODUCTION`, merchantId, key out of source) is not yet activated. See `docs/PAYMENTS_SETUP.md` and `docs/BACKEND_STRIPE.md`.
 
 ### Room schema
 
+`DollarBlockDatabase` is at **version 2** (`MonitoredAppEntity` gained `createdAt` + `usageBaselineMillis`).
+
 | Entity | PK | Notes |
 |---|---|---|
-| `MonitoredAppEntity` | `packageName` | App name + monitoring flag + daily limit |
+| `MonitoredAppEntity` | `packageName` | App name + monitoring flag + `dailyLimitMinutes?` + `createdAt` + `usageBaselineMillis` (pre-DollarBlock usage subtracted on the day the app was added — see Statistics baseline below) |
 | `DailyUsageEntity` | `id` | Unique index on `(packageName, epochDay)` |
 | `BlockEventEntity` | `id` | One row per blocking trigger |
 | `UnlockEventEntity` | `id` | FK to `BlockEvent`; holds `penaltyAmount` (simulated) + `unlockUntil` |
@@ -108,7 +116,7 @@ Split **per feature** in `di/` to minimize merge conflicts between parallel devs
 
 ### Navigation (per feature)
 
-Each feature owns a `feature/<name>/<Name>Navigation.kt` declaring its route constant (e.g. `HOME_ROUTE`) and a `NavGraphBuilder.<name>Screen()` extension. `DollarBlockNavHost` just composes them (`homeScreen()`, `appsScreen()`, …) and `TopLevelDestination` references the route constants. Adding a screen is a one-line, conflict-free change.
+Each feature owns a `feature/<name>/<Name>Navigation.kt` declaring its route constant (e.g. `HOME_ROUTE`) and a `NavGraphBuilder.<name>Screen()` extension. `DollarBlockNavHost` just composes them (`homeScreen()`, `appsScreen()`, …) and `TopLevelDestination` references the route constants. Adding a screen is a one-line, conflict-free change. Non-top-level (detail) screens follow the same pattern but take nav callbacks instead of appearing in `TopLevelDestination` — e.g. `historyScreen(onBack)` on `HISTORY_ROUTE`, opened from Profile via `profileScreen(onOpenHistory)`; the bottom bar simply doesn't highlight while there.
 
 ### Parallel-dev workflow
 
@@ -116,14 +124,19 @@ Two devs work in parallel. `CONTRIBUTING.md` defines the workflow (feature-verti
 
 ---
 
-## Epics status (as of E2)
+## Epics status (as of E8)
 
 - **E0** Foundation + Design System ✅
 - **E0.5** Navigable shell with mock data ✅
-- **E1** Data layer — events history slice ✅; remaining entities (`MonitoredApp`, `DailyUsage`, `UserStats`) + DAO tests pending
+- **E1** Data layer — events history slice ✅; remaining entities (`UserStats`) + DAO tests pending
 - **E2** Onboarding & permissions ✅ — concept pager + guided requests for the 4 permissions; first-run routing via `OnboardingPreferences` flag (replaces the old Usage Access gate)
-- **E5** Blocking engine — minimum slice (manual on/off per app) ✅; usage-triggered blocking pending (needs E4)
-- **E9** Google Pay — test-mode slice ✅; production PSP pending
+- **E3** Apps — list, monitoring toggle, daily-limit dialog, name search ✅
+- **E4** Monitoring — `UsageStatsManager` reads + periodic sync to `DailyUsageEntity` ✅
+- **E5** Blocking engine ✅ — manual on/off per app + usage-triggered blocking (foreground polling)
+- **E6** Home dashboard ✅ — Daily Score / Time Saved / Active Limits over monitored apps with limits
+- **E7** Statistics ✅ — daily/weekly/monthly aggregation + per-app weekly score over `DailyUsageEntity` (with per-app baseline)
+- **E8** Profile & History ✅ — real permission status (re-checked on resume) + real today's stats header + `HistoryScreen` (full block/unlock timeline, grouped by day) on a nested `HISTORY_ROUTE`
+- **E9** Google Pay + **real Stripe charge via AWS backend** ✅ (test mode); production keys/env pending
 - **E10** Quality (transversal) — parallel-dev workflow + per-feature DI/Navigation + unit-test
   scaffolding (`HomeMetrics`) + pre-push test gate ✅; DAO/ViewModel tests + CI pending
 

@@ -1,10 +1,19 @@
-# DollarBlock — Backend de cobrança real (Stripe) — Especificação
+# DollarBlock — Backend de cobrança real (Stripe)
 
-> **Status:** documento de planejamento para implementar em outra sessão.
-> Nada aqui foi implementado ainda. Nenhum recurso AWS foi criado.
+> **Status:** ✅ **Implementado e funcionando em modo TESTE.** O app cobra de fato via
+> Stripe (conta teste) através de um backend AWS serverless já no ar:
+> `POST https://duj02ll1zl.execute-api.us-east-1.amazonaws.com/test/unlock-charge`.
+> O fluxo de produção (`pk_live_`/`sk_live_`, `ENVIRONMENT_PRODUCTION`) ainda não foi ativado.
+>
+> No app, ver `feature/blocking/payment/`: `GooglePayConfig` (gateway `stripe` + `pk_test_`),
+> `PaymentApiClient` (chamada ao endpoint), `StripeToken` (extração do `id` do token) e
+> `BlockActivity.handlePaymentData` (orquestra a cobrança e só desbloqueia em `succeeded`).
+>
+> As seções abaixo descrevem a especificação/arquitetura que guiou essa implementação e o
+> que falta para produção.
 
-Objetivo: transformar o pagamento de teste (Google Pay `ENVIRONMENT_TEST` + gateway
-`example`) em **cobrança real** via **Stripe**, sem expor a chave secreta no app.
+Objetivo: transformar o pagamento de teste (Google Pay `ENVIRONMENT_TEST`) em **cobrança
+real** via **Stripe**, sem expor a chave secreta no app.
 
 ---
 

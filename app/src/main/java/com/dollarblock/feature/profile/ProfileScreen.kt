@@ -17,42 +17,99 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Accessibility
+import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Layers
-import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.QueryStats
 import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Shield
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dollarblock.R
 import com.dollarblock.core.designsystem.DollarBlockTheme
 import com.dollarblock.core.designsystem.components.ScreenHeader
 import com.dollarblock.core.designsystem.components.SectionHeader
+import com.dollarblock.data.permissions.AppPermission
+import com.dollarblock.data.permissions.PermissionsState
 
 /**
  * Profile — identidade do usuário, estatísticas, permissões e preferências.
- * No E0.5 usa dados mock; o E8 liga permissões reais e histórico de eventos.
+ *
+ * E8: **Permissões** refletem o estado real (via [ProfileViewModel] + `PermissionsProvider`),
+ * re-checado em `ON_RESUME` — tocar numa permissão pendente abre a tela do sistema. O
+ * **cabeçalho de estatísticas** (limites ativos, tempo economizado, bloqueios de hoje) usa
+ * dados reais. O item **Histórico** abre a tela de eventos reais. Tema/Sobre ainda são mock.
  */
 @Composable
-fun ProfileScreen(modifier: Modifier = Modifier) {
+fun ProfileScreen(
+    onOpenHistory: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: ProfileViewModel = hiltViewModel(),
+) {
+    val permissions by viewModel.permissions.collectAsStateWithLifecycle()
+    val stats by viewModel.stats.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    // Re-checa as permissões sempre que a tela volta ao foreground (igual ao onboarding).
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.refresh() }
+
+    val notificationsLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { viewModel.refresh() }
+
+    fun requestPermission(permission: AppPermission) {
+        if (permission == AppPermission.NOTIFICATIONS &&
+            android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU
+        ) {
+            notificationsLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            viewModel.intentFor(permission)?.let { context.startActivity(it) }
+        }
+    }
+
+    ProfileScreenContent(
+        permissions = permissions,
+        stats = stats,
+        onRequestPermission = ::requestPermission,
+        onOpenHistory = onOpenHistory,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun ProfileScreenContent(
+    permissions: PermissionsState,
+    stats: ProfileStats,
+    onRequestPermission: (AppPermission) -> Unit,
+    onOpenHistory: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -66,21 +123,21 @@ fun ProfileScreen(modifier: Modifier = Modifier) {
 
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             StatTile(
-                icon = Icons.Filled.LocalFireDepartment,
-                value = "7",
-                label = stringResource(R.string.profile_streak),
+                icon = Icons.Filled.Block,
+                value = stats.blocksToday.toString(),
+                label = stringResource(R.string.profile_blocks_today),
                 modifier = Modifier.weight(1f),
             )
             StatTile(
                 icon = Icons.Filled.Savings,
-                value = "4h",
+                value = formatSavedMinutes(stats.timeSavedMinutes),
                 label = stringResource(R.string.profile_saved),
                 modifier = Modifier.weight(1f),
             )
             StatTile(
-                icon = Icons.Filled.EmojiEvents,
-                value = "12",
-                label = stringResource(R.string.profile_goals),
+                icon = Icons.Filled.Shield,
+                value = stats.activeLimitsCount.toString(),
+                label = stringResource(R.string.profile_active_limits),
                 modifier = Modifier.weight(1f),
             )
         }
@@ -96,25 +153,29 @@ fun ProfileScreen(modifier: Modifier = Modifier) {
                     icon = Icons.Filled.QueryStats,
                     title = stringResource(R.string.perm_usage),
                     description = stringResource(R.string.perm_usage_desc),
-                    granted = true,
+                    granted = permissions.usageAccess,
+                    onClick = { onRequestPermission(AppPermission.USAGE_ACCESS) },
                 )
                 PermissionRow(
                     icon = Icons.Filled.Accessibility,
                     title = stringResource(R.string.perm_accessibility),
                     description = stringResource(R.string.perm_accessibility_desc),
-                    granted = false,
+                    granted = permissions.accessibility,
+                    onClick = { onRequestPermission(AppPermission.ACCESSIBILITY) },
                 )
                 PermissionRow(
                     icon = Icons.Filled.Layers,
                     title = stringResource(R.string.perm_overlay),
                     description = stringResource(R.string.perm_overlay_desc),
-                    granted = false,
+                    granted = permissions.overlay,
+                    onClick = { onRequestPermission(AppPermission.OVERLAY) },
                 )
                 PermissionRow(
                     icon = Icons.Filled.Notifications,
                     title = stringResource(R.string.perm_notifications),
                     description = stringResource(R.string.perm_notifications_desc),
-                    granted = true,
+                    granted = permissions.notifications,
+                    onClick = { onRequestPermission(AppPermission.NOTIFICATIONS) },
                 )
             }
         }
@@ -135,6 +196,7 @@ fun ProfileScreen(modifier: Modifier = Modifier) {
                     icon = Icons.Filled.History,
                     title = stringResource(R.string.pref_history),
                     value = stringResource(R.string.pref_history_value),
+                    onClick = onOpenHistory,
                 )
                 SettingRow(
                     icon = Icons.Filled.Info,
@@ -232,11 +294,14 @@ private fun PermissionRow(
     title: String,
     description: String,
     granted: Boolean,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
+            // Permissão pendente é tocável para abrir a tela do sistema; já concedida não faz nada.
+            .then(if (granted) Modifier else Modifier.clickable(onClick = onClick))
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -299,10 +364,12 @@ private fun SettingRow(
     title: String,
     value: String?,
     modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -336,10 +403,27 @@ private fun SettingRow(
     }
 }
 
+/** Formata minutos economizados como "Xh Ym" / "Ym" para o cabeçalho de estatísticas. */
+private fun formatSavedMinutes(totalMinutes: Int): String {
+    val hours = totalMinutes / 60
+    val minutes = totalMinutes % 60
+    return if (hours > 0) "${hours}h ${minutes}m" else "${minutes}m"
+}
+
 @Preview(showBackground = true)
 @Composable
 private fun ProfileScreenPreview() {
     DollarBlockTheme {
-        ProfileScreen()
+        ProfileScreenContent(
+            permissions = PermissionsState(
+                usageAccess = true,
+                accessibility = false,
+                overlay = false,
+                notifications = true,
+            ),
+            stats = ProfileStats(activeLimitsCount = 3, timeSavedMinutes = 95, blocksToday = 4),
+            onRequestPermission = {},
+            onOpenHistory = {},
+        )
     }
 }

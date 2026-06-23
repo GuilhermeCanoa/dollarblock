@@ -94,8 +94,18 @@
     <string name="pref_theme">Tema</string>
     <string name="pref_theme_value">Sistema</string>
     <string name="pref_history">Histórico</string>
-    <string name="pref_history_value">Bloqueios, desbloqueios e metas</string>
+    <string name="pref_history_value">Bloqueios e desbloqueios</string>
     <string name="pref_about">Sobre o DollarBlock</string>
+
+    <!-- Profile — estatísticas reais (E8) -->
+    <string name="profile_blocks_today">Bloqueios hoje</string>
+    <string name="profile_active_limits">Limites ativos</string>
+    <string name="profile_stat_score">Score</string>
+
+    <!-- Histórico (E8) -->
+    <string name="history_title">Histórico</string>
+    <string name="history_empty">Nenhum evento ainda.\nBloqueios e desbloqueios aparecem aqui.</string>
+    <string name="history_back">Voltar</string>
 
     <!-- Bloqueio de apps (Home / E5) -->
     <string name="block_section_title">Bloqueio de aplicativos</string>

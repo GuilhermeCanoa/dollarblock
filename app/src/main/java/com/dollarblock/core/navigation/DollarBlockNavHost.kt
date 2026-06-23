@@ -7,6 +7,8 @@ import androidx.navigation.compose.NavHost
 import com.dollarblock.feature.apps.appsScreen
 import com.dollarblock.feature.home.HOME_ROUTE
 import com.dollarblock.feature.home.homeScreen
+import com.dollarblock.feature.profile.HISTORY_ROUTE
+import com.dollarblock.feature.profile.historyScreen
 import com.dollarblock.feature.profile.profileScreen
 import com.dollarblock.feature.statistics.statisticsScreen
 
@@ -29,6 +31,7 @@ fun DollarBlockNavHost(
         homeScreen()
         appsScreen()
         statisticsScreen()
-        profileScreen()
+        profileScreen(onOpenHistory = { navController.navigate(HISTORY_ROUTE) })
+        historyScreen(onBack = { navController.popBackStack() })
     }
 }

@@ -182,48 +182,78 @@ para mais adiante se fizer sentido.
 ## E7 — Statistics
 **Objetivo:** visão de uso ao longo do tempo.
 
-**Entregáveis**
-- Agregações diário / semanal / mensal sobre `DailyUsage`.
-- Gráficos simples (Compose Canvas ou lib leve).
-- **Score semanal por app** (ideia definida em 23/06): para cada app monitorado *com*
-  `dailyLimitMinutes` definido, média dos últimos 7 dias de `(limite − usado)/limite`
-  (mesma lógica de pontuação do Daily Score do E6, porém por app e numa janela semanal).
-  Apps sem limite não entram. Precisa de histórico mínimo acumulado em `DailyUsageEntity`
-  para fazer sentido visualmente.
+**Entregue (validado):**
+- `StatisticsViewModel` agrega `DailyUsageEntity` por período sobre `DailyUsageDao.observeRange`,
+  combinando com `MonitoredAppDao.observeMonitored` e `EventDao.countBlocksInRange`:
+  - **Diário**: uma barra por app monitorado (top 7 por uso) no dia de hoje.
+  - **Semanal**: barras seg→dom da semana atual (rótulos de dia da semana, pt-BR).
+  - **Mensal**: 4 barras (Sem 1 → Sem 4), somando uso por janela de 7 dias.
+  - Cartões de resumo: tempo total, app mais usado e nº de bloqueios no período.
+- **Baseline por app** (`usageBaselineMillis` + `createdAt` em `MonitoredAppEntity`): no
+  dia em que o app foi adicionado ao monitoramento, subtrai o uso pré-DollarBlock; nos
+  dias seguintes `DailyUsageEntity` já parte de zero à meia-noite, sem ajuste.
+- **Score semanal por app**: para cada app monitorado *com* `dailyLimitMinutes` definido,
+  média dos últimos 7 dias de `(limite − usado)/limite` (mesma lógica do Daily Score do E6,
+  por app, em janela semanal), ordenado por score. Apps sem limite não entram.
+- Gráfico de barras em `StatisticsScreen` (Compose Canvas) ligado ao estado real.
 
-**Aceite:** gráficos renderizam com dados reais nos três períodos. **Depende de E1, E4.**
+**Restante:** extrair os agregadores do `StatisticsViewModel` para funções puras testáveis
+(padrão `HomeMetrics`); testes de DAO de `observeRange`.
+
+**Aceite:** gráficos renderizam com dados reais nos três períodos. ✅ **Validado.**
+**Depende de E1, E4.**
 
 ---
 
 ## E8 — Profile & Histórico
-**Objetivo:** ajustes, gestão de permissões e linha do tempo de eventos.
 
-**Entregáveis**
-- Profile: status/atalhos de permissões, preferências, "sobre".
-- Histórico: bloqueios, desbloqueios e metas cumpridas.
+**Entregue (validado no dispositivo):**
+- **Permissões reais**: `ProfileViewModel` injeta `PermissionsProvider` e expõe o estado das
+  4 permissões (Usage Access, Acessibilidade, Sobreposição, Notificações), re-checado em
+  `ON_RESUME`. Cada linha mostra Concedida/Pendente; tocar numa pendente abre a tela do
+  sistema (`intentFor`) — ou o runtime permission de Notificações no Android 13+. ✅
+- **Cabeçalho de estatísticas reais**: limites ativos e tempo economizado de hoje
+  reaproveitam `HomeMetrics.compute` sobre `observeMonitoredAppsUsage`; bloqueios de hoje
+  vêm de `EventDao.countBlocksInRange`. Substitui os tiles mock (sequência/economizado/metas). ✅
+- **Tela de Histórico** (`HistoryScreen` + `HistoryViewModel`): lista completa de bloqueios e
+  desbloqueios a partir de `EventsRepository.recentEvents`, agrupada por dia (cabeçalho de
+  data pt-BR), reaproveitando o estilo de linha da Home. Rota própria `HISTORY_ROUTE`
+  (`historyScreen()`), fora da bottom bar, com botão Voltar; aberta pelo item "Histórico"
+  das Preferências. ✅
 
-**Aceite:** histórico lista eventos reais; Profile permite revisar permissões.
-**Depende de E1, E5.**
+**Restante (menor):**
+- Preferências Tema/Sobre ainda são placeholders (não acionáveis).
+
+**Aceite:** histórico lista eventos reais; Profile mostra estatísticas reais e permite
+revisar/conceder permissões. ✅ **Validado.** **Depende de E1, E5.**
 
 ---
 
-## E9 — Pagamento (Google Pay) & desbloqueio
+## E9 — Pagamento (Google Pay + Stripe) & desbloqueio
 
-**Entregue (fatia mínima — Google Pay em TESTE):**
+**Entregue (Google Pay + cobrança Stripe real em modo TESTE):**
 - Botão **"Pagar com Google Pay"** na tela de bloqueio (`PaymentsClient`, `ENVIRONMENT_TEST`,
-  gateway `"example"` — sem PSP/keys) + fallback **"Simular pagamento (teste)"**.
-- Pagamento OK → `BlockPreferences.grantUnlock(pkg, janela)` libera o app por
-  `UNLOCK_WINDOW_MINUTES` (15 min) e reabre o app. Após a janela, volta a bloquear.
-- Config em `feature/blocking/payment/GooglePayConfig.kt`. Tutorial em
-  [`PAYMENTS_SETUP.md`](./PAYMENTS_SETUP.md) (teste, PSP e produção).
+  gateway **`"stripe"`** com `pk_test_`) + fallback **"Simular pagamento (teste)"** (debug).
+- **Cobrança real via backend**: o token do Google Pay é extraído
+  (`paymentMethodData.tokenizationData.token`), o `id` do token Stripe é isolado por
+  `StripeToken.extractId` e enviado por `PaymentApiClient.charge()` ao endpoint
+  `POST /unlock-charge` (AWS API Gateway + Lambda + Stripe). O desbloqueio só é concedido
+  quando o backend responde `status: "succeeded"`. Idempotência por `idempotencyKey` (UUID).
+- Pagamento OK → `BlockPreferences.grantUnlock(pkg, janela)` libera por
+  `UNLOCK_WINDOW_MINUTES` (5 min) e reabre o app; depois volta a bloquear. O desbloqueio é
+  registrado via `EventsRepository.recordUnlock` (valor + método) e aparece no histórico.
+- Config em `feature/blocking/payment/` (`GooglePayConfig`, `PaymentApiClient`, `StripeToken`).
+  Backend documentado em [`BACKEND_STRIPE.md`](./BACKEND_STRIPE.md); tutorial de pagamento em
+  [`PAYMENTS_SETUP.md`](./PAYMENTS_SETUP.md).
 
-**Restante (produção / depende de E1):**
-- Integração com PSP real (Stripe/Adyen/…) + backend para a cobrança (chave secreta no servidor).
-- `merchantInfo.merchantId` (Google Pay & Wallet Console) + `ENVIRONMENT_PRODUCTION`.
-- Botão oficial `com.google.pay.button` (diretrizes de marca).
-- Registrar `UnlockEvent`/`penaltyAmount` em Room; modelos de saldo/depósito/transação.
+**Restante (produção):**
+- `pk_live_`/`sk_live_` + `ENVIRONMENT_PRODUCTION` + `merchantInfo.merchantId`
+  (Google Pay & Wallet Console); botão oficial `com.google.pay.button` (diretrizes de marca).
+- Mover `pk_test_` para fora do código-fonte (BuildConfig/secret) antes de qualquer release.
+- Persistir `UnlockEvent`/`penaltyAmount` em Room; modelos de saldo/depósito/transação.
 
-**Aceite (fatia atual):** pagar (ou simular) na tela de bloqueio libera o app pela janela. ✅ **Validado.**
+**Aceite (fatia atual):** pagar com Google Pay cobra de fato via Stripe (conta teste) e
+libera o app pela janela; falha de cobrança não libera. ✅ **Validado.**
 
 ---
 
@@ -272,4 +302,8 @@ E10 ── transversal a todos
 
 E0.5 é uma camada de UI placeholder: E3/E7/E8 substituem seus mocks por dados reais.
 
-**Próximo passo sugerido:** após E0.5 (shell navegável), iniciar **E1** (dados & domínio).
+**Status atual:** E0–E9 entregues e validados — todas as 4 abas operam com dados reais.
+
+**Próximo passo sugerido:** **E10** (transversal) — testes de DAO/ViewModel (Room in-memory),
+estados loading/erro/vazio padronizados e config de build release. Extrair os agregadores do
+`StatisticsViewModel`/`ProfileViewModel` para funções puras testáveis (padrão `HomeMetrics`).
