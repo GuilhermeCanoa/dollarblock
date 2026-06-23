@@ -1,17 +1,21 @@
 package com.dollarblock.feature.home
 
-import androidx.compose.foundation.Image
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -19,78 +23,58 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Bolt
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.FormatQuote
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Savings
-import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuAnchorType
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dollarblock.R
 import com.dollarblock.core.designsystem.DollarBlockTheme
 import com.dollarblock.core.designsystem.components.MetricCard
-import com.dollarblock.core.designsystem.components.PenaltyButton
-import com.dollarblock.core.designsystem.components.PrimaryActionButton
 import com.dollarblock.core.designsystem.components.ScreenHeader
 import com.dollarblock.core.designsystem.components.SectionHeader
-import com.dollarblock.data.apps.InstalledApp
 import com.dollarblock.domain.model.PaymentMethod
 import com.dollarblock.domain.model.RecentEvent
-import com.dollarblock.service.accessibility.accessibilitySettingsIntent
-import com.dollarblock.service.accessibility.isAccessibilityServiceEnabled
+import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-/**
- * Home — painel diário + controle de bloqueio de apps (E5/E6).
- * Os 3 cards de métrica (Daily Score, Time Saved, Active Limits) e o card de bloqueio
- * usam dados reais, derivados de `MonitoredAppRepository` e `BlockPreferences`.
- */
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
+    onNavigateToApps: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
-
-    var accessibilityEnabled by remember { mutableStateOf(isAccessibilityServiceEnabled(context)) }
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-        accessibilityEnabled = isAccessibilityServiceEnabled(context)
-    }
 
     Column(
         modifier = modifier
@@ -104,36 +88,25 @@ fun HomeScreen(
             subtitle = stringResource(R.string.msg_on_track),
         )
 
-        BlockControlCard(
-            state = uiState,
-            accessibilityEnabled = accessibilityEnabled,
-            onSelect = viewModel::selectApp,
-            onToggle = viewModel::setBlocked,
-            onOpenAccessibility = { context.startActivity(accessibilitySettingsIntent()) },
-        )
+        ManifestoCard()
+
+        DailyScoreHero(score = uiState.dailyScore)
 
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            MetricCard(
-                title = stringResource(R.string.home_daily_score),
-                value = uiState.dailyScore?.toString() ?: "—",
-                icon = Icons.Filled.Bolt,
-                subtitle = if (uiState.dailyScore == null) stringResource(R.string.coming_soon) else null,
-                modifier = Modifier.weight(1f),
-            )
             MetricCard(
                 title = stringResource(R.string.home_time_saved),
                 value = formatSavedMinutes(uiState.timeSavedMinutes),
                 icon = Icons.Filled.Savings,
                 modifier = Modifier.weight(1f),
             )
+            MetricCard(
+                title = stringResource(R.string.home_active_limits),
+                value = uiState.activeLimitsCount.toString(),
+                icon = Icons.Filled.Timer,
+                modifier = Modifier.weight(1f),
+                onClick = onNavigateToApps,
+            )
         }
-
-        MetricCard(
-            title = stringResource(R.string.home_active_limits),
-            value = uiState.activeLimitsCount.toString(),
-            icon = Icons.Filled.Timer,
-            modifier = Modifier.fillMaxWidth(),
-        )
 
         SectionHeader(text = stringResource(R.string.home_recent_events))
         if (uiState.recentEvents.isEmpty()) {
@@ -144,7 +117,137 @@ fun HomeScreen(
     }
 }
 
-/** Formata minutos economizados como "1h 20m" (ou "45m" se for menos de 1h). */
+@Composable
+private fun ManifestoCard(modifier: Modifier = Modifier) {
+    val quotes = stringArrayResource(R.array.home_quotes)
+    var index by remember { mutableIntStateOf(0) }
+    var expanded by remember { mutableStateOf(true) }
+    var dragAccum by remember { mutableStateOf(0f) }
+
+    LaunchedEffect(index) {
+        delay(8_000)
+        index = (index + 1) % quotes.size
+    }
+
+    Card(
+        onClick = { expanded = !expanded },
+        modifier = modifier
+            .fillMaxWidth()
+            .pointerInput(Unit) {
+                detectHorizontalDragGestures(
+                    onDragEnd = {
+                        if (dragAccum > 80f) {
+                            index = (index - 1 + quotes.size) % quotes.size
+                        } else if (dragAccum < -80f) {
+                            index = (index + 1) % quotes.size
+                        }
+                        dragAccum = 0f
+                    },
+                    onHorizontalDrag = { _, delta -> dragAccum += delta },
+                )
+            },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.FormatQuote,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Text(
+                        text = "${index + 1} / ${quotes.size}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Icon(
+                    imageVector = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                    contentDescription = if (expanded) "Collapse" else "Expand",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+
+            AnimatedVisibility(
+                visible = expanded,
+                enter = fadeIn() + slideInVertically(),
+                exit = fadeOut() + slideOutVertically(),
+            ) {
+                AnimatedContent(
+                    targetState = index,
+                    transitionSpec = { fadeIn() togetherWith fadeOut() },
+                    label = "quote_transition",
+                    modifier = Modifier.padding(top = 10.dp),
+                ) { i ->
+                    Text(
+                        text = quotes[i],
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontStyle = FontStyle.Italic,
+                            lineHeight = 26.sp,
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DailyScoreHero(
+    score: Int?,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.home_daily_score),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
+            )
+            Text(
+                text = score?.toString() ?: "—",
+                fontSize = 72.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                lineHeight = 80.sp,
+            )
+            Text(
+                text = if (score != null) stringResource(R.string.home_score_out_of) else stringResource(R.string.home_score_no_limits),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
+            )
+        }
+    }
+}
+
 private fun formatSavedMinutes(totalMinutes: Int): String {
     val hours = totalMinutes / 60
     val minutes = totalMinutes % 60
@@ -227,237 +330,6 @@ private fun formatEventTime(epochMillis: Long): String =
     Instant.ofEpochMilli(epochMillis)
         .atZone(ZoneId.systemDefault())
         .format(DateTimeFormatter.ofPattern("HH:mm"))
-
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
-@Composable
-private fun BlockControlCard(
-    state: HomeUiState,
-    accessibilityEnabled: Boolean,
-    onSelect: (String) -> Unit,
-    onToggle: (String, Boolean) -> Unit,
-    onOpenAccessibility: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Filled.Shield,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                )
-                Spacer(Modifier.size(10.dp))
-                Column {
-                    Text(
-                        text = stringResource(R.string.block_section_title),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Text(
-                        text = stringResource(R.string.block_section_subtitle),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-
-            if (accessibilityEnabled) {
-                AccessibilityActiveRow()
-            } else {
-                AccessibilityWarning(onOpenAccessibility = onOpenAccessibility)
-            }
-
-            AppSelector(
-                apps = state.installedApps,
-                selectedPackage = state.selectedPackage,
-                loading = state.loadingApps,
-                onSelect = onSelect,
-            )
-
-            val selected = state.selectedPackage
-            if (selected != null) {
-                val isBlocked = state.blockedPackages.contains(selected)
-                if (isBlocked) {
-                    PenaltyButton(
-                        text = stringResource(R.string.block_disable_button),
-                        onClick = { onToggle(selected, false) },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                } else {
-                    PrimaryActionButton(
-                        text = stringResource(R.string.block_enable_button),
-                        onClick = { onToggle(selected, true) },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-            }
-
-            if (state.blockedPackages.isNotEmpty()) {
-                Text(
-                    text = stringResource(
-                        R.string.block_blocked_list_title,
-                        state.blockedPackages.size,
-                    ),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    state.blockedPackages.forEach { pkg ->
-                        val label = state.installedApps.find { it.packageName == pkg }?.label ?: pkg
-                        InputChip(
-                            selected = true,
-                            onClick = { onToggle(pkg, false) },
-                            label = { Text(label) },
-                            trailingIcon = {
-                                Icon(
-                                    imageVector = Icons.Filled.Close,
-                                    contentDescription = stringResource(R.string.block_unblock_action),
-                                    modifier = Modifier.size(16.dp),
-                                )
-                            },
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun AppSelector(
-    apps: List<InstalledApp>,
-    selectedPackage: String?,
-    loading: Boolean,
-    onSelect: (String) -> Unit,
-) {
-    var expanded by remember { mutableStateOf(false) }
-    val selectedApp = apps.find { it.packageName == selectedPackage }
-    val selectedIcon = selectedApp?.icon
-
-    ExposedDropdownMenuBox(
-        expanded = expanded && !loading,
-        onExpandedChange = { if (!loading) expanded = it },
-    ) {
-        OutlinedTextField(
-            value = if (loading) stringResource(R.string.block_loading_apps) else selectedApp?.label.orEmpty(),
-            onValueChange = {},
-            readOnly = true,
-            enabled = !loading,
-            label = { Text(stringResource(R.string.block_select_label)) },
-            placeholder = { Text(stringResource(R.string.block_select_placeholder)) },
-            leadingIcon = if (selectedIcon != null) {
-                {
-                    Image(
-                        bitmap = selectedIcon,
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp),
-                    )
-                }
-            } else {
-                null
-            },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier
-                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
-                .fillMaxWidth(),
-        )
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-        ) {
-            apps.forEach { app ->
-                val icon = app.icon
-                DropdownMenuItem(
-                    text = { Text(app.label) },
-                    onClick = {
-                        onSelect(app.packageName)
-                        expanded = false
-                    },
-                    leadingIcon = if (icon != null) {
-                        {
-                            Image(
-                                bitmap = icon,
-                                contentDescription = null,
-                                modifier = Modifier.size(24.dp),
-                            )
-                        }
-                    } else {
-                        null
-                    },
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun AccessibilityWarning(
-    onOpenAccessibility: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(
-                color = DollarBlockTheme.colors.alert.copy(alpha = 0.14f),
-                shape = RoundedCornerShape(12.dp),
-            )
-            .padding(12.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = Icons.Filled.Warning,
-                contentDescription = null,
-                tint = DollarBlockTheme.colors.alert,
-                modifier = Modifier.size(20.dp),
-            )
-            Spacer(Modifier.size(8.dp))
-            Text(
-                text = stringResource(R.string.block_a11y_needed_title),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-        }
-        Text(
-            text = stringResource(R.string.block_a11y_needed_desc),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        TextButton(onClick = onOpenAccessibility) {
-            Text(stringResource(R.string.block_a11y_button))
-        }
-    }
-}
-
-@Composable
-private fun AccessibilityActiveRow(modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            imageVector = Icons.Filled.CheckCircle,
-            contentDescription = null,
-            tint = DollarBlockTheme.colors.success,
-            modifier = Modifier.size(18.dp),
-        )
-        Spacer(Modifier.size(8.dp))
-        Text(
-            text = stringResource(R.string.block_a11y_active),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-}
 
 @Composable
 private fun EmptyEventsCard(modifier: Modifier = Modifier) {

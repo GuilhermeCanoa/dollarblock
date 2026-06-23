@@ -241,8 +241,8 @@ private fun UserHeaderCard(modifier: Modifier = Modifier) {
                 )
                 Text(
                     text = stringResource(R.string.profile_user_tagline),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
         }
@@ -300,8 +300,7 @@ private fun PermissionRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            // Permissão pendente é tocável para abrir a tela do sistema; já concedida não faz nada.
-            .then(if (granted) Modifier else Modifier.clickable(onClick = onClick))
+            .clickable(onClick = onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

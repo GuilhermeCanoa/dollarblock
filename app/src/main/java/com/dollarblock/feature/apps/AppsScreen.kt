@@ -73,6 +73,9 @@ fun AppsScreen(
             ScreenHeader(
                 title = stringResource(R.string.apps_title),
                 subtitle = stringResource(R.string.apps_subtitle),
+                subtitleStyle = MaterialTheme.typography.titleLarge,
+                subtitleColor = MaterialTheme.colorScheme.primary,
+                subtitleTextAlign = androidx.compose.ui.text.style.TextAlign.Center,
             )
         }
 
@@ -229,12 +232,8 @@ private fun AppListItem(
     modifier: Modifier = Modifier,
 ) {
     val limit = row.dailyLimitMinutes
+    val overtimeMinutes = if (limit != null) (row.usedMinutesToday - limit).coerceAtLeast(0) else 0
     val overLimit = limit != null && row.usedMinutesToday >= limit
-    val progressColor = if (overLimit) {
-        DollarBlockTheme.colors.penalty
-    } else {
-        MaterialTheme.colorScheme.primary
-    }
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -266,11 +265,8 @@ private fun AppListItem(
                             stringResource(R.string.apps_used_no_limit, formatMinutes(row.usedMinutesToday))
                         },
                         style = MaterialTheme.typography.bodyMedium,
-                        color = if (overLimit) {
-                            DollarBlockTheme.colors.penalty
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        },
+                        color = if (overLimit) DollarBlockTheme.colors.penalty
+                                else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     if (limit == null) {
                         Text(
@@ -289,22 +285,67 @@ private fun AppListItem(
                     ),
                 )
             }
+
             if (limit != null) {
-                val ratio = (row.usedMinutesToday.toFloat() / limit).coerceIn(0f, 1f)
                 Spacer(Modifier.height(12.dp))
-                LinearProgressIndicator(
-                    progress = { if (row.isMonitored) ratio else 0f },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(8.dp)
-                        .clip(CircleShape),
-                    color = progressColor,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+
+                // Barra 1: uso dentro do limite (trava em 100% quando excedido)
+                val limitRatio = (row.usedMinutesToday.toFloat() / limit).coerceIn(0f, 1f)
+                UsageBar(
+                    label = stringResource(R.string.apps_limit_label),
+                    progress = if (row.isMonitored) limitRatio else 0f,
+                    color = if (overLimit) DollarBlockTheme.colors.penalty
+                            else MaterialTheme.colorScheme.primary,
                 )
+
+                // Barra 2: tempo extra via desbloqueio pago (aparece só quando passou do limite)
+                if (overLimit && overtimeMinutes > 0) {
+                    Spacer(Modifier.height(8.dp))
+                    // Progresso relativo a janelas de 5 min: avança e reinicia a cada unlock
+                    val windowMinutes = UNLOCK_WINDOW_MINUTES
+                    val overtimeRatio = (overtimeMinutes % windowMinutes).toFloat() / windowMinutes
+                    val windowsUsed = overtimeMinutes / windowMinutes
+                    UsageBar(
+                        label = stringResource(
+                            R.string.apps_overtime_label,
+                            formatMinutes(overtimeMinutes),
+                            windowsUsed + 1,
+                        ),
+                        progress = if (overtimeRatio == 0f) 1f else overtimeRatio,
+                        color = DollarBlockTheme.colors.alert,
+                    )
+                }
             }
         }
     }
 }
+
+@Composable
+private fun UsageBar(
+    label: String,
+    progress: Float,
+    color: androidx.compose.ui.graphics.Color,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        LinearProgressIndicator(
+            progress = { progress },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+                .clip(CircleShape),
+            color = color,
+            trackColor = MaterialTheme.colorScheme.surfaceVariant,
+        )
+    }
+}
+
+private const val UNLOCK_WINDOW_MINUTES = 5
 
 @Composable
 private fun AppAvatar(icon: ImageBitmap?, letter: Char, modifier: Modifier = Modifier) {

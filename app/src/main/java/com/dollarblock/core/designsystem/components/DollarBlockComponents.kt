@@ -37,8 +37,11 @@ fun MetricCard(
     icon: ImageVector,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
+    onClick: (() -> Unit)? = null,
 ) {
     Card(
+        onClick = onClick ?: {},
+        enabled = onClick != null,
         modifier = modifier,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface,
@@ -147,6 +150,9 @@ fun ScreenHeader(
     title: String,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
+    subtitleStyle: androidx.compose.ui.text.TextStyle? = null,
+    subtitleColor: androidx.compose.ui.graphics.Color? = null,
+    subtitleTextAlign: androidx.compose.ui.text.style.TextAlign? = null,
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -181,8 +187,10 @@ fun ScreenHeader(
         if (subtitle != null) {
             Text(
                 text = subtitle,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = subtitleStyle ?: MaterialTheme.typography.bodyMedium,
+                color = subtitleColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = subtitleTextAlign,
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }

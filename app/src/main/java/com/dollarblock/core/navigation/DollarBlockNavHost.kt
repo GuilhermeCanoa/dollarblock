@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
+import com.dollarblock.feature.apps.APPS_ROUTE
 import com.dollarblock.feature.apps.appsScreen
 import com.dollarblock.feature.home.HOME_ROUTE
 import com.dollarblock.feature.home.homeScreen
@@ -28,7 +29,15 @@ fun DollarBlockNavHost(
         startDestination = HOME_ROUTE,
         modifier = modifier,
     ) {
-        homeScreen()
+        homeScreen(onNavigateToApps = {
+            navController.navigate(APPS_ROUTE) {
+                popUpTo(navController.graph.startDestinationId) {
+                    saveState = true
+                }
+                launchSingleTop = true
+                restoreState = true
+            }
+        })
         appsScreen()
         statisticsScreen()
         profileScreen(onOpenHistory = { navController.navigate(HISTORY_ROUTE) })
