@@ -10,6 +10,9 @@ interface DailyUsageDao {
     @Query("SELECT * FROM daily_usage WHERE epochDay = :epochDay")
     fun observeForDay(epochDay: Long): Flow<List<DailyUsageEntity>>
 
+    @Query("SELECT * FROM daily_usage WHERE epochDay BETWEEN :startDay AND :endDay")
+    fun observeRange(startDay: Long, endDay: Long): Flow<List<DailyUsageEntity>>
+
     @Query("SELECT * FROM daily_usage WHERE packageName = :packageName AND epochDay = :epochDay LIMIT 1")
     suspend fun getForDay(packageName: String, epochDay: Long): DailyUsageEntity?
 

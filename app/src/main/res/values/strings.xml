@@ -70,6 +70,8 @@
     <string name="stat_most_used">Mais usado</string>
     <string name="stat_blocks">Bloqueios</string>
     <string name="stat_usage_overview">Visão geral de uso</string>
+    <string name="stat_weekly_score">Score semanal por app</string>
+    <string name="stat_no_data">Nenhum dado de uso ainda.\nAbra apps monitorados para ver o gráfico.</string>
 
     <!-- Profile (preview E0.5) -->
     <string name="profile_user_name">Você</string>

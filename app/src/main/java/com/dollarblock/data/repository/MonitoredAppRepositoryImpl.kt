@@ -100,12 +100,6 @@ class MonitoredAppRepositoryImpl @Inject constructor(
         val now = System.currentTimeMillis()
         monitoredPackages.forEach { packageName ->
             val rawMillis = usageByPackage[packageName] ?: return@forEach
-            val app = monitoredAppDao.getByPackage(packageName)
-            if (app != null && rawMillis < app.usageBaselineMillis) {
-                // Baseline desatualizado (capturado com método diferente) — corrige para o raw atual
-                monitoredAppDao.setUsageBaseline(packageName, rawMillis)
-                Log.d(TAG, "baseline reset for $packageName: was=${app.usageBaselineMillis} raw=$rawMillis")
-            }
             dailyUsageDao.upsertUsage(
                 packageName = packageName,
                 epochDay = today,
