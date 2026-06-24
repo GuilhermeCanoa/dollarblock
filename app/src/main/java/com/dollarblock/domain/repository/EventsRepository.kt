@@ -18,4 +18,7 @@ interface EventsRepository {
 
     /** Eventos mais recentes (bloqueios + desbloqueios), ordenados do mais novo. */
     fun recentEvents(limit: Int): Flow<List<RecentEvent>>
+
+    /** Total de tentativas de abertura de apps bloqueados desde o início do dia. */
+    fun blockAttemptsToday(): Flow<Int>
 }

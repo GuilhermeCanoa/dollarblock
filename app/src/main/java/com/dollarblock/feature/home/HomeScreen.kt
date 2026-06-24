@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -100,13 +101,20 @@ fun HomeScreen(
                 modifier = Modifier.weight(1f),
             )
             MetricCard(
-                title = stringResource(R.string.home_active_limits),
-                value = uiState.activeLimitsCount.toString(),
-                icon = Icons.Filled.Timer,
+                title = stringResource(R.string.home_currently_blocked),
+                value = uiState.currentlyBlockedCount.toString(),
+                icon = Icons.Filled.Lock,
                 modifier = Modifier.weight(1f),
                 onClick = onNavigateToApps,
             )
         }
+
+        MetricCard(
+            title = stringResource(R.string.home_addiction_tracker),
+            value = uiState.addictionAttempts.toString(),
+            icon = Icons.Filled.Warning,
+            modifier = Modifier.fillMaxWidth(),
+        )
 
         SectionHeader(text = stringResource(R.string.home_recent_events))
         if (uiState.recentEvents.isEmpty()) {

@@ -234,6 +234,7 @@ private fun AppListItem(
     val limit = row.dailyLimitMinutes
     val overtimeMinutes = if (limit != null) (row.usedMinutesToday - limit).coerceAtLeast(0) else 0
     val overLimit = limit != null && row.usedMinutesToday >= limit
+    val displayedUsed = if (limit != null) minOf(row.usedMinutesToday, limit) else row.usedMinutesToday
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -258,7 +259,7 @@ private fun AppListItem(
                         text = if (limit != null) {
                             stringResource(
                                 R.string.apps_used_of_limit,
-                                formatMinutes(row.usedMinutesToday),
+                                formatMinutes(displayedUsed),
                                 formatMinutes(limit),
                             )
                         } else {
@@ -268,6 +269,13 @@ private fun AppListItem(
                         color = if (overLimit) DollarBlockTheme.colors.penalty
                                 else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    if (overLimit && overtimeMinutes > 0) {
+                        Text(
+                            text = stringResource(R.string.apps_over_limit_text, formatMinutes(overtimeMinutes)),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = DollarBlockTheme.colors.penalty,
+                        )
+                    }
                     if (limit == null) {
                         Text(
                             text = stringResource(R.string.apps_tap_to_set_limit),
@@ -298,20 +306,25 @@ private fun AppListItem(
                             else MaterialTheme.colorScheme.primary,
                 )
 
-                // Barra 2: tempo extra via desbloqueio pago (aparece só quando passou do limite)
+                // Barra 2: overtime total acumulado (aparece quando passou do limite)
                 if (overLimit && overtimeMinutes > 0) {
                     Spacer(Modifier.height(8.dp))
-                    // Progresso relativo a janelas de 5 min: avança e reinicia a cada unlock
+                    // Cresce de 0 a 100% conforme overtime vai de 0 ao limite; trava em 100%
+                    val overtimeTotalRatio = (overtimeMinutes.toFloat() / limit).coerceIn(0f, 1f)
+                    UsageBar(
+                        label = stringResource(R.string.apps_overtime_bar_label, formatMinutes(overtimeMinutes)),
+                        progress = if (row.isMonitored) overtimeTotalRatio else 0f,
+                        color = DollarBlockTheme.colors.penalty,
+                    )
+
+                    // Barra 3: progresso dentro da janela de desbloqueio atual (5 min)
+                    Spacer(Modifier.height(8.dp))
                     val windowMinutes = UNLOCK_WINDOW_MINUTES
                     val overtimeRatio = (overtimeMinutes % windowMinutes).toFloat() / windowMinutes
                     val windowsUsed = overtimeMinutes / windowMinutes
                     UsageBar(
-                        label = stringResource(
-                            R.string.apps_overtime_label,
-                            formatMinutes(overtimeMinutes),
-                            windowsUsed + 1,
-                        ),
-                        progress = if (overtimeRatio == 0f) 1f else overtimeRatio,
+                        label = stringResource(R.string.apps_unlock_window_label, windowsUsed + 1),
+                        progress = if (row.isMonitored) (if (overtimeRatio == 0f) 1f else overtimeRatio) else 0f,
                         color = DollarBlockTheme.colors.alert,
                     )
                 }

@@ -7,14 +7,13 @@ import kotlin.math.roundToInt
  * Daily metrics shown on the Home screen, computed from monitored apps.
  *
  * @property score 0..1000 points remaining today, or `null` when no monitored app has a limit.
- *   Formula: (totalRemainingMinutes / totalLimitMinutes) * 1000, rounded.
  * @property timeSavedMinutes sum of (limit − used) across all apps with a limit, clamped ≥ 0.
- * @property activeLimitsCount number of monitored apps that have a daily limit set.
+ * @property currentlyBlockedCount number of monitored apps that have exceeded their daily limit.
  */
 data class DailyMetrics(
     val score: Int?,
     val timeSavedMinutes: Int,
-    val activeLimitsCount: Int,
+    val currentlyBlockedCount: Int,
 )
 
 object HomeMetrics {
@@ -37,10 +36,14 @@ object HomeMetrics {
             (limit - app.usedMinutesToday).coerceAtLeast(0)
         }
 
+        val currentlyBlocked = withLimit.count { app ->
+            app.usedMinutesToday >= (app.dailyLimitMinutes ?: Int.MAX_VALUE)
+        }
+
         return DailyMetrics(
             score = score,
             timeSavedMinutes = timeSaved,
-            activeLimitsCount = withLimit.size,
+            currentlyBlockedCount = currentlyBlocked,
         )
     }
 }
