@@ -186,6 +186,39 @@ class UsageStatsProvider @Inject constructor(
         totals
     }
 
+    /**
+     * Tempo de uso em foreground de [packageName] desde [sinceMs] (epoch millis) até agora.
+     * Usa eventos UsageStats — só conta tempo real em foreground, não é afetado por overlays.
+     * Inclui sessão em andamento se o app ainda estiver aberto (ACTIVITY_RESUMED sem PAUSED).
+     */
+    suspend fun getUsageMillisSince(packageName: String, sinceMs: Long): Long = withContext(Dispatchers.IO) {
+        if (!hasUsageAccess()) return@withContext 0L
+        val now = System.currentTimeMillis()
+        val from = sinceMs.coerceAtLeast(0L)
+
+        val events = usageStatsManager.queryEvents(from, now)
+        var total = 0L
+        var resumeTime = -1L
+        val ev = UsageEvents.Event()
+
+        while (events.hasNextEvent()) {
+            events.getNextEvent(ev)
+            if (ev.packageName != packageName) continue
+            when (ev.eventType) {
+                UsageEvents.Event.ACTIVITY_RESUMED -> resumeTime = ev.timeStamp
+                UsageEvents.Event.ACTIVITY_PAUSED,
+                UsageEvents.Event.ACTIVITY_STOPPED -> {
+                    if (resumeTime >= 0L) {
+                        total += ev.timeStamp - resumeTime
+                        resumeTime = -1L
+                    }
+                }
+            }
+        }
+        if (resumeTime >= 0L) total += now - resumeTime
+        total
+    }
+
     /** epochDay local consistente com o usado nas entidades Room. */
     fun currentEpochDay(): Long = LocalDate.now(ZoneId.systemDefault()).toEpochDay()
 

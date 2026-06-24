@@ -20,9 +20,12 @@ import javax.inject.Singleton
 private val Context.dollarBlockDataStore by preferencesDataStore(name = "dollarblock_prefs")
 
 /**
- * Fonte única do estado de bloqueio. Mantém o estado em memória ([StateFlow]) para
- * leitura síncrona pelo [com.dollarblock.service.accessibility.DollarBlockAccessibilityService]
- * (evita corrida entre conceder o desbloqueio e reabrir o app), e persiste em DataStore.
+ * Fonte única do estado de bloqueio.
+ *
+ * Janela de desbloqueio: após pagamento, armazena (grantedAtMs, durationMs).
+ * A verificação de expiração por *tempo de uso real* é feita no serviço de acessibilidade
+ * via [com.dollarblock.data.usage.UsageStatsProvider.getUsageMillisSince] — não há
+ * session tracking aqui. Para bloqueios manuais, usa wall-clock (rápido e síncrono).
  */
 @Singleton
 class BlockPreferences @Inject constructor(
@@ -32,20 +35,21 @@ class BlockPreferences @Inject constructor(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val blockedKey = stringSetPreferencesKey("blocked_packages")
-    private val unlockedKey = stringSetPreferencesKey("unlocked_until")
+    private val unlockGrantsKey = stringSetPreferencesKey("unlock_grants")
 
     private val _blockedPackages = MutableStateFlow<Set<String>>(emptySet())
     val blockedPackages: StateFlow<Set<String>> = _blockedPackages.asStateFlow()
 
-    /** package -> instante (epoch millis) até o qual o app está liberado. */
-    private val _unlockedUntil = MutableStateFlow<Map<String, Long>>(emptyMap())
-    val unlockedUntil: StateFlow<Map<String, Long>> = _unlockedUntil.asStateFlow()
+    /** package → (grantedAtMs, durationMs) — concedido após pagamento. */
+    private val _unlockGrants = MutableStateFlow<Map<String, UnlockGrant>>(emptyMap())
+
+    data class UnlockGrant(val grantedAtMs: Long, val durationMs: Long)
 
     init {
         scope.launch {
             val prefs = dataStore.data.first()
             _blockedPackages.value = prefs[blockedKey] ?: emptySet()
-            _unlockedUntil.value = parseUnlocks(prefs[unlockedKey] ?: emptySet())
+            _unlockGrants.value = parseGrants(prefs[unlockGrantsKey] ?: emptySet())
         }
     }
 
@@ -54,52 +58,45 @@ class BlockPreferences @Inject constructor(
         persist()
     }
 
-    /** Concede acesso temporário a [packageName] por [durationMs] (após pagamento). */
+    /** Registra uma janela de desbloqueio de [durationMs] a partir de agora. */
     fun grantUnlock(packageName: String, durationMs: Long) {
-        val until = System.currentTimeMillis() + durationMs
-        _unlockedUntil.update { it + (packageName to until) }
+        _unlockGrants.update { it + (packageName to UnlockGrant(System.currentTimeMillis(), durationMs)) }
         persist()
     }
 
-    /** True se o app está bloqueado e fora de uma janela de desbloqueio ativa. */
-    fun shouldBlock(packageName: String): Boolean {
-        if (!_blockedPackages.value.contains(packageName)) return false
-        return isUnlockWindowExpired(packageName)
-    }
+    /** Retorna o grant ativo para [packageName], ou null se não houver. */
+    fun getUnlockGrant(packageName: String): UnlockGrant? = _unlockGrants.value[packageName]
 
     /**
-     * True se [packageName] não tem uma janela de desbloqueio ativa agora (ou nunca teve).
-     * Usado tanto por [shouldBlock] (bloqueio manual) quanto pelo bloqueio automático por
-     * limite diário no `DollarBlockAccessibilityService` — pagar libera os dois igualmente.
+     * True se o app está bloqueado manualmente e fora da janela de desbloqueio (wall-clock).
+     * Usado no path síncrono do AccessibilityService — sem IO.
      */
-    fun isUnlockWindowExpired(packageName: String): Boolean {
-        val until = _unlockedUntil.value[packageName] ?: 0L
-        return System.currentTimeMillis() >= until
-    }
-
-    /** Millis restantes na janela de desbloqueio ativa, ou 0 se já expirou. */
-    fun unlockWindowRemainingMillis(packageName: String): Long {
-        val until = _unlockedUntil.value[packageName] ?: 0L
-        return (until - System.currentTimeMillis()).coerceAtLeast(0L)
+    fun shouldBlock(packageName: String): Boolean {
+        if (!_blockedPackages.value.contains(packageName)) return false
+        val grant = _unlockGrants.value[packageName] ?: return true
+        return System.currentTimeMillis() >= grant.grantedAtMs + grant.durationMs
     }
 
     private fun persist() {
         val blocked = _blockedPackages.value
-        val unlocks = _unlockedUntil.value
+        val grants = _unlockGrants.value
         scope.launch {
             dataStore.edit { prefs ->
                 prefs[blockedKey] = blocked
-                prefs[unlockedKey] = unlocks.map { (pkg, until) -> "$pkg|$until" }.toSet()
+                prefs[unlockGrantsKey] = grants.map { (pkg, g) ->
+                    "$pkg|${g.grantedAtMs}|${g.durationMs}"
+                }.toSet()
             }
         }
     }
 
-    private fun parseUnlocks(raw: Set<String>): Map<String, Long> =
+    private fun parseGrants(raw: Set<String>): Map<String, UnlockGrant> =
         raw.mapNotNull { entry ->
-            val idx = entry.lastIndexOf('|')
-            if (idx <= 0) return@mapNotNull null
-            val pkg = entry.substring(0, idx)
-            val until = entry.substring(idx + 1).toLongOrNull() ?: return@mapNotNull null
-            pkg to until
+            val parts = entry.split('|')
+            if (parts.size != 3) return@mapNotNull null
+            val pkg = parts[0]
+            val grantedAt = parts[1].toLongOrNull() ?: return@mapNotNull null
+            val duration = parts[2].toLongOrNull() ?: return@mapNotNull null
+            pkg to UnlockGrant(grantedAt, duration)
         }.toMap()
 }

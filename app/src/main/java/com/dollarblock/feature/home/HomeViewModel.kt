@@ -19,7 +19,8 @@ data class HomeUiState(
     val recentEvents: List<RecentEvent> = emptyList(),
     val dailyScore: Int? = null,
     val timeSavedMinutes: Int = 0,
-    val activeLimitsCount: Int = 0,
+    val currentlyBlockedCount: Int = 0,
+    val addictionAttempts: Int = 0,
 )
 
 @HiltViewModel
@@ -31,13 +32,15 @@ class HomeViewModel @Inject constructor(
     val uiState: StateFlow<HomeUiState> = combine(
         eventsRepository.recentEvents(RECENT_EVENTS_LIMIT),
         monitoredAppRepository.observeMonitoredAppsUsage(),
-    ) { events, monitoredUsage ->
+        eventsRepository.blockAttemptsToday(),
+    ) { events, monitoredUsage, blockAttempts ->
         val metrics = HomeMetrics.compute(monitoredUsage)
         HomeUiState(
             recentEvents = events,
             dailyScore = metrics.score,
             timeSavedMinutes = metrics.timeSavedMinutes,
-            activeLimitsCount = metrics.activeLimitsCount,
+            currentlyBlockedCount = metrics.currentlyBlockedCount,
+            addictionAttempts = blockAttempts,
         )
     }.stateIn(
         scope = viewModelScope,

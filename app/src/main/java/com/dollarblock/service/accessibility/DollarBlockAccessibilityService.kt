@@ -26,41 +26,26 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * Detecta o app em primeiro plano. Bloqueia (abre [BlockActivity] por cima) em dois casos:
- * 1. Bloqueio manual: app presente em [BlockPreferences] (toggle na Home), fora de uma
- *    janela de desbloqueio ativa — checagem síncrona, sem custo de IO.
- * 2. Limite diário atingido: app monitorado (`MonitoredAppEntity.isMonitored`) com
- *    `dailyLimitMinutes` definido e uso de hoje (`UsageStatsProvider`) ≥ limite —
- *    checagem assíncrona (Room + UsageStatsManager), também respeitando a janela de
- *    desbloqueio ativa (pagar libera os dois tipos de bloqueio igualmente).
+ * Detecta o app em primeiro plano e bloqueia (abre [BlockActivity]) em dois casos:
  *
- * O bloqueio é re-afirmado a cada mudança de janela do app (sem debounce no lançamento)
- * e uma vez mais com atraso, para vencer a corrida com as transições de inicialização do
- * app (ex.: splash → tela inicial num cold start). O registro do evento é deduplicado.
+ * 1. **Bloqueio manual**: app presente em [BlockPreferences] e sem janela de desbloqueio ativa.
+ * 2. **Limite diário atingido**: app monitorado com uso ≥ limite e sem unlock ativo.
  *
- * Enquanto um app **monitorado** permanece em foreground (sem trocar de janela — ex.:
- * rolando o feed de um app por minutos), nenhum [AccessibilityEvent] novo chega. Por isso
- * o serviço também mantém um polling a cada [POLL_INTERVAL_MS] enquanto esse app estiver
- * aberto: sincroniza o uso de hoje (`MonitoredAppRepository.syncTodayUsage`, que atualiza o
- * Room observado pela tela Apps) e reavalia o limite, bloqueando sem precisar fechar/reabrir.
+ * A janela de desbloqueio é medida em **tempo real de uso** via [UsageStatsProvider.getUsageMillisSince]
+ * — não há session tracking; o próprio SO registra foreground time com precisão.
+ *
+ * Fix Bug 1: o bloqueio por limite só dispara na tela quando o app monitorado está em
+ * foreground — se o limite for detectado enquanto outro app está na tela, o bloqueio é
+ * aplicado apenas na próxima abertura do app.
  */
 @AndroidEntryPoint
 class DollarBlockAccessibilityService : AccessibilityService() {
 
-    @Inject
-    lateinit var blockPreferences: BlockPreferences
-
-    @Inject
-    lateinit var eventsRepository: EventsRepository
-
-    @Inject
-    lateinit var monitoredAppDao: MonitoredAppDao
-
-    @Inject
-    lateinit var usageStatsProvider: UsageStatsProvider
-
-    @Inject
-    lateinit var monitoredAppRepository: MonitoredAppRepository
+    @Inject lateinit var blockPreferences: BlockPreferences
+    @Inject lateinit var eventsRepository: EventsRepository
+    @Inject lateinit var monitoredAppDao: MonitoredAppDao
+    @Inject lateinit var usageStatsProvider: UsageStatsProvider
+    @Inject lateinit var monitoredAppRepository: MonitoredAppRepository
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val handler = Handler(Looper.getMainLooper())
@@ -72,6 +57,21 @@ class DollarBlockAccessibilityService : AccessibilityService() {
     private var trackedPackage: String? = null
     private var trackingJob: Job? = null
 
+    private val launcherPackage: String by lazy {
+        val home = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+        packageManager.resolveActivity(home, 0)?.activityInfo?.packageName.orEmpty()
+    }
+
+    /**
+     * Filtra eventos de overlays de sistema, IME e serviços que não são apps reais.
+     * Sem esse filtro, qualquer TYPE_WINDOW_STATE_CHANGED de um serviço do sistema
+     * corromperia lastForegroundPackage e impediria o bloqueio no tracking loop.
+     */
+    private fun isRealApp(packageName: String): Boolean {
+        if (packageName == launcherPackage) return true
+        return packageManager.getLaunchIntentForPackage(packageName) != null
+    }
+
     override fun onServiceConnected() {
         super.onServiceConnected()
         Log.i(TAG, "Service connected")
@@ -82,17 +82,19 @@ class DollarBlockAccessibilityService : AccessibilityService() {
         val packageName = event.packageName?.toString() ?: return
 
         if (packageName == getPackageName()) {
-            // DollarBlock entrou em foreground — cancela rastreamento do app anterior
-            // para não disparar bloqueio por cima do próprio app.
             lastForegroundPackage = packageName
             stopTracking()
             return
         }
 
-        // Ignora mudanças internas dentro do mesmo app — só processa quando o package muda.
+        // Ignora overlays, IME, painéis de notificação — não são apps reais e
+        // corromperiam lastForegroundPackage, quebrando o check no tracking loop.
+        if (!isRealApp(packageName)) return
+
         val packageChanged = packageName != lastForegroundPackage
         lastForegroundPackage = packageName
 
+        // Bloqueio manual: verificação síncrona rápida.
         if (blockPreferences.shouldBlock(packageName)) {
             stopTracking()
             assertBlock(packageName) { blockPreferences.shouldBlock(packageName) }
@@ -105,21 +107,20 @@ class DollarBlockAccessibilityService : AccessibilityService() {
 
         scope.launch {
             val app = monitoredAppDao.getByPackage(packageName)
-            if (app == null || !app.isMonitored) {
-                // Só cancela o rastreamento se o app monitorado foi realmente substituído
-                // (não cancela por overlays/IME, que não disparam novo evento ao fechar).
-                // scheduleTracking já cuida disso: se outro app monitorado entrar em foreground,
-                // ele chama stopTracking() explicitamente.
-                return@launch
-            }
+            if (app == null || !app.isMonitored) return@launch
 
             val usedMillis = effectiveUsageMillis(app, enteredForegroundAt)
             val limitMillis = (app.dailyLimitMinutes ?: return@launch) * 60_000L
 
-            if (usedMillis >= limitMillis && blockPreferences.isUnlockWindowExpired(packageName)) {
+            if (usedMillis >= limitMillis) {
+                val unlockActive = isUnlockActive(packageName)
                 handler.post {
-                    stopTracking()
-                    assertBlock(packageName) { blockPreferences.isUnlockWindowExpired(packageName) }
+                    if (!unlockActive) {
+                        stopTracking()
+                        assertBlock(packageName) { !isUnlockActiveSync(packageName) }
+                    } else {
+                        scheduleTracking(packageName, enteredForegroundAt)
+                    }
                 }
             } else {
                 handler.post { scheduleTracking(packageName, enteredForegroundAt) }
@@ -128,22 +129,9 @@ class DollarBlockAccessibilityService : AccessibilityService() {
     }
 
     /**
-     * Uso efetivo em millis = uso bruto via UsageEvents − baseline capturado na ativação.
-     * [foregroundSinceMillis] inclui a sessão em andamento no cálculo.
-     */
-    private suspend fun effectiveUsageMillis(app: MonitoredAppEntity, foregroundSinceMillis: Long?): Long {
-        val raw = usageStatsProvider.getTodayUsageMillisViaEvents(
-            packageName = app.packageName,
-            ongoingSessionSince = foregroundSinceMillis,
-        )
-        return (raw - app.usageBaselineMillis).coerceAtLeast(0L)
-    }
-
-    /**
-     * Polling adaptativo: verifica uso e limite a cada [MIN_POLL_INTERVAL_MS]–[MAX_POLL_INTERVAL_MS].
-     * Intervalo reduz conforme o limite se aproxima. Robusto contra overlays/IME que cancelavam
-     * o timer one-shot anterior: mesmo que um evento de outro pacote cancele este job, o próximo
-     * evento do app monitorado reinicia o rastreamento (via onAccessibilityEvent).
+     * Polling adaptativo: sincroniza uso e avalia limite a cada iteração.
+     * Quando o limite é atingido, verifica se há janela de desbloqueio ativa (via UsageStats).
+     * O bloqueio só é disparado visualmente se o app ainda estiver em foreground (Bug 1 fix).
      */
     private fun scheduleTracking(packageName: String, foregroundSinceMillis: Long) {
         stopTracking()
@@ -157,24 +145,57 @@ class DollarBlockAccessibilityService : AccessibilityService() {
                 val usedMillis = effectiveUsageMillis(app, foregroundSinceMillis)
                 monitoredAppRepository.syncTodayUsage(packageName, foregroundSinceMillis)
 
-                if (usedMillis >= limitMillis && blockPreferences.isUnlockWindowExpired(packageName)) {
-                    handler.post {
-                        assertBlock(packageName) { blockPreferences.isUnlockWindowExpired(packageName) }
+                if (usedMillis >= limitMillis) {
+                    val grant = blockPreferences.getUnlockGrant(packageName)
+                    if (grant == null) {
+                        // Sem unlock → bloqueia se o app estiver em foreground
+                        handler.post {
+                            if (lastForegroundPackage == packageName) {
+                                assertBlock(packageName) { !isUnlockActiveSync(packageName) }
+                            }
+                        }
+                        break
                     }
-                    break
-                }
 
-                val sleepMs = when {
-                    usedMillis >= limitMillis -> {
-                        // Dentro da janela de desbloqueio — aguarda expirar
-                        blockPreferences.unlockWindowRemainingMillis(packageName)
-                            .coerceIn(MIN_POLL_INTERVAL_MS, MAX_POLL_INTERVAL_MS)
+                    val usageSinceGrant = usageStatsProvider.getUsageMillisSince(
+                        packageName, grant.grantedAtMs,
+                    )
+                    if (usageSinceGrant >= grant.durationMs) {
+                        // Janela de desbloqueio esgotada → bloqueia se em foreground
+                        handler.post {
+                            if (lastForegroundPackage == packageName) {
+                                assertBlock(packageName) { !isUnlockActiveSync(packageName) }
+                            }
+                        }
+                        break
                     }
-                    else -> (limitMillis - usedMillis).coerceIn(MIN_POLL_INTERVAL_MS, MAX_POLL_INTERVAL_MS)
+
+                    // Ainda dentro da janela — dorme proporcionalmente ao tempo restante
+                    val remaining = grant.durationMs - usageSinceGrant
+                    delay(remaining.coerceIn(MIN_POLL_INTERVAL_MS, MAX_POLL_INTERVAL_MS))
+                } else {
+                    delay((limitMillis - usedMillis).coerceIn(MIN_POLL_INTERVAL_MS, MAX_POLL_INTERVAL_MS))
                 }
-                delay(sleepMs)
             }
         }
+    }
+
+    /** Verifica se há unlock ativo via UsageStats (suspend — uso em coroutine). */
+    private suspend fun isUnlockActive(packageName: String): Boolean {
+        val grant = blockPreferences.getUnlockGrant(packageName) ?: return false
+        val usageSince = usageStatsProvider.getUsageMillisSince(packageName, grant.grantedAtMs)
+        return usageSince < grant.durationMs
+    }
+
+    /**
+     * Verifica unlock ativo de forma síncrona (wall-clock) — usada no lambda [assertBlock]
+     * que roda na main thread. Conservador: se há grant recente (< 10× duração), considera ativo.
+     */
+    private fun isUnlockActiveSync(packageName: String): Boolean {
+        val grant = blockPreferences.getUnlockGrant(packageName) ?: return false
+        // Se o grant foi concedido há menos de 10× a duração, pode ainda estar ativo.
+        // A verificação precisa (via UsageStats) é feita no polling loop.
+        return System.currentTimeMillis() < grant.grantedAtMs + grant.durationMs * 10
     }
 
     private fun stopTracking() {
@@ -184,22 +205,25 @@ class DollarBlockAccessibilityService : AccessibilityService() {
     }
 
     /**
-     * Abre a tela de bloqueio e a re-afirma após [REASSERT_DELAY_MS]. [stillBlocked] decide
-     * se a re-asserção ainda se aplica — cada chamador passa a checagem correspondente ao
-     * motivo do bloqueio (manual ou limite diário), já que pagar libera a janela para ambos.
+     * Uso efetivo em millis = uso bruto via UsageEvents − baseline capturado na ativação.
      */
+    private suspend fun effectiveUsageMillis(
+        app: MonitoredAppEntity,
+        foregroundSinceMillis: Long?,
+    ): Long {
+        val raw = usageStatsProvider.getTodayUsageMillisViaEvents(
+            packageName = app.packageName,
+            ongoingSessionSince = foregroundSinceMillis,
+        )
+        return (raw - app.usageBaselineMillis).coerceAtLeast(0L)
+    }
+
     private fun assertBlock(packageName: String, stillBlocked: () -> Boolean) {
         val label = resolveLabel(packageName)
-
-        // Re-afirma imediatamente (cobre o app assim que ele aparece).
         launchBlockScreen(packageName, label)
         recordBlockOnce(packageName, label)
-
-        // Re-afirma após o app concluir suas transições de inicialização (cold start).
         handler.postDelayed({
-            if (stillBlocked()) {
-                launchBlockScreen(packageName, label)
-            }
+            if (stillBlocked()) launchBlockScreen(packageName, label)
         }, REASSERT_DELAY_MS)
     }
 

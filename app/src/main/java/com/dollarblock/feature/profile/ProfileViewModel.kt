@@ -57,7 +57,7 @@ class ProfileViewModel @Inject constructor(
             // Mesma lógica pura da Home — limites ativos e tempo economizado de hoje.
             val metrics = HomeMetrics.compute(monitoredUsage)
             ProfileStats(
-                activeLimitsCount = metrics.activeLimitsCount,
+                activeLimitsCount = metrics.currentlyBlockedCount,
                 timeSavedMinutes = metrics.timeSavedMinutes,
                 blocksToday = blocksToday,
             )

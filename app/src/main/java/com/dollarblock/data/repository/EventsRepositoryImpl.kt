@@ -7,6 +7,8 @@ import com.dollarblock.domain.model.RecentEvent
 import com.dollarblock.domain.repository.EventsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import java.time.LocalDate
+import java.time.ZoneId
 import javax.inject.Inject
 
 class EventsRepositoryImpl @Inject constructor(
@@ -40,6 +42,14 @@ class EventsRepositoryImpl @Inject constructor(
                 method = method,
             ),
         )
+    }
+
+    override fun blockAttemptsToday(): Flow<Int> {
+        val startOfDay = LocalDate.now()
+            .atStartOfDay(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
+        return eventDao.countBlocksSince(startOfDay)
     }
 
     override fun recentEvents(limit: Int): Flow<List<RecentEvent>> =
