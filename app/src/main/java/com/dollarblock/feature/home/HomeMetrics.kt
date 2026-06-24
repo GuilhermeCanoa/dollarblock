@@ -4,11 +4,12 @@ import com.dollarblock.domain.model.MonitoredAppUsage
 import kotlin.math.roundToInt
 
 /**
- * Métricas do dia exibidas na Home, calculadas a partir dos apps monitorados.
+ * Daily metrics shown on the Home screen, computed from monitored apps.
  *
- * @property score 0..100, ou `null` quando nenhum app monitorado tem limite definido hoje.
- * @property timeSavedMinutes soma de (limite − usado), só quando positivo.
- * @property activeLimitsCount quantidade de apps monitorados com limite diário definido.
+ * @property score 0..1000 points remaining today, or `null` when no monitored app has a limit.
+ *   Formula: (totalRemainingMinutes / totalLimitMinutes) * 1000, rounded.
+ * @property timeSavedMinutes sum of (limit − used) across all apps with a limit, clamped ≥ 0.
+ * @property activeLimitsCount number of monitored apps that have a daily limit set.
  */
 data class DailyMetrics(
     val score: Int?,
@@ -16,29 +17,24 @@ data class DailyMetrics(
     val activeLimitsCount: Int,
 )
 
-/**
- * Lógica **pura** (sem Android/Room/Compose) do cálculo das métricas do dia, extraída do
- * ViewModel para poder ser coberta por teste unitário JVM. Ver CONTRIBUTING.md seção 4.
- */
 object HomeMetrics {
 
     fun compute(monitoredUsage: List<MonitoredAppUsage>): DailyMetrics {
-        // Só apps monitorados COM limite contam — sem meta não há "economia" nem "score".
         val withLimit = monitoredUsage.filter { it.isMonitored && it.dailyLimitMinutes != null }
+
+        val totalLimit = withLimit.sumOf { it.dailyLimitMinutes ?: 0 }
+        val totalUsed = withLimit.sumOf { it.usedMinutesToday }
+        val totalRemaining = (totalLimit - totalUsed).coerceAtLeast(0)
+
+        val score = if (totalLimit == 0) {
+            null
+        } else {
+            (totalRemaining.toFloat() / totalLimit * 1000).roundToInt()
+        }
 
         val timeSaved = withLimit.sumOf { app ->
             val limit = app.dailyLimitMinutes ?: 0
             (limit - app.usedMinutesToday).coerceAtLeast(0)
-        }
-
-        val score = if (withLimit.isEmpty()) {
-            null
-        } else {
-            val perAppRatios = withLimit.map { app ->
-                val limit = app.dailyLimitMinutes ?: 1
-                ((limit - app.usedMinutesToday).toFloat() / limit).coerceIn(0f, 1f)
-            }
-            (perAppRatios.average() * 100).roundToInt()
         }
 
         return DailyMetrics(

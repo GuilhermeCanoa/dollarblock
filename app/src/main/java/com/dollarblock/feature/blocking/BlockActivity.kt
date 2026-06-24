@@ -36,14 +36,18 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.dollarblock.BuildConfig
 import com.dollarblock.MainActivity
 import com.dollarblock.R
@@ -291,12 +295,30 @@ private fun BlockScreen(
     onSimulatePayment: () -> Unit,
     onGoHome: () -> Unit,
 ) {
+    val quotes = stringArrayResource(R.array.home_quotes)
+    val quote = remember { quotes.random() }
+    val neonGreen = Color(0xFF39FF14)
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(DollarGreenDark),
         contentAlignment = Alignment.Center,
     ) {
+        // Frase motivacional no topo
+        Text(
+            text = "\"$quote\"",
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontStyle = FontStyle.Italic,
+                lineHeight = 20.sp,
+            ),
+            color = neonGreen,
+            textAlign = TextAlign.Center,
+            modifier = androidx.compose.ui.Modifier
+                .align(Alignment.TopCenter)
+                .padding(horizontal = 24.dp, vertical = 52.dp),
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
