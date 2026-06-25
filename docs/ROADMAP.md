@@ -99,9 +99,9 @@ reabrir o app pula o onboarding. ✅ **Validado.** **Depende de E1.**
   real por `label`, com mensagem de "nenhum resultado" e botão de limpar. ✅
 - Persistência em `MonitoredAppEntity.dailyLimitMinutes` (Room), via
   `MonitoredAppRepository.setDailyLimit`.
+- **Barra dupla de progresso** (2026-06-23): Barra 1 mostra uso vs limite (trava em 100% e muda para `penalty` quando excedido); Barra 2 (overtime) aparece só quando o limite foi ultrapassado, mostrando progresso dentro da janela de 5 min de desbloqueio pago — reinicia a cada janela. Componente `UsageBar` extraído internamente.
 
-**Aceite:** ativar/desativar, definir limite e buscar por nome persistem e refletem na
-lista. ✅ **Validado.** **Depende de E1.**
+**Aceite:** ativar/desativar, definir limite, buscar por nome e visualizar barra dupla de progresso persistem e refletem na lista. ✅ **Validado.** **Depende de E1.**
 
 ---
 
@@ -140,6 +140,10 @@ lista. ✅ **Validado.** **Depende de E1.**
   `MonitoredAppRepository.syncTodayUsage()` (atualiza Room → UI via Flow) e reavalia o
   limite. É iniciado/parado por app conforme o foreground muda. ✅
 
+**Entregue adicionalmente (2026-06-23):**
+- **Fix overlays/IME**: `isRealApp()` no `DollarBlockAccessibilityService` filtra eventos de overlays de sistema, IME e painéis de notificação antes de qualquer avaliação — esses eventos corrompiam `lastForegroundPackage` e impediam o bloqueio correto no tracking loop.
+- **Unlock por tempo real de uso**: a janela de desbloqueio agora é medida via `UsageStatsProvider.getUsageMillisSince` (tempo real de foreground registrado pelo SO), sem session tracking próprio.
+
 **Restante do E5 (depende de E1):**
 - Migrar o conjunto bloqueado-manualmente de DataStore para Room (unificar com
   `MonitoredAppEntity`).
@@ -171,8 +175,14 @@ diário também é bloqueado automaticamente ao ser aberto. ✅ **Validado.**
 - Daily Score / Time Saved / Active Limits exibidos na Home com dados reais.
 - Recent Events (já entregue no E1) permanece.
 
-**Restante:** nenhum por ora — ViewModel/UI prontos. Streak/histórico de scores fica
-para mais adiante se fizer sentido.
+**Entregue adicionalmente (2026-06-23):**
+- Home redesenhada com animação `AnimatedContent` nos valores das métricas (slide up/down).
+- Frases motivacionais rotativas com swipe horizontal (string-array em strings.xml).
+- Métricas revistas: **Currently Blocked** substitui Active Limits (conta apps que já ultrapassaram o limite hoje); novo card **Addiction Tracker** exibe tentativas de abertura de apps bloqueados desde meia-noite (`EventsRepository.blockAttemptsToday()`).
+- Seção de controle manual de bloqueio (dropdown + chips) removida da Home — fluxo consolidado na aba Apps.
+- UI migrada para inglês.
+
+**Restante:** Streak/histórico de scores fica para mais adiante se fizer sentido.
 
 **Aceite:** Home reflete dados reais de uso, limites e eventos. ✅ **Validado.**
 **Depende de E1, E4, E5.**

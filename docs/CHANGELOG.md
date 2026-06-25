@@ -12,6 +12,38 @@ Descrição funcional.
 
 ---
 
+## [2026-06-23] — Redesign da Home + UI totalmente em inglês
+**Tipo:** feature / refactor
+**Épico:** E6 / adhoc
+
+Home redesenhada: cartões de métricas com animação `AnimatedContent` (slide up/down ao trocar de valor), suporte a swipe horizontal entre abas de período, frases motivacionais rotativas com swipe (`string-array` em `strings.xml`) e ícone `FormatQuote`. Toda a UI (strings.xml) migrada para inglês. A seção de controle manual de bloqueio (dropdown de app + chips de bloqueados) foi removida da Home — o bloqueio por limite e por toggle na aba Apps é o fluxo canônico. `BlockActivity` recebeu ajuste visual complementar.
+
+---
+
+## [2026-06-23] — Apps: barra dupla de progresso (uso + overtime)
+**Tipo:** feature
+**Épico:** E3 / E5
+
+Aba Apps agora exibe duas barras por app monitorado com limite: **Barra 1** (limite) trava em 100% quando o uso excede o limite e muda de cor para `penalty`; **Barra 2** (overtime) só aparece quando o limite foi ultrapassado, mostrando o progresso dentro da janela de 5 min comprada via desbloqueio pago — reinicia a cada janela (`overtimeMinutes % UNLOCK_WINDOW_MINUTES`). Componente `UsageBar` extraído para reutilização interna.
+
+---
+
+## [2026-06-23] — Home: métrica "Currently Blocked" + "Addiction Tracker"
+**Tipo:** feature
+**Épico:** E6
+
+Terceiro card de métrica na Home substituído: **Active Limits** (contagem estática) foi trocado por **Currently Blocked** (apps que já atingiram o limite hoje — lógica em `HomeMetrics.currentlyBlockedCount`). Novo card **Addiction Tracker** exibe o total de tentativas de abertura de apps bloqueados desde o início do dia (`EventsRepository.blockAttemptsToday()` → `EventDao.countBlocksSince`). `HomeUiState` ganhou `addictionAttempts`.
+
+---
+
+## [2026-06-23] — Fix: AccessibilityService filtrava overlays e IME como apps reais
+**Tipo:** bugfix
+**Épico:** E5
+
+Eventos `TYPE_WINDOW_STATE_CHANGED` de overlays de sistema, IME e painéis de notificação corrompiam `lastForegroundPackage` no `DollarBlockAccessibilityService`, fazendo o tracking loop avaliar o bloqueio com o package errado. Corrigido com `isRealApp()` que filtra esses eventos antes de qualquer avaliação (verifica `getLaunchIntentForPackage != null`; exceção para o launcher do sistema).
+
+---
+
 ## [2026-06-23] — Cobrança Stripe real via backend AWS (modo teste)
 **Tipo:** feature
 **Épico:** E9
