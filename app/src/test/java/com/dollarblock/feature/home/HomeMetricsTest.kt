@@ -45,12 +45,13 @@ class HomeMetricsTest {
         )
 
         assertEquals(40, metrics.timeSavedMinutes)
-        assertEquals(1, metrics.currentlyBlockedCount)
+        // b (used=50 > limit=30) e c (used=45 >= limit=45) estão bloqueados
+        assertEquals(2, metrics.currentlyBlockedCount)
     }
 
     @Test
-    fun `score eh a media das razoes restante sobre limite em porcentagem`() {
-        // a: (60-30)/60 = 0.5 ; b: (40-10)/40 = 0.75 ; média 0.625 -> 63
+    fun `score eh totalRemaining sobre totalLimit em escala 0-1000`() {
+        // a: remaining=30, b: remaining=30 → totalRemaining=60, totalLimit=100 → 600
         val metrics = HomeMetrics.compute(
             listOf(
                 app("a", limit = 60, used = 30),
@@ -58,13 +59,13 @@ class HomeMetricsTest {
             ),
         )
 
-        assertEquals(63, metrics.score)
+        assertEquals(600, metrics.score)
     }
 
     @Test
     fun `uso acima do limite nao deixa o score negativo`() {
         val metrics = HomeMetrics.compute(
-            listOf(app("a", limit = 30, used = 90)), // razão clampa em 0
+            listOf(app("a", limit = 30, used = 90)), // totalRemaining clampa em 0
         )
 
         assertEquals(0, metrics.score)
@@ -72,12 +73,12 @@ class HomeMetricsTest {
     }
 
     @Test
-    fun `app no limite exato pontua 100`() {
+    fun `app no limite exato pontua 1000`() {
         val metrics = HomeMetrics.compute(
             listOf(app("a", limit = 60, used = 0)),
         )
 
-        assertEquals(100, metrics.score)
+        assertEquals(1000, metrics.score)
         assertEquals(60, metrics.timeSavedMinutes)
     }
 }
