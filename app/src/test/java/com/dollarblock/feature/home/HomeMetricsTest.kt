@@ -31,7 +31,7 @@ class HomeMetricsTest {
 
         assertNull(metrics.score)
         assertEquals(0, metrics.timeSavedMinutes)
-        assertEquals(0, metrics.activeLimitsCount)
+        assertEquals(0, metrics.currentlyBlockedCount)
     }
 
     @Test
@@ -45,7 +45,7 @@ class HomeMetricsTest {
         )
 
         assertEquals(40, metrics.timeSavedMinutes)
-        assertEquals(3, metrics.activeLimitsCount)
+        assertEquals(1, metrics.currentlyBlockedCount)
     }
 
     @Test
