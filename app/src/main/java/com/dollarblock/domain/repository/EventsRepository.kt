@@ -1,12 +1,13 @@
 package com.dollarblock.domain.repository
 
+import com.dollarblock.domain.model.BlockReason
 import com.dollarblock.domain.model.RecentEvent
 import kotlinx.coroutines.flow.Flow
 
 /** Registro e leitura de eventos de bloqueio e desbloqueio (histórico). */
 interface EventsRepository {
 
-    suspend fun recordBlock(packageName: String, appLabel: String)
+    suspend fun recordBlock(packageName: String, appLabel: String, reason: BlockReason)
 
     suspend fun recordUnlock(
         packageName: String,

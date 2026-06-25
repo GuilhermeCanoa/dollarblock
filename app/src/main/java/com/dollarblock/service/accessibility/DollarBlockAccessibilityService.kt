@@ -11,6 +11,7 @@ import com.dollarblock.data.local.db.MonitoredAppDao
 import com.dollarblock.data.local.db.MonitoredAppEntity
 import com.dollarblock.data.local.prefs.BlockPreferences
 import com.dollarblock.data.usage.UsageStatsProvider
+import com.dollarblock.domain.model.BlockReason
 import com.dollarblock.domain.repository.EventsRepository
 import com.dollarblock.domain.repository.MonitoredAppRepository
 import com.dollarblock.feature.blocking.BlockActivity
@@ -26,17 +27,11 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * Detecta o app em primeiro plano e bloqueia (abre [BlockActivity]) em dois casos:
- *
- * 1. **Bloqueio manual**: app presente em [BlockPreferences] e sem janela de desbloqueio ativa.
- * 2. **Limite diário atingido**: app monitorado com uso ≥ limite e sem unlock ativo.
+ * Detecta o app em primeiro plano e bloqueia (abre [BlockActivity]) quando um app
+ * monitorado atinge o limite diário de uso e não há janela de desbloqueio ativa.
  *
  * A janela de desbloqueio é medida em **tempo real de uso** via [UsageStatsProvider.getUsageMillisSince]
  * — não há session tracking; o próprio SO registra foreground time com precisão.
- *
- * Fix Bug 1: o bloqueio por limite só dispara na tela quando o app monitorado está em
- * foreground — se o limite for detectado enquanto outro app está na tela, o bloqueio é
- * aplicado apenas na próxima abertura do app.
  */
 @AndroidEntryPoint
 class DollarBlockAccessibilityService : AccessibilityService() {
@@ -93,13 +88,6 @@ class DollarBlockAccessibilityService : AccessibilityService() {
 
         val packageChanged = packageName != lastForegroundPackage
         lastForegroundPackage = packageName
-
-        // Bloqueio manual: verificação síncrona rápida.
-        if (blockPreferences.shouldBlock(packageName)) {
-            stopTracking()
-            assertBlock(packageName) { blockPreferences.shouldBlock(packageName) }
-            return
-        }
 
         if (!packageChanged) return
 
@@ -241,7 +229,7 @@ class DollarBlockAccessibilityService : AccessibilityService() {
         if (packageName == lastRecordedPackage && now - lastRecordedAt < RECORD_DEDUPE_MS) return
         lastRecordedPackage = packageName
         lastRecordedAt = now
-        scope.launch { eventsRepository.recordBlock(packageName, label) }
+        scope.launch { eventsRepository.recordBlock(packageName, label, BlockReason.DAILY_LIMIT) }
         Log.i(TAG, "Blocked $packageName ($label)")
     }
 

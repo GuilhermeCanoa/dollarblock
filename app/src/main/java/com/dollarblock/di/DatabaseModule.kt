@@ -27,5 +27,5 @@ object DatabaseModule {
             context,
             DollarBlockDatabase::class.java,
             "dollarblock.db",
-        ).addMigrations(DollarBlockDatabase.MIGRATION_1_2).build()
+        ).addMigrations(DollarBlockDatabase.MIGRATION_1_2, DollarBlockDatabase.MIGRATION_2_3).build()
 }

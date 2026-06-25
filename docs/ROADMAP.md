@@ -144,11 +144,10 @@ reabrir o app pula o onboarding. ✅ **Validado.** **Depende de E1.**
 - **Fix overlays/IME**: `isRealApp()` no `DollarBlockAccessibilityService` filtra eventos de overlays de sistema, IME e painéis de notificação antes de qualquer avaliação — esses eventos corrompiam `lastForegroundPackage` e impediam o bloqueio correto no tracking loop.
 - **Unlock por tempo real de uso**: a janela de desbloqueio agora é medida via `UsageStatsProvider.getUsageMillisSince` (tempo real de foreground registrado pelo SO), sem session tracking próprio.
 
-**Restante do E5 (depende de E1):**
-- Migrar o conjunto bloqueado-manualmente de DataStore para Room (unificar com
-  `MonitoredAppEntity`).
-- Tipar o motivo do bloqueio no `BlockEvent` (manual vs. limite diário) para exibir
-  diferenciado no histórico (E8).
+**Entregue (limpeza E5 — 2026-06-25):**
+- Feature de bloqueio manual removida da UI; path `shouldBlock()` no serviço removido.
+- `BlockReason` (enum `DAILY_LIMIT`) adicionado ao `BlockEventEntity`; migration Room v3.
+- `BlockPreferences` simplificado: mantém apenas `grantUnlock`/`getUnlockGrant`. ✅
 
 **Aceite (fatia atual):** app selecionado e bloqueado pela Home → abre bloqueado mostra a
 tela do DollarBlock; desabilitar libera o acesso. App monitorado que atinge o limite
