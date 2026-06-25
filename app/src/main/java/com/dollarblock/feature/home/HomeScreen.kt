@@ -28,8 +28,6 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
-import androidx.compose.material.icons.filled.Savings
-import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -91,15 +89,9 @@ fun HomeScreen(
 
         ManifestoCard()
 
-        DailyScoreHero(score = uiState.dailyScore)
+        MoneyLostHero(moneyLost = uiState.moneyLostToday)
 
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            MetricCard(
-                title = stringResource(R.string.home_time_saved),
-                value = formatSavedMinutes(uiState.timeSavedMinutes),
-                icon = Icons.Filled.Savings,
-                modifier = Modifier.weight(1f),
-            )
             MetricCard(
                 title = stringResource(R.string.home_currently_blocked),
                 value = uiState.currentlyBlockedCount.toString(),
@@ -107,14 +99,13 @@ fun HomeScreen(
                 modifier = Modifier.weight(1f),
                 onClick = onNavigateToApps,
             )
+            MetricCard(
+                title = stringResource(R.string.home_addiction_tracker),
+                value = uiState.addictionAttempts.toString(),
+                icon = Icons.Filled.Warning,
+                modifier = Modifier.weight(1f),
+            )
         }
-
-        MetricCard(
-            title = stringResource(R.string.home_addiction_tracker),
-            value = uiState.addictionAttempts.toString(),
-            icon = Icons.Filled.Warning,
-            modifier = Modifier.fillMaxWidth(),
-        )
 
         SectionHeader(text = stringResource(R.string.home_recent_events))
         if (uiState.recentEvents.isEmpty()) {
@@ -216,8 +207,8 @@ private fun ManifestoCard(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun DailyScoreHero(
-    score: Int?,
+private fun MoneyLostHero(
+    moneyLost: Double?,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -236,19 +227,30 @@ private fun DailyScoreHero(
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
-                text = stringResource(R.string.home_daily_score),
+                text = stringResource(R.string.home_money_lost_today),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
             )
+            AnimatedContent(
+                targetState = moneyLost,
+                transitionSpec = {
+                    slideInVertically { it } + fadeIn() togetherWith slideOutVertically { -it } + fadeOut()
+                },
+                label = "money_lost_anim",
+            ) { value ->
+                Text(
+                    text = if (value != null) formatReais(value) else "—",
+                    fontSize = 72.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    lineHeight = 80.sp,
+                )
+            }
             Text(
-                text = score?.toString() ?: "—",
-                fontSize = 72.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                lineHeight = 80.sp,
-            )
-            Text(
-                text = if (score != null) stringResource(R.string.home_score_out_of) else stringResource(R.string.home_score_no_limits),
+                text = if (moneyLost != null)
+                    stringResource(R.string.home_money_lost_subtitle)
+                else
+                    stringResource(R.string.home_money_lost_no_data),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
             )
@@ -256,10 +258,8 @@ private fun DailyScoreHero(
     }
 }
 
-private fun formatSavedMinutes(totalMinutes: Int): String {
-    val hours = totalMinutes / 60
-    val minutes = totalMinutes % 60
-    return if (hours > 0) "${hours}h ${minutes}m" else "${minutes}m"
+private fun formatReais(value: Double): String {
+    return "R$ %,.2f".format(value).replace(',', 'X').replace('.', ',').replace('X', '.')
 }
 
 @Composable

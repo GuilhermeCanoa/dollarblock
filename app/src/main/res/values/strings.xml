@@ -11,8 +11,9 @@
 
     <!-- Home -->
     <string name="home_title">Home</string>
-    <string name="home_daily_score">Daily Score</string>
-    <string name="home_time_saved">Time Saved</string>
+    <string name="home_money_lost_today">Money Lost Today</string>
+    <string name="home_money_lost_subtitle">given away for free today</string>
+    <string name="home_money_lost_no_data">Start monitoring apps to see your cost</string>
     <string name="home_active_limits">Active Limits</string>
     <string name="home_currently_blocked">Blocked Now</string>
     <string name="home_addiction_tracker">Addiction Tracker</string>
@@ -28,8 +29,6 @@
         <item>Your time is your life. How you spend your hours is how you spend your years.</item>
         <item>The apps are designed to keep you scrolling. You are designed for something greater. Take the control back.</item>
     </string-array>
-    <string name="home_score_out_of">out of 1000 points</string>
-    <string name="home_score_no_limits">Set a limit in Apps to start tracking</string>
     <string name="pay_method_google">Google Pay</string>
     <string name="pay_method_simulated">Simulated payment</string>
 
@@ -81,11 +80,13 @@
     <string name="stat_period_daily">Daily</string>
     <string name="stat_period_weekly">Weekly</string>
     <string name="stat_period_monthly">Monthly</string>
-    <string name="stat_total_time">Total time</string>
+    <string name="stat_time_spent_daily">Daily Time Spent</string>
+    <string name="stat_time_spent_weekly">Weekly Time Spent</string>
+    <string name="stat_time_spent_monthly">Monthly Time Spent</string>
+    <string name="stat_money_lost_week">Money Lost This Week</string>
+    <string name="stat_money_lost_month">Money Lost This Month</string>
     <string name="stat_most_used">Most used</string>
-    <string name="stat_blocks">Blocks</string>
     <string name="stat_usage_overview">Usage overview</string>
-    <string name="stat_weekly_score">Weekly score by app</string>
     <string name="stat_no_data">No usage data yet.\nOpen monitored apps to see the chart.</string>
 
     <!-- Profile -->

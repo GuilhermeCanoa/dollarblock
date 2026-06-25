@@ -17,8 +17,7 @@ import javax.inject.Inject
 
 data class HomeUiState(
     val recentEvents: List<RecentEvent> = emptyList(),
-    val dailyScore: Int? = null,
-    val timeSavedMinutes: Int = 0,
+    val moneyLostToday: Double? = null,
     val currentlyBlockedCount: Int = 0,
     val addictionAttempts: Int = 0,
 )
@@ -37,8 +36,7 @@ class HomeViewModel @Inject constructor(
         val metrics = HomeMetrics.compute(monitoredUsage)
         HomeUiState(
             recentEvents = events,
-            dailyScore = metrics.score,
-            timeSavedMinutes = metrics.timeSavedMinutes,
+            moneyLostToday = metrics.moneyLostToday,
             currentlyBlockedCount = metrics.currentlyBlockedCount,
             addictionAttempts = blockAttempts,
         )

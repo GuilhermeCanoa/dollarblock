@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dollarblock.data.local.db.DailyUsageDao
 import com.dollarblock.data.local.db.MonitoredAppDao
-import com.dollarblock.data.local.db.dao.EventDao
+import com.dollarblock.feature.home.HomeMetrics
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,28 +19,25 @@ import javax.inject.Inject
 
 enum class StatPeriod { DAILY, WEEKLY, MONTHLY }
 
-data class AppScore(
-    val appName: String,
-    val score: Float,       // 0..1
-    val usedMinutes: Int,
-    val limitMinutes: Int,
-)
-
 data class StatisticsUiState(
+    val period: StatPeriod = StatPeriod.WEEKLY,
     val chartValues: List<Float> = emptyList(),
     val chartLabels: List<String> = emptyList(),
-    val totalTime: String = "—",
+    val timeSpent: String = "—",
     val mostUsed: String = "—",
-    val blocks: Int = 0,
-    val weeklyScores: List<AppScore> = emptyList(),
+    /** null when period == DAILY (shown on Home instead). */
+    val moneyLost: Double? = null,
 )
 
 @HiltViewModel
 class StatisticsViewModel @Inject constructor(
     private val dailyUsageDao: DailyUsageDao,
     private val monitoredAppDao: MonitoredAppDao,
-    private val eventDao: EventDao,
 ) : ViewModel() {
+
+    private companion object {
+        val REAIS_PER_MINUTE = HomeMetrics.REAIS_PER_MINUTE
+    }
 
     val period = MutableStateFlow(StatPeriod.WEEKLY)
     private val _uiState = MutableStateFlow(StatisticsUiState())
@@ -65,19 +62,14 @@ class StatisticsViewModel @Inject constructor(
             StatPeriod.MONTHLY -> (todayEpoch - 27) to todayEpoch
         }
 
-        val startMs = today.minusDays(todayEpoch - startDay).atStartOfDay(zone).toInstant().toEpochMilli()
-        val endMs = System.currentTimeMillis()
-
         dataJob = combine(
             dailyUsageDao.observeRange(startDay, endDay),
             monitoredAppDao.observeMonitored(),
-            eventDao.countBlocksInRange(startMs, endMs),
-        ) { usageRows, monitoredApps, blockCount ->
+        ) { usageRows, monitoredApps ->
 
             val appNames = monitoredApps.associate { it.packageName to it.appName }
 
             // Baseline por app: subtrai uso pré-DollarBlock apenas no dia em que o app foi adicionado.
-            // Nos dias seguintes, DailyUsageEntity já parte de zero (meia-noite), sem necessidade de ajuste.
             val baselineByApp = monitoredApps.associate { app ->
                 val createdDay = java.time.Instant.ofEpochMilli(app.createdAt)
                     .atZone(zone)
@@ -93,7 +85,7 @@ class StatisticsViewModel @Inject constructor(
 
             // ── Métricas globais ────────────────────────────────────────────
             val totalMillis = usageRows.sumOf { effectiveMillis(it.packageName, it.epochDay, it.usedMillis) }
-            val totalTime = formatMillis(totalMillis)
+            val timeSpent = formatMillis(totalMillis)
 
             val mostUsedPkg = usageRows
                 .groupBy { it.packageName }
@@ -102,6 +94,10 @@ class StatisticsViewModel @Inject constructor(
                 .maxByOrNull { it.value }?.key
             val mostUsed = mostUsedPkg?.let { appNames[it] ?: it } ?: ""
 
+            // ── Money lost (weekly/monthly only — daily is shown on Home) ───
+            val moneyLost = if (p == StatPeriod.DAILY) null
+            else (totalMillis / 60_000.0) * REAIS_PER_MINUTE
+
             // ── Dados do gráfico ────────────────────────────────────────────
             val (values, labels) = when (p) {
                 StatPeriod.DAILY -> buildDailyChart(usageRows, monitoredApps, appNames, ::effectiveMillis, todayEpoch)
@@ -109,40 +105,13 @@ class StatisticsViewModel @Inject constructor(
                 StatPeriod.MONTHLY -> buildMonthlyChart(usageRows, todayEpoch, ::effectiveMillis)
             }
 
-            // ── Score semanal por app (últimos 7 dias, apenas com limite) ───
-            val last7Start = todayEpoch - 6
-            val weeklyScores = monitoredApps
-                .filter { it.dailyLimitMinutes != null }
-                .map { app ->
-                    val limitMs = app.dailyLimitMinutes!! * 60_000L
-                    val appRows = usageRows.filter {
-                        it.packageName == app.packageName && it.epochDay >= last7Start
-                    }
-                    val scores = (0..6).map { offset ->
-                        val day = todayEpoch - (6 - offset)
-                        val used = appRows.firstOrNull { it.epochDay == day }
-                            ?.let { effectiveMillis(app.packageName, it.epochDay, it.usedMillis) } ?: 0L
-                        ((limitMs - used).toFloat() / limitMs).coerceIn(0f, 1f)
-                    }
-                    val avgScore = scores.average().toFloat()
-                    val todayRow = appRows.firstOrNull { it.epochDay == todayEpoch }
-                    val todayUsed = todayRow?.let { effectiveMillis(app.packageName, it.epochDay, it.usedMillis) } ?: 0L
-                    AppScore(
-                        appName = app.appName,
-                        score = avgScore,
-                        usedMinutes = (todayUsed / 60_000L).toInt(),
-                        limitMinutes = app.dailyLimitMinutes,
-                    )
-                }
-                .sortedByDescending { it.score }
-
             StatisticsUiState(
+                period = p,
                 chartValues = values,
                 chartLabels = labels,
-                totalTime = totalTime,
+                timeSpent = timeSpent,
                 mostUsed = mostUsed,
-                blocks = blockCount,
-                weeklyScores = weeklyScores,
+                moneyLost = moneyLost,
             )
         }.onEach { _uiState.value = it }.launchIn(viewModelScope)
     }

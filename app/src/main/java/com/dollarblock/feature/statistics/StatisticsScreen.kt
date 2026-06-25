@@ -13,13 +13,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -28,7 +26,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -93,26 +90,19 @@ fun StatisticsScreen(
             icon = Icons.Filled.EmojiEvents,
             modifier = Modifier.fillMaxWidth(),
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        MetricCard(
+            title = stringResource(uiState.period.timeSpentRes),
+            value = uiState.timeSpent,
+            icon = Icons.Filled.Schedule,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        uiState.moneyLost?.let { lost ->
             MetricCard(
-                title = stringResource(R.string.stat_total_time),
-                value = uiState.totalTime,
-                icon = Icons.Filled.Schedule,
-                modifier = Modifier.weight(1f),
+                title = stringResource(uiState.period.moneyLostRes!!),
+                value = formatReais(lost),
+                icon = Icons.Filled.AttachMoney,
+                modifier = Modifier.fillMaxWidth(),
             )
-            MetricCard(
-                title = stringResource(R.string.stat_blocks),
-                value = uiState.blocks.toString(),
-                icon = Icons.Filled.Block,
-                modifier = Modifier.weight(1f),
-            )
-        }
-
-        if (uiState.weeklyScores.isNotEmpty()) {
-            SectionHeader(text = stringResource(R.string.stat_weekly_score))
-            uiState.weeklyScores.forEach { appScore ->
-                AppScoreCard(appScore = appScore)
-            }
         }
     }
 }
@@ -196,58 +186,29 @@ private fun EmptyChartCard(modifier: Modifier = Modifier) {
     }
 }
 
-@Composable
-private fun AppScoreCard(appScore: AppScore, modifier: Modifier = Modifier) {
-    val scoreColor = when {
-        appScore.score >= 0.7f -> DollarBlockTheme.colors.success
-        appScore.score >= 0.4f -> DollarBlockTheme.colors.alert
-        else -> DollarBlockTheme.colors.penalty
-    }
-
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(
-                    text = appScore.appName,
-                    style = MaterialTheme.typography.titleSmall,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                LinearProgressIndicator(
-                    progress = { appScore.score },
-                    modifier = Modifier.fillMaxWidth(),
-                    color = scoreColor,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                )
-                Text(
-                    text = "${appScore.usedMinutes}m / ${appScore.limitMinutes}m hoje",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Text(
-                text = "${(appScore.score * 100).toInt()}",
-                style = MaterialTheme.typography.headlineSmall,
-                color = scoreColor,
-            )
-        }
-    }
-}
-
 private val StatPeriod.labelRes: Int
     @StringRes get() = when (this) {
         StatPeriod.DAILY -> R.string.stat_period_daily
         StatPeriod.WEEKLY -> R.string.stat_period_weekly
         StatPeriod.MONTHLY -> R.string.stat_period_monthly
     }
+
+private val StatPeriod.timeSpentRes: Int
+    @StringRes get() = when (this) {
+        StatPeriod.DAILY -> R.string.stat_time_spent_daily
+        StatPeriod.WEEKLY -> R.string.stat_time_spent_weekly
+        StatPeriod.MONTHLY -> R.string.stat_time_spent_monthly
+    }
+
+private val StatPeriod.moneyLostRes: Int?
+    @StringRes get() = when (this) {
+        StatPeriod.DAILY -> null
+        StatPeriod.WEEKLY -> R.string.stat_money_lost_week
+        StatPeriod.MONTHLY -> R.string.stat_money_lost_month
+    }
+
+private fun formatReais(value: Double): String =
+    "R$ %,.2f".format(value).replace(',', 'X').replace('.', ',').replace('X', '.')
 
 @Preview(showBackground = true)
 @Composable

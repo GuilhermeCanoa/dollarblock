@@ -1,48 +1,42 @@
 package com.dollarblock.feature.home
 
 import com.dollarblock.domain.model.MonitoredAppUsage
-import kotlin.math.roundToInt
 
 /**
  * Daily metrics shown on the Home screen, computed from monitored apps.
  *
- * @property score 0..1000 points remaining today, or `null` when no monitored app has a limit.
- * @property timeSavedMinutes sum of (limit − used) across all apps with a limit, clamped ≥ 0.
+ * @property moneyLostToday monetary value of time spent on monitored apps today (BRL),
+ *   based on a R$2000/month reference salary (43200 min/month ≈ R$0.0463/min).
+ *   `null` when no apps are monitored.
  * @property currentlyBlockedCount number of monitored apps that have exceeded their daily limit.
  */
 data class DailyMetrics(
-    val score: Int?,
-    val timeSavedMinutes: Int,
+    val moneyLostToday: Double?,
     val currentlyBlockedCount: Int,
 )
 
 object HomeMetrics {
 
+    private const val MONTHLY_SALARY = 2000.0
+    private const val MINUTES_PER_MONTH = 43200.0
+    const val REAIS_PER_MINUTE = MONTHLY_SALARY / MINUTES_PER_MONTH
+
     fun compute(monitoredUsage: List<MonitoredAppUsage>): DailyMetrics {
-        val withLimit = monitoredUsage.filter { it.isMonitored && it.dailyLimitMinutes != null }
+        val monitored = monitoredUsage.filter { it.isMonitored }
 
-        val totalLimit = withLimit.sumOf { it.dailyLimitMinutes ?: 0 }
-        val totalUsed = withLimit.sumOf { it.usedMinutesToday }
-        val totalRemaining = (totalLimit - totalUsed).coerceAtLeast(0)
-
-        val score = if (totalLimit == 0) {
+        val moneyLostToday = if (monitored.isEmpty()) {
             null
         } else {
-            (totalRemaining.toFloat() / totalLimit * 1000).roundToInt()
+            monitored.sumOf { it.usedMinutesToday } * REAIS_PER_MINUTE
         }
 
-        val timeSaved = withLimit.sumOf { app ->
-            val limit = app.dailyLimitMinutes ?: 0
-            (limit - app.usedMinutesToday).coerceAtLeast(0)
-        }
-
+        val withLimit = monitored.filter { it.dailyLimitMinutes != null }
         val currentlyBlocked = withLimit.count { app ->
             app.usedMinutesToday >= (app.dailyLimitMinutes ?: Int.MAX_VALUE)
         }
 
         return DailyMetrics(
-            score = score,
-            timeSavedMinutes = timeSaved,
+            moneyLostToday = moneyLostToday,
             currentlyBlockedCount = currentlyBlocked,
         )
     }

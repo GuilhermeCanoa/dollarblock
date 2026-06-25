@@ -130,8 +130,8 @@ private fun ProfileScreenContent(
             )
             StatTile(
                 icon = Icons.Filled.Savings,
-                value = formatSavedMinutes(stats.timeSavedMinutes),
-                label = stringResource(R.string.profile_saved),
+                value = stats.moneyLostToday?.let { formatReais(it) } ?: "—",
+                label = stringResource(R.string.home_money_lost_today),
                 modifier = Modifier.weight(1f),
             )
             StatTile(
@@ -402,12 +402,8 @@ private fun SettingRow(
     }
 }
 
-/** Formata minutos economizados como "Xh Ym" / "Ym" para o cabeçalho de estatísticas. */
-private fun formatSavedMinutes(totalMinutes: Int): String {
-    val hours = totalMinutes / 60
-    val minutes = totalMinutes % 60
-    return if (hours > 0) "${hours}h ${minutes}m" else "${minutes}m"
-}
+private fun formatReais(value: Double): String =
+    "R$ %,.2f".format(value).replace(',', 'X').replace('.', ',').replace('X', '.')
 
 @Preview(showBackground = true)
 @Composable
@@ -420,7 +416,7 @@ private fun ProfileScreenPreview() {
                 overlay = false,
                 notifications = true,
             ),
-            stats = ProfileStats(activeLimitsCount = 3, timeSavedMinutes = 95, blocksToday = 4),
+            stats = ProfileStats(activeLimitsCount = 3, moneyLostToday = 8.33, blocksToday = 4),
             onRequestPermission = {},
             onOpenHistory = {},
         )

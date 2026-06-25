@@ -23,7 +23,7 @@ import javax.inject.Inject
 /** Estatísticas reais exibidas no cabeçalho do Profile. */
 data class ProfileStats(
     val activeLimitsCount: Int = 0,
-    val timeSavedMinutes: Int = 0,
+    val moneyLostToday: Double? = null,
     val blocksToday: Int = 0,
 )
 
@@ -58,7 +58,7 @@ class ProfileViewModel @Inject constructor(
             val metrics = HomeMetrics.compute(monitoredUsage)
             ProfileStats(
                 activeLimitsCount = metrics.currentlyBlockedCount,
-                timeSavedMinutes = metrics.timeSavedMinutes,
+                moneyLostToday = metrics.moneyLostToday,
                 blocksToday = blocksToday,
             )
         }.stateIn(
