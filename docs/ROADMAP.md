@@ -140,11 +140,12 @@ lista. ✅ **Validado.** **Depende de E1.**
   `MonitoredAppRepository.syncTodayUsage()` (atualiza Room → UI via Flow) e reavalia o
   limite. É iniciado/parado por app conforme o foreground muda. ✅
 
-**Restante do E5 (depende de E1):**
-- Migrar o conjunto bloqueado-manualmente de DataStore para Room (unificar com
-  `MonitoredAppEntity`).
-- Tipar o motivo do bloqueio no `BlockEvent` (manual vs. limite diário) para exibir
-  diferenciado no histórico (E8).
+**Restante do E5:**
+- A feature de bloqueio manual foi removida da UI; o path `blockPreferences.shouldBlock()`
+  no serviço é código morto — remover junto com `blockedPackages`/`setBlocked` do
+  `BlockPreferences`.
+- Tipar o motivo do bloqueio no `BlockEvent` (`reason: BlockReason = DAILY_LIMIT`) para
+  suporte a histórico diferenciado e extensibilidade futura. Ver `docs/specs/E5-blocking-refactor.md`.
 
 **Aceite (fatia atual):** app selecionado e bloqueado pela Home → abre bloqueado mostra a
 tela do DollarBlock; desabilitar libera o acesso. App monitorado que atinge o limite

@@ -3,6 +3,7 @@ package com.dollarblock.data.repository
 import com.dollarblock.data.local.db.dao.EventDao
 import com.dollarblock.data.local.db.entity.BlockEventEntity
 import com.dollarblock.data.local.db.entity.UnlockEventEntity
+import com.dollarblock.domain.model.BlockReason
 import com.dollarblock.domain.model.RecentEvent
 import com.dollarblock.domain.repository.EventsRepository
 import kotlinx.coroutines.flow.Flow
@@ -15,12 +16,13 @@ class EventsRepositoryImpl @Inject constructor(
     private val eventDao: EventDao,
 ) : EventsRepository {
 
-    override suspend fun recordBlock(packageName: String, appLabel: String) {
+    override suspend fun recordBlock(packageName: String, appLabel: String, reason: BlockReason) {
         eventDao.insertBlock(
             BlockEventEntity(
                 packageName = packageName,
                 appLabel = appLabel,
                 timestamp = System.currentTimeMillis(),
+                reason = reason,
             ),
         )
     }

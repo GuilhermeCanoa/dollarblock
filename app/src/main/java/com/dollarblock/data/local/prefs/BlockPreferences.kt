@@ -9,8 +9,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -20,12 +18,9 @@ import javax.inject.Singleton
 private val Context.dollarBlockDataStore by preferencesDataStore(name = "dollarblock_prefs")
 
 /**
- * Fonte única do estado de bloqueio.
- *
- * Janela de desbloqueio: após pagamento, armazena (grantedAtMs, durationMs).
- * A verificação de expiração por *tempo de uso real* é feita no serviço de acessibilidade
- * via [com.dollarblock.data.usage.UsageStatsProvider.getUsageMillisSince] — não há
- * session tracking aqui. Para bloqueios manuais, usa wall-clock (rápido e síncrono).
+ * Persiste janelas de desbloqueio pós-pagamento (grantedAtMs, durationMs).
+ * A verificação de expiração por tempo de uso real é feita no serviço de acessibilidade
+ * via [com.dollarblock.data.usage.UsageStatsProvider.getUsageMillisSince].
  */
 @Singleton
 class BlockPreferences @Inject constructor(
@@ -34,11 +29,7 @@ class BlockPreferences @Inject constructor(
     private val dataStore = context.dollarBlockDataStore
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    private val blockedKey = stringSetPreferencesKey("blocked_packages")
     private val unlockGrantsKey = stringSetPreferencesKey("unlock_grants")
-
-    private val _blockedPackages = MutableStateFlow<Set<String>>(emptySet())
-    val blockedPackages: StateFlow<Set<String>> = _blockedPackages.asStateFlow()
 
     /** package → (grantedAtMs, durationMs) — concedido após pagamento. */
     private val _unlockGrants = MutableStateFlow<Map<String, UnlockGrant>>(emptyMap())
@@ -48,14 +39,8 @@ class BlockPreferences @Inject constructor(
     init {
         scope.launch {
             val prefs = dataStore.data.first()
-            _blockedPackages.value = prefs[blockedKey] ?: emptySet()
             _unlockGrants.value = parseGrants(prefs[unlockGrantsKey] ?: emptySet())
         }
-    }
-
-    fun setBlocked(packageName: String, blocked: Boolean) {
-        _blockedPackages.update { if (blocked) it + packageName else it - packageName }
-        persist()
     }
 
     /** Registra uma janela de desbloqueio de [durationMs] a partir de agora. */
@@ -67,22 +52,10 @@ class BlockPreferences @Inject constructor(
     /** Retorna o grant ativo para [packageName], ou null se não houver. */
     fun getUnlockGrant(packageName: String): UnlockGrant? = _unlockGrants.value[packageName]
 
-    /**
-     * True se o app está bloqueado manualmente e fora da janela de desbloqueio (wall-clock).
-     * Usado no path síncrono do AccessibilityService — sem IO.
-     */
-    fun shouldBlock(packageName: String): Boolean {
-        if (!_blockedPackages.value.contains(packageName)) return false
-        val grant = _unlockGrants.value[packageName] ?: return true
-        return System.currentTimeMillis() >= grant.grantedAtMs + grant.durationMs
-    }
-
     private fun persist() {
-        val blocked = _blockedPackages.value
         val grants = _unlockGrants.value
         scope.launch {
             dataStore.edit { prefs ->
-                prefs[blockedKey] = blocked
                 prefs[unlockGrantsKey] = grants.map { (pkg, g) ->
                     "$pkg|${g.grantedAtMs}|${g.durationMs}"
                 }.toSet()
