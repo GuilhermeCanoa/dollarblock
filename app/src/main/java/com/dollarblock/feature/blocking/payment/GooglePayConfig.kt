@@ -1,6 +1,7 @@
 package com.dollarblock.feature.blocking.payment
 
 import android.content.Context
+import com.dollarblock.BuildConfig
 import com.google.android.gms.wallet.PaymentsClient
 import com.google.android.gms.wallet.Wallet
 import com.google.android.gms.wallet.WalletConstants
@@ -73,7 +74,7 @@ object GooglePayConfig {
                         JSONObject().apply {
                             put("gateway", "stripe")
                             put("stripe:version", "2020-08-27")
-                            put("stripe:publishableKey", "pk_test_51SnkcBGcK4ie5x8ZDLCPxuBt0GB8Gq1osG9Kgw3tuO3rLPU6hSc7pKZrJgkJ9aKg2NlLexyrXNu1UFG69ngoVy47006ZKV9wHp")
+                            put("stripe:publishableKey", BuildConfig.STRIPE_PUBLISHABLE_KEY)
                         },
                     )
                 },
