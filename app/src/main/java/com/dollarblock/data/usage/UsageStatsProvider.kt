@@ -219,6 +219,16 @@ class UsageStatsProvider @Inject constructor(
         total
     }
 
+    /** Uso total de cada app nos últimos 7 dias (millis de foreground). */
+    suspend fun getWeeklyUsageByPackage(): Map<String, Long> = withContext(Dispatchers.IO) {
+        if (!hasUsageAccess()) return@withContext emptyMap()
+        val now = System.currentTimeMillis()
+        val sevenDaysAgo = now - 7L * 24 * 60 * 60 * 1000
+        usageStatsManager.queryAndAggregateUsageStats(sevenDaysAgo, now)
+            .mapValues { (_, stats) -> stats.totalTimeInForeground }
+            .filterValues { it > 0L }
+    }
+
     /** epochDay local consistente com o usado nas entidades Room. */
     fun currentEpochDay(): Long = LocalDate.now(ZoneId.systemDefault()).toEpochDay()
 

@@ -2,6 +2,7 @@ package com.dollarblock.data.apps
 
 import android.content.Context
 import android.content.Intent
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.graphics.drawable.toBitmap
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -38,6 +39,13 @@ class InstalledAppsProvider @Inject constructor(
             }
             .sortedBy { it.label.lowercase() }
             .toList()
+    }
+
+    suspend fun getIconForPackage(packageName: String): ImageBitmap? = withContext(Dispatchers.IO) {
+        runCatching {
+            val appInfo = context.packageManager.getApplicationInfo(packageName, 0)
+            context.packageManager.getApplicationIcon(appInfo).toBitmap(ICON_PX, ICON_PX).asImageBitmap()
+        }.getOrNull()
     }
 
     private companion object {
