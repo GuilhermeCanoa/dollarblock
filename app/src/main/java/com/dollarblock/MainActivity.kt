@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -16,6 +17,7 @@ import androidx.navigation.compose.rememberNavController
 import com.dollarblock.core.designsystem.DollarBlockTheme
 import com.dollarblock.core.navigation.DollarBlockBottomBar
 import com.dollarblock.core.navigation.DollarBlockNavHost
+import com.dollarblock.data.local.prefs.AppTheme
 import com.dollarblock.feature.onboarding.OnboardingScreen
 import com.dollarblock.feature.onboarding.OnboardingViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -32,14 +34,23 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            DollarBlockTheme {
+            val mainViewModel: MainViewModel = hiltViewModel()
+            val theme by mainViewModel.theme.collectAsStateWithLifecycle()
+            val systemDark = isSystemInDarkTheme()
+            val darkTheme = when (theme) {
+                AppTheme.DARK -> true
+                AppTheme.LIGHT -> false
+                AppTheme.SYSTEM -> systemDark
+                null -> true // aguardando leitura do DataStore
+            }
+
+            DollarBlockTheme(darkTheme = darkTheme) {
                 val viewModel: OnboardingViewModel = hiltViewModel()
                 val onboardingCompleted by viewModel.onboardingCompleted.collectAsStateWithLifecycle()
 
                 when (onboardingCompleted) {
-                    // null = flag ainda sendo lida do DataStore; evita piscar o onboarding.
                     null -> Unit
-                    false -> OnboardingScreen(onFinished = { /* flag persistida no ViewModel */ })
+                    false -> OnboardingScreen(onFinished = { })
                     true -> MainTabs()
                 }
             }

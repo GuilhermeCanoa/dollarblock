@@ -48,6 +48,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.dollarblock.BuildConfig
+import com.dollarblock.data.local.prefs.AppTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -85,6 +86,7 @@ fun ProfileScreen(
 ) {
     val permissions by viewModel.permissions.collectAsStateWithLifecycle()
     val stats by viewModel.stats.collectAsStateWithLifecycle()
+    val theme by viewModel.theme.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     // Re-checa as permissões sempre que a tela volta ao foreground (igual ao onboarding).
@@ -107,8 +109,10 @@ fun ProfileScreen(
     ProfileScreenContent(
         permissions = permissions,
         stats = stats,
+        theme = theme,
         onRequestPermission = ::requestPermission,
         onOpenHistory = onOpenHistory,
+        onThemeChange = viewModel::setTheme,
         onResetAllData = viewModel::resetAllData,
         modifier = modifier,
     )
@@ -118,12 +122,23 @@ fun ProfileScreen(
 private fun ProfileScreenContent(
     permissions: PermissionsState,
     stats: ProfileStats,
+    theme: AppTheme,
     onRequestPermission: (AppPermission) -> Unit,
     onOpenHistory: () -> Unit,
+    onThemeChange: (AppTheme) -> Unit,
     onResetAllData: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var showResetDialog by remember { mutableStateOf(false) }
+    var showThemeDialog by remember { mutableStateOf(false) }
+
+    if (showThemeDialog) {
+        ThemePickerDialog(
+            current = theme,
+            onSelect = { onThemeChange(it); showThemeDialog = false },
+            onDismiss = { showThemeDialog = false },
+        )
+    }
 
     if (showResetDialog) {
         AlertDialog(
@@ -230,7 +245,14 @@ private fun ProfileScreenContent(
                 SettingRow(
                     icon = Icons.Filled.Palette,
                     title = stringResource(R.string.pref_theme),
-                    value = stringResource(R.string.pref_theme_value),
+                    value = stringResource(
+                        when (theme) {
+                            AppTheme.DARK -> R.string.pref_theme_dark
+                            AppTheme.LIGHT -> R.string.pref_theme_light
+                            AppTheme.SYSTEM -> R.string.pref_theme_system
+                        },
+                    ),
+                    onClick = { showThemeDialog = true },
                 )
                 SettingRow(
                     icon = Icons.Filled.History,
@@ -475,6 +497,50 @@ private fun SettingRow(
     }
 }
 
+@Composable
+private fun ThemePickerDialog(
+    current: AppTheme,
+    onSelect: (AppTheme) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.pref_theme)) },
+        text = {
+            Column {
+                listOf(
+                    AppTheme.DARK to R.string.pref_theme_dark,
+                    AppTheme.LIGHT to R.string.pref_theme_light,
+                    AppTheme.SYSTEM to R.string.pref_theme_system,
+                ).forEach { (option, labelRes) ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSelect(option) }
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        androidx.compose.material3.RadioButton(
+                            selected = current == option,
+                            onClick = { onSelect(option) },
+                        )
+                        Text(
+                            text = stringResource(labelRes),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        },
+    )
+}
+
 private fun formatReais(value: Double): String =
     "R$ %,.2f".format(value).replace(',', 'X').replace('.', ',').replace('X', '.')
 
@@ -490,8 +556,10 @@ private fun ProfileScreenPreview() {
                 notifications = true,
             ),
             stats = ProfileStats(activeLimitsCount = 3, moneyLostToday = 8.33, blocksToday = 4),
+            theme = AppTheme.DARK,
             onRequestPermission = {},
             onOpenHistory = {},
+            onThemeChange = {},
             onResetAllData = {},
         )
     }

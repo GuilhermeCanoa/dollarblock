@@ -5,8 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dollarblock.data.local.db.DollarBlockDatabase
 import com.dollarblock.data.local.db.dao.EventDao
+import com.dollarblock.data.local.prefs.AppTheme
 import com.dollarblock.data.local.prefs.BlockPreferences
 import com.dollarblock.data.local.prefs.OnboardingPreferences
+import com.dollarblock.data.local.prefs.ThemePreferences
 import com.dollarblock.data.permissions.AppPermission
 import com.dollarblock.data.permissions.PermissionsProvider
 import com.dollarblock.data.permissions.PermissionsState
@@ -46,12 +48,20 @@ class ProfileViewModel @Inject constructor(
     private val database: DollarBlockDatabase,
     private val onboardingPreferences: OnboardingPreferences,
     private val blockPreferences: BlockPreferences,
+    private val themePreferences: ThemePreferences,
     monitoredAppRepository: MonitoredAppRepository,
     eventDao: EventDao,
 ) : ViewModel() {
 
     private val _permissions = MutableStateFlow(permissionsProvider.currentState())
     val permissions: StateFlow<PermissionsState> = _permissions.asStateFlow()
+
+    val theme: StateFlow<AppTheme> = themePreferences.theme
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AppTheme.DARK)
+
+    fun setTheme(theme: AppTheme) {
+        viewModelScope.launch { themePreferences.setTheme(theme) }
+    }
 
     val stats: StateFlow<ProfileStats> = run {
         val zone = ZoneId.systemDefault()
