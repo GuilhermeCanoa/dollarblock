@@ -94,5 +94,5 @@ O DollarBlock não é um aplicativo de produtividade chato ou punitivo; ele é u
 
 ## 6. Aplicação do Logo (Icon Assets)
 
-* **Launcher Icon (App no celular):** O emblema central (escudo com a ampulheta e o cifrão em espaço negativo) deve ocupar o centro do grid circular ou quadrado do Android, mantendo o fundo escuro texturizado para se destacar na tela inicial do usuário.
+* **Launcher Icon (App no celular):** O ativo `drawable-nodpi/db_shield.webp` é o ícone oficial do app. Ele é usado tanto no Adaptive Icon do launcher (`mipmap-anydpi-v26/ic_launcher.xml` + `ic_launcher_round.xml`, como `<foreground>`) quanto nas telas internas via `BrandShield` composable. O background do adaptive icon usa `Deep Green Velvet (#0A241D)`. Nunca substituir o foreground por outro ativo sem atualizar ambos os pontos de uso.
 * **Versão Horizontal (Brand Mark):** O símbolo à esquerda, seguido pelo texto **DOLLAR** (em peso regular/light) e **BLOCK** (em peso extra bold) na cor branca ou verde esmeralda.
