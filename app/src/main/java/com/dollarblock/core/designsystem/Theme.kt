@@ -9,11 +9,13 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
 /**
- * Cores semânticas do DollarBlock que não existem no Material 3 padrão
- * (sucesso, alerta e penalidade). Expostas via [DollarBlockTheme.colors].
+ * Cores de marca do DollarBlock que vão além do Material 3 padrão: o brilho neon
+ * (Mint Glow), o texto secundário "muted", as semânticas (sucesso/alerta/bloqueio)
+ * e o gradiente linear de marca (135°). Expostas via [DollarBlockTheme.colors].
  */
 @Immutable
 data class DollarBlockColors(
@@ -23,70 +25,91 @@ data class DollarBlockColors(
     val onSuccess: Color,
     val onAlert: Color,
     val onPenalty: Color,
+    /** Brilho neon para bordas/halos (Mint Glow). */
+    val glow: Color,
+    /** Texto secundário esmaecido. */
+    val muted: Color,
+    /** Gradiente de marca a 135°: Velvet → Emerald → Mint Glow. */
+    val brandGradient: Brush,
+    /** Cores cru do gradiente (para halos/realces pontuais). */
+    val gradientStops: List<Color>,
 )
 
-private val LightExtraColors = DollarBlockColors(
-    success = SuccessGreen,
-    alert = AlertYellow,
-    penalty = PenaltyRed,
-    onSuccess = NeutralWhite,
-    onAlert = NeutralDarkest,
-    onPenalty = NeutralWhite,
+private val brandGradientColors = listOf(DeepGreenVelvet, EmeraldMid, MintGlow)
+
+private val DarkExtraColors = DollarBlockColors(
+    success = EmeraldPremium,
+    alert = AlertAmber,
+    penalty = BlockingRed,
+    onSuccess = DeepGreenVelvet,
+    onAlert = DeepGreenVelvet,
+    onPenalty = TextPrimary,
+    glow = MintGlow,
+    muted = TextMuted,
+    brandGradient = Brush.linearGradient(brandGradientColors),
+    gradientStops = brandGradientColors,
 )
 
-private val DarkExtraColors = LightExtraColors
-
-private val LocalDollarBlockColors = staticCompositionLocalOf {
-    LightExtraColors
-}
-
-private val LightColorScheme = lightColorScheme(
-    primary = DollarGreen,
-    onPrimary = NeutralWhite,
-    primaryContainer = DollarGreenContainer,
-    onPrimaryContainer = OnDollarGreenContainer,
-    secondary = DollarGreenDark,
-    onSecondary = NeutralWhite,
-    secondaryContainer = DollarGreenContainer,
-    onSecondaryContainer = OnDollarGreenContainer,
-    tertiary = SuccessGreen,
-    onTertiary = NeutralWhite,
-    error = PenaltyRed,
-    onError = NeutralWhite,
-    background = NeutralLight,
-    onBackground = NeutralDarkest,
-    surface = NeutralWhite,
-    onSurface = NeutralDark,
-    surfaceVariant = NeutralLight,
-    onSurfaceVariant = NeutralGray,
-    outline = NeutralGray,
+private val LightExtraColors = DarkExtraColors.copy(
+    onSuccess = TextPrimary,
+    onAlert = DeepGreenVelvet,
+    muted = TextMutedLight,
 )
+
+private val LocalDollarBlockColors = staticCompositionLocalOf { DarkExtraColors }
 
 private val DarkColorScheme = darkColorScheme(
-    primary = SuccessGreen,
-    onPrimary = NeutralDarkest,
-    primaryContainer = DollarGreenDark,
-    onPrimaryContainer = NeutralWhite,
-    secondary = DollarGreen,
-    onSecondary = NeutralWhite,
-    secondaryContainer = DollarGreenDark,
-    onSecondaryContainer = NeutralWhite,
-    tertiary = SuccessGreen,
-    onTertiary = NeutralDarkest,
-    error = PenaltyRed,
-    onError = NeutralWhite,
-    background = NeutralDarkest,
-    onBackground = OnSurfaceDark,
-    surface = SurfaceDark,
-    onSurface = OnSurfaceDark,
-    surfaceVariant = NeutralDark,
-    onSurfaceVariant = NeutralGray,
-    outline = NeutralGray,
+    primary = EmeraldPremium,
+    onPrimary = DeepGreenVelvet,
+    primaryContainer = VelvetSurfaceHigh,
+    onPrimaryContainer = MintGlow,
+    secondary = MintGlow,
+    onSecondary = DeepGreenVelvet,
+    secondaryContainer = VelvetSurfaceVariant,
+    onSecondaryContainer = MintGlow,
+    tertiary = EmeraldMid,
+    onTertiary = TextPrimary,
+    error = BlockingRed,
+    onError = TextPrimary,
+    errorContainer = Color(0xFF4A1416),
+    onErrorContainer = Color(0xFFFFD9D9),
+    background = DeepGreenVelvet,
+    onBackground = TextPrimary,
+    surface = VelvetSurface,
+    onSurface = TextPrimary,
+    surfaceVariant = VelvetSurfaceVariant,
+    onSurfaceVariant = TextMuted,
+    outline = Color(0xFF2E5C4F),
+    outlineVariant = Color(0xFF234A3E),
+)
+
+private val LightColorScheme = lightColorScheme(
+    primary = EmeraldOnLight,
+    onPrimary = TextPrimary,
+    primaryContainer = EmeraldContainerLight,
+    onPrimaryContainer = OnEmeraldContainerLight,
+    secondary = EmeraldMid,
+    onSecondary = TextPrimary,
+    secondaryContainer = EmeraldContainerLight,
+    onSecondaryContainer = OnEmeraldContainerLight,
+    tertiary = EmeraldOnLight,
+    onTertiary = TextPrimary,
+    error = BlockingRed,
+    onError = TextPrimary,
+    background = LightBackground,
+    onBackground = DeepGreenVelvet,
+    surface = LightSurface,
+    onSurface = Color(0xFF13231D),
+    surfaceVariant = LightSurfaceVariant,
+    onSurfaceVariant = TextMutedLight,
+    outline = Color(0xFFAEC3B9),
+    outlineVariant = Color(0xFFCBDDD4),
 )
 
 /**
  * Tema raiz do DollarBlock. Aplica o color scheme do Material 3 (claro/escuro
- * conforme o sistema) e disponibiliza as cores semânticas extras.
+ * conforme o sistema — o escuro é o nativo da marca) e disponibiliza as cores
+ * e o gradiente de marca extras via [DollarBlockTheme.colors].
  */
 @Composable
 fun DollarBlockTheme(
@@ -105,7 +128,7 @@ fun DollarBlockTheme(
     }
 }
 
-/** Acesso conveniente às cores semânticas extras: `DollarBlockTheme.colors.success`. */
+/** Acesso conveniente às cores de marca extras: `DollarBlockTheme.colors.glow`. */
 object DollarBlockTheme {
     val colors: DollarBlockColors
         @Composable

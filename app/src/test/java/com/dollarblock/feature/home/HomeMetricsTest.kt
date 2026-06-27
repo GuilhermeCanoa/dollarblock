@@ -21,64 +21,61 @@ class HomeMetricsTest {
     )
 
     @Test
-    fun `sem apps com limite o score eh nulo e metricas zeradas`() {
+    fun `sem apps monitorados moneyLost eh nulo`() {
         val metrics = HomeMetrics.compute(
             listOf(
-                app("a", monitored = true, limit = null, used = 30),
-                app("b", monitored = false, limit = 60, used = 10),
+                app("a", monitored = false, used = 30),
+                app("b", monitored = false, used = 10),
             ),
         )
 
-        assertNull(metrics.score)
-        assertEquals(0, metrics.timeSavedMinutes)
+        assertNull(metrics.moneyLostToday)
         assertEquals(0, metrics.currentlyBlockedCount)
     }
 
     @Test
-    fun `time saved soma apenas a folga positiva por app`() {
+    fun `moneyLost soma todos os apps monitorados`() {
         val metrics = HomeMetrics.compute(
             listOf(
-                app("a", limit = 60, used = 20), // economiza 40
-                app("b", limit = 30, used = 50), // estourou: 0 (não conta negativo)
-                app("c", limit = 45, used = 45), // economiza 0
+                app("a", monitored = true, used = 60),
+                app("b", monitored = true, used = 60),
+                app("c", monitored = false, used = 999),
             ),
         )
 
-        assertEquals(40, metrics.timeSavedMinutes)
-        // b (used=50 > limit=30) e c (used=45 >= limit=45) estão bloqueados
+        val expected = 120 * HomeMetrics.REAIS_PER_MINUTE
+        assertEquals(expected, metrics.moneyLostToday!!, 0.001)
+    }
+
+    @Test
+    fun `currentlyBlocked conta apps que atingiram o limite`() {
+        val metrics = HomeMetrics.compute(
+            listOf(
+                app("a", limit = 60, used = 20),  // dentro do limite
+                app("b", limit = 30, used = 50),  // estourou
+                app("c", limit = 45, used = 45),  // exatamente no limite
+            ),
+        )
+
         assertEquals(2, metrics.currentlyBlockedCount)
     }
 
     @Test
-    fun `score eh totalRemaining sobre totalLimit em escala 0-1000`() {
-        // a: remaining=30, b: remaining=30 → totalRemaining=60, totalLimit=100 → 600
+    fun `app sem limite nao conta como bloqueado`() {
         val metrics = HomeMetrics.compute(
-            listOf(
-                app("a", limit = 60, used = 30),
-                app("b", limit = 40, used = 10),
-            ),
+            listOf(app("a", limit = null, used = 999)),
         )
 
-        assertEquals(600, metrics.score)
+        assertEquals(0, metrics.currentlyBlockedCount)
     }
 
     @Test
-    fun `uso acima do limite nao deixa o score negativo`() {
+    fun `app nao monitorado com limite nao conta como bloqueado`() {
         val metrics = HomeMetrics.compute(
-            listOf(app("a", limit = 30, used = 90)), // totalRemaining clampa em 0
+            listOf(app("a", monitored = false, limit = 10, used = 999)),
         )
 
-        assertEquals(0, metrics.score)
-        assertEquals(0, metrics.timeSavedMinutes)
-    }
-
-    @Test
-    fun `app no limite exato pontua 1000`() {
-        val metrics = HomeMetrics.compute(
-            listOf(app("a", limit = 60, used = 0)),
-        )
-
-        assertEquals(1000, metrics.score)
-        assertEquals(60, metrics.timeSavedMinutes)
+        assertNull(metrics.moneyLostToday)
+        assertEquals(0, metrics.currentlyBlockedCount)
     }
 }

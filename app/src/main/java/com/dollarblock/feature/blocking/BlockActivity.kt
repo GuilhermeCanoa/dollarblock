@@ -12,6 +12,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts.StartIntentSenderForResult
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,6 +24,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Button
@@ -41,7 +43,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -297,12 +302,18 @@ private fun BlockScreen(
 ) {
     val quotes = stringArrayResource(R.array.home_quotes)
     val quote = remember { quotes.random() }
-    val neonGreen = Color(0xFF39FF14)
+    val mintGlow = Color(0xFF64FFDA)
+
+    // Fundo com gradiente vertical de marca (Velvet → tom intermediário) para um
+    // momento de bloqueio "pesado e seguro" (styleguide §4).
+    val backdrop = Brush.verticalGradient(
+        listOf(DollarGreenDark, Color(0xFF0E3328), DollarGreenDark),
+    )
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(DollarGreenDark),
+            .background(backdrop),
         contentAlignment = Alignment.Center,
     ) {
         // Frase motivacional no topo
@@ -312,7 +323,7 @@ private fun BlockScreen(
                 fontStyle = FontStyle.Italic,
                 lineHeight = 20.sp,
             ),
-            color = neonGreen,
+            color = mintGlow,
             textAlign = TextAlign.Center,
             modifier = androidx.compose.ui.Modifier
                 .align(Alignment.TopCenter)
@@ -326,20 +337,14 @@ private fun BlockScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            Box(
+            Image(
+                painter = painterResource(R.drawable.db_shield),
+                contentDescription = null,
                 modifier = Modifier
-                    .size(88.dp)
-                    .clip(CircleShape)
-                    .background(NeutralWhite.copy(alpha = 0.14f)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Lock,
-                    contentDescription = null,
-                    tint = NeutralWhite,
-                    modifier = Modifier.size(44.dp),
-                )
-            }
+                    .size(108.dp)
+                    .shadow(28.dp, RoundedCornerShape(28.dp), ambientColor = mintGlow, spotColor = mintGlow)
+                    .clip(RoundedCornerShape(28.dp)),
+            )
             Spacer(Modifier.height(24.dp))
             Text(
                 text = stringResource(R.string.block_screen_title),

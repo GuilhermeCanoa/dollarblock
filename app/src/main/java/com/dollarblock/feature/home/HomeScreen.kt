@@ -1,14 +1,14 @@
 package com.dollarblock.feature.home
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,9 +23,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FormatQuote
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Warning
@@ -35,19 +32,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -56,8 +45,12 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dollarblock.R
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import com.dollarblock.core.designsystem.DollarBlockTheme
+import com.dollarblock.core.designsystem.NeutralWhite
 import com.dollarblock.core.designsystem.components.MetricCard
+import com.dollarblock.core.designsystem.components.glow
 import com.dollarblock.core.designsystem.components.ScreenHeader
 import com.dollarblock.core.designsystem.components.SectionHeader
 import com.dollarblock.domain.model.PaymentMethod
@@ -87,8 +80,6 @@ fun HomeScreen(
             subtitle = stringResource(R.string.msg_on_track),
         )
 
-        ManifestoCard()
-
         MoneyLostHero(moneyLost = uiState.moneyLostToday)
 
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -117,119 +108,38 @@ fun HomeScreen(
 }
 
 @Composable
-private fun ManifestoCard(modifier: Modifier = Modifier) {
-    val quotes = stringArrayResource(R.array.home_quotes)
-    var index by remember { mutableIntStateOf(0) }
-    var expanded by remember { mutableStateOf(true) }
-    var dragAccum by remember { mutableStateOf(0f) }
-
-    LaunchedEffect(index) {
-        delay(8_000)
-        index = (index + 1) % quotes.size
-    }
-
-    Card(
-        onClick = { expanded = !expanded },
-        modifier = modifier
-            .fillMaxWidth()
-            .pointerInput(Unit) {
-                detectHorizontalDragGestures(
-                    onDragEnd = {
-                        if (dragAccum > 80f) {
-                            index = (index - 1 + quotes.size) % quotes.size
-                        } else if (dragAccum < -80f) {
-                            index = (index + 1) % quotes.size
-                        }
-                        dragAccum = 0f
-                    },
-                    onHorizontalDrag = { _, delta -> dragAccum += delta },
-                )
-            },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.FormatQuote,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp),
-                    )
-                    Text(
-                        text = "${index + 1} / ${quotes.size}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                Icon(
-                    imageVector = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
-                    contentDescription = if (expanded) "Collapse" else "Expand",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
-
-            AnimatedVisibility(
-                visible = expanded,
-                enter = fadeIn() + slideInVertically(),
-                exit = fadeOut() + slideOutVertically(),
-            ) {
-                AnimatedContent(
-                    targetState = index,
-                    transitionSpec = { fadeIn() togetherWith fadeOut() },
-                    label = "quote_transition",
-                    modifier = Modifier.padding(top = 10.dp),
-                ) { i ->
-                    Text(
-                        text = quotes[i],
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontStyle = FontStyle.Italic,
-                            lineHeight = 26.sp,
-                        ),
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
 private fun MoneyLostHero(
     moneyLost: Double?,
     modifier: Modifier = Modifier,
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+    // Bloco-herói com gradiente de marca a 135° (Velvet → Emerald → Mint) e halo
+    // de brilho, reforçando a relação dinheiro × tempo (styleguide §2).
+    val shape = RoundedCornerShape(24.dp)
+    val gradient = Brush.linearGradient(
+        colors = DollarBlockTheme.colors.gradientStops,
+        start = Offset(0f, 0f),
+        end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY),
+    )
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .glow(DollarBlockTheme.colors.glow, shape, radius = 28.dp, alpha = 0.4f)
+            .clip(shape)
+            .background(gradient)
+            .border(1.dp, DollarBlockTheme.colors.glow.copy(alpha = 0.35f), shape),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp),
+                .padding(horizontal = 24.dp, vertical = 28.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Text(
-                text = stringResource(R.string.home_money_lost_today),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
+                text = stringResource(R.string.home_money_lost_today).uppercase(),
+                style = MaterialTheme.typography.labelMedium,
+                letterSpacing = 1.5.sp,
+                color = NeutralWhite.copy(alpha = 0.85f),
             )
             AnimatedContent(
                 targetState = moneyLost,
@@ -240,10 +150,11 @@ private fun MoneyLostHero(
             ) { value ->
                 Text(
                     text = if (value != null) formatReais(value) else "—",
-                    fontSize = 72.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    lineHeight = 80.sp,
+                    style = MaterialTheme.typography.displaySmall,
+                    fontSize = 64.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = NeutralWhite,
+                    lineHeight = 70.sp,
                 )
             }
             Text(
@@ -252,7 +163,7 @@ private fun MoneyLostHero(
                 else
                     stringResource(R.string.home_money_lost_no_data),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
+                color = NeutralWhite.copy(alpha = 0.75f),
             )
         }
     }
@@ -269,8 +180,12 @@ private fun RecentEventsCard(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+        ),
+        border = BorderStroke(1.dp, DollarBlockTheme.colors.glow.copy(alpha = 0.15f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Column(modifier = Modifier.padding(vertical = 4.dp)) {
             events.forEach { event -> RecentEventRow(event) }
@@ -343,8 +258,12 @@ private fun formatEventTime(epochMillis: Long): String =
 private fun EmptyEventsCard(modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+        ),
+        border = BorderStroke(1.dp, DollarBlockTheme.colors.glow.copy(alpha = 0.15f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Row(
             modifier = Modifier.padding(20.dp),

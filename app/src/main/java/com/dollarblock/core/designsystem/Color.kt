@@ -3,28 +3,62 @@ package com.dollarblock.core.designsystem
 import androidx.compose.ui.graphics.Color
 
 /**
- * Paleta DollarBlock — dinheiro, responsabilidade, disciplina e progresso.
- * Mistura fintech + produtividade + bem-estar digital.
+ * Paleta DollarBlock — identidade fintech premium do styleguide
+ * (docs/STYLEGUIDE_ANDROID.md): Proteção (escudo), Tempo (ampulheta) e Valor (cifrão).
+ *
+ * Construída sobre três pilares de cor: Emerald Premium (energia/CTA),
+ * Deep Green Velvet (sofisticação/segurança, fundo Dark Mode nativo) e
+ * Mint Glow (brilho neon sutil em bordas, progresso e conquistas).
  */
 
-// Marca — "verde dólar"
-val DollarGreen = Color(0xFF1AA34A) // primária
-val DollarGreenDark = Color(0xFF0C6B33) // secundária (verde escuro)
-val DollarGreenContainer = Color(0xFFB9F0C9)
-val OnDollarGreenContainer = Color(0xFF04210E)
+// ── Brand Colors (styleguide §2) ────────────────────────────────────────────
+/** Emerald Premium — primária: CTA, estados ativos, sucesso. */
+val EmeraldPremium = Color(0xFF00E676)
 
-// Semânticos
-val SuccessGreen = Color(0xFF26D07C) // sucesso vibrante
-val AlertYellow = Color(0xFFF4C430) // alerta
-val PenaltyRed = Color(0xFFE5484D) // penalidade
+/** Deep Green Velvet — fundo principal (Dark Mode nativo). */
+val DeepGreenVelvet = Color(0xFF0A241D)
 
-// Neutros
-val NeutralDarkest = Color(0xFF111513)
-val NeutralDark = Color(0xFF1C211E)
-val NeutralGray = Color(0xFF6B7280)
-val NeutralLight = Color(0xFFF1F5F2)
-val NeutralWhite = Color(0xFFFFFFFF)
+/** Mint Glow — accent/neon: bordas iluminadas, gradientes de progresso, badges. */
+val MintGlow = Color(0xFF64FFDA)
 
-// Superfícies (tema escuro)
-val SurfaceDark = Color(0xFF161A18)
-val OnSurfaceDark = Color(0xFFE6EAE7)
+/** Emerald médio — passo intermediário do gradiente de marca. */
+val EmeraldMid = Color(0xFF00A86B)
+
+// ── Superfícies derivadas do Velvet (profundidade no dark) ──────────────────
+/** Superfície de cards no dark — um degrau acima do fundo Velvet. */
+val VelvetSurface = Color(0xFF103129)
+/** Superfície elevada / containers translúcidos. */
+val VelvetSurfaceHigh = Color(0xFF15453A)
+/** Variante de superfície (tracks, divisores) no dark. */
+val VelvetSurfaceVariant = Color(0xFF1C4A3D)
+
+// ── Texto (styleguide §2) ───────────────────────────────────────────────────
+val TextPrimary = Color(0xFFFFFFFF)
+/** Text Secondary (Muted) — apoio, legendas, descrições. */
+val TextMuted = Color(0xFFA0B2AE)
+
+// ── Semânticas ──────────────────────────────────────────────────────────────
+/** Alert/Blocking — estritamente tempo esgotado / app bloqueado. */
+val BlockingRed = Color(0xFFFF5252)
+/** Alerta intermediário (pendências, janelas de desbloqueio). */
+val AlertAmber = Color(0xFFFFC24B)
+
+// ── Light scheme (coerente com a marca, derivado do verde dólar) ────────────
+val LightBackground = Color(0xFFF1F7F4)
+val LightSurface = Color(0xFFFFFFFF)
+val LightSurfaceVariant = Color(0xFFE3EFE9)
+val EmeraldContainerLight = Color(0xFFB9F0CE)
+val OnEmeraldContainerLight = Color(0xFF04210E)
+val EmeraldOnLight = Color(0xFF00894B) // emerald legível sobre fundo claro
+val TextMutedLight = Color(0xFF566460)
+
+// ── Aliases legados (mantidos para não quebrar usos diretos existentes) ──────
+// BlockActivity referencia DollarGreenDark/NeutralWhite; o tema usa estes nomes.
+val DollarGreen = EmeraldPremium
+val DollarGreenDark = DeepGreenVelvet
+val SuccessGreen = EmeraldPremium
+val PenaltyRed = BlockingRed
+val NeutralWhite = TextPrimary
+val NeutralDarkest = DeepGreenVelvet
+val SurfaceDark = VelvetSurface
+val OnSurfaceDark = Color(0xFFE6F2EC)

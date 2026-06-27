@@ -66,6 +66,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dollarblock.R
 import com.dollarblock.core.designsystem.DollarBlockTheme
+import com.dollarblock.core.designsystem.components.BrandShield
 import com.dollarblock.core.designsystem.components.PrimaryActionButton
 import com.dollarblock.data.permissions.AppPermission
 import com.dollarblock.data.permissions.PermissionsState
@@ -76,10 +77,12 @@ private data class ConceptPage(
     val icon: ImageVector,
     val titleRes: Int,
     val bodyRes: Int,
+    val isBrand: Boolean = false,
 )
 
 private val conceptPages = listOf(
-    ConceptPage(Icons.Filled.Savings, R.string.onb_welcome_title, R.string.onb_welcome_body),
+    // A primeira página é a apresentação da marca — usa o emblema do escudo.
+    ConceptPage(Icons.Filled.Savings, R.string.onb_welcome_title, R.string.onb_welcome_body, isBrand = true),
     ConceptPage(Icons.Filled.Bolt, R.string.onb_penalty_title, R.string.onb_penalty_body),
 )
 
@@ -185,11 +188,11 @@ fun OnboardingScreen(
 }
 
 private val quickSummaryPalette = listOf(
-    Color(0xFF6650A4),
-    Color(0xFFE53935),
-    Color(0xFF43A047),
-    Color(0xFFFB8C00),
-    Color(0xFF1E88E5),
+    Color(0xFF00E676), // Emerald Premium
+    Color(0xFF64FFDA), // Mint Glow
+    Color(0xFF00A86B), // Emerald médio
+    Color(0xFF2DD4BF), // Teal
+    Color(0xFFA7F432), // Lime
 )
 
 @Composable
@@ -392,18 +395,22 @@ private fun ConceptPageContent(page: ConceptPage, modifier: Modifier = Modifier)
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Surface(
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.primaryContainer,
-            modifier = Modifier.size(96.dp),
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    imageVector = page.icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.size(44.dp),
-                )
+        if (page.isBrand) {
+            BrandShield(size = 128.dp, cornerRadius = 28.dp)
+        } else {
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.size(96.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = page.icon,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(44.dp),
+                    )
+                }
             }
         }
         Text(

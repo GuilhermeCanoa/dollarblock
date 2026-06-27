@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -22,6 +23,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AttachMoney
@@ -114,7 +116,6 @@ fun StatisticsScreen(
         }
 
         if (uiState.chartLines.isNotEmpty() && uiState.chartXLabels.isNotEmpty()) {
-            SectionHeader(text = stringResource(R.string.stat_usage_overview))
             LineChartCard(
                 lines = uiState.chartLines,
                 xLabels = uiState.chartXLabels,
@@ -156,8 +157,12 @@ private fun DonutChartCard(
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+        ),
+        border = BorderStroke(1.dp, DollarBlockTheme.colors.glow.copy(alpha = 0.15f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -293,14 +298,16 @@ private fun DonutChartCard(
     }
 }
 
+// Paleta de gráficos alinhada à marca: emerald, mint glow e tons análogos de
+// verde/teal, com âmbar e vermelho reservados para realces semânticos.
 private val chartPalette = listOf(
-    Color(0xFF6650A4),
-    Color(0xFFE53935),
-    Color(0xFF43A047),
-    Color(0xFFFB8C00),
-    Color(0xFF1E88E5),
-    Color(0xFF8E24AA),
-    Color(0xFF00ACC1),
+    Color(0xFF00E676), // Emerald Premium
+    Color(0xFF64FFDA), // Mint Glow
+    Color(0xFF00A86B), // Emerald médio
+    Color(0xFF2DD4BF), // Teal
+    Color(0xFFA7F432), // Lime
+    Color(0xFFFFC24B), // Amber
+    Color(0xFF4ECDC4), // Aqua
 )
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -318,8 +325,10 @@ private fun LineChartCard(
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = bgColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = bgColor.copy(alpha = 0.92f)),
+        border = BorderStroke(1.dp, DollarBlockTheme.colors.glow.copy(alpha = 0.15f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
             Row(
