@@ -20,6 +20,9 @@ import com.dollarblock.core.navigation.DollarBlockNavHost
 import com.dollarblock.data.local.prefs.AppTheme
 import com.dollarblock.feature.onboarding.OnboardingScreen
 import com.dollarblock.feature.onboarding.OnboardingViewModel
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
@@ -50,7 +53,10 @@ class MainActivity : ComponentActivity() {
 
                 when (onboardingCompleted) {
                     null -> Unit
-                    false -> OnboardingScreen(onFinished = { })
+                    false -> OnboardingScreen(
+                        onFinished = { },
+                        modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing),
+                    )
                     true -> MainTabs()
                 }
             }
