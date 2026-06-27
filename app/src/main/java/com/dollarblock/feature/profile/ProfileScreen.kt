@@ -19,6 +19,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Accessibility
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Layers
@@ -31,13 +32,21 @@ import androidx.compose.material.icons.filled.Shield
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.dollarblock.BuildConfig
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -98,6 +107,7 @@ fun ProfileScreen(
         stats = stats,
         onRequestPermission = ::requestPermission,
         onOpenHistory = onOpenHistory,
+        onResetAllData = viewModel::resetAllData,
         modifier = modifier,
     )
 }
@@ -108,8 +118,28 @@ private fun ProfileScreenContent(
     stats: ProfileStats,
     onRequestPermission: (AppPermission) -> Unit,
     onOpenHistory: () -> Unit,
+    onResetAllData: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var showResetDialog by remember { mutableStateOf(false) }
+
+    if (showResetDialog) {
+        AlertDialog(
+            onDismissRequest = { showResetDialog = false },
+            title = { Text("[DEBUG] Resetar todos os dados?") },
+            text = { Text("Apaga o banco de dados, onboarding e preferências. O app voltará à tela inicial na próxima abertura.") },
+            confirmButton = {
+                Button(
+                    onClick = { onResetAllData(); showResetDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                ) { Text("Resetar") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetDialog = false }) { Text("Cancelar") }
+            },
+        )
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -203,6 +233,43 @@ private fun ProfileScreenContent(
                     title = stringResource(R.string.pref_about),
                     value = null,
                 )
+            }
+        }
+
+        if (BuildConfig.DEBUG) {
+            SectionHeader(text = "Debug")
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showResetDialog = true }
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.DeleteForever,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(24.dp),
+                    )
+                    Spacer(Modifier.size(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Resetar todos os dados",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                        Text(
+                            text = "Apaga DB, onboarding e preferências",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                        )
+                    }
+                }
             }
         }
     }
@@ -419,6 +486,7 @@ private fun ProfileScreenPreview() {
             stats = ProfileStats(activeLimitsCount = 3, moneyLostToday = 8.33, blocksToday = 4),
             onRequestPermission = {},
             onOpenHistory = {},
+            onResetAllData = {},
         )
     }
 }

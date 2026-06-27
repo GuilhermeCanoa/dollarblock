@@ -3,19 +3,24 @@ package com.dollarblock.feature.profile
 import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dollarblock.data.local.db.DollarBlockDatabase
 import com.dollarblock.data.local.db.dao.EventDao
+import com.dollarblock.data.local.prefs.BlockPreferences
+import com.dollarblock.data.local.prefs.OnboardingPreferences
 import com.dollarblock.data.permissions.AppPermission
 import com.dollarblock.data.permissions.PermissionsProvider
 import com.dollarblock.data.permissions.PermissionsState
 import com.dollarblock.domain.repository.MonitoredAppRepository
 import com.dollarblock.feature.home.HomeMetrics
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.ZoneId
 import javax.inject.Inject
@@ -38,6 +43,9 @@ data class ProfileStats(
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val permissionsProvider: PermissionsProvider,
+    private val database: DollarBlockDatabase,
+    private val onboardingPreferences: OnboardingPreferences,
+    private val blockPreferences: BlockPreferences,
     monitoredAppRepository: MonitoredAppRepository,
     eventDao: EventDao,
 ) : ViewModel() {
@@ -71,6 +79,18 @@ class ProfileViewModel @Inject constructor(
     /** Re-lê o estado das permissões. Barato — seguro chamar em cada ON_RESUME. */
     fun refresh() {
         _permissions.value = permissionsProvider.currentState()
+    }
+
+    /**
+     * Apaga todos os dados locais e reseta o onboarding. Só disponível em builds debug
+     * (a UI condiciona a exibição via BuildConfig.DEBUG).
+     */
+    fun resetAllData() {
+        viewModelScope.launch(Dispatchers.IO) {
+            database.clearAllTables()
+            onboardingPreferences.reset()
+            blockPreferences.reset()
+        }
     }
 
     /**

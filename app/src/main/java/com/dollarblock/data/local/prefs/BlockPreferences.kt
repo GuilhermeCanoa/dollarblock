@@ -63,6 +63,12 @@ class BlockPreferences @Inject constructor(
         }
     }
 
+    /** Apaga todos os unlock grants (uso exclusivo do reset de debug). */
+    fun reset() {
+        _unlockGrants.value = emptyMap()
+        scope.launch { dataStore.edit { it.clear() } }
+    }
+
     private fun parseGrants(raw: Set<String>): Map<String, UnlockGrant> =
         raw.mapNotNull { entry ->
             val parts = entry.split('|')

@@ -31,4 +31,9 @@ class OnboardingPreferences @Inject constructor(
     suspend fun setCompleted() {
         dataStore.edit { it[completedKey] = true }
     }
+
+    /** Apaga todas as preferências de onboarding (uso exclusivo do reset de debug). */
+    suspend fun reset() {
+        dataStore.edit { it.clear() }
+    }
 }

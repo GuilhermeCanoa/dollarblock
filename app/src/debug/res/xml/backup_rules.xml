@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    DEBUG BUILD: exclui todos os dados do backup automático do Android.
+    Isso garante que cada reinstalação comece do zero (onboarding, apps, DB).
+    O arquivo release usa o backup_rules.xml padrão em src/main/res/xml/.
+-->
+<full-backup-content>
+    <exclude domain="database" path="." />
+    <exclude domain="sharedpref" path="." />
+    <exclude domain="file" path="." />
+</full-backup-content>
