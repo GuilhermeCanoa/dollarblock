@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Idiomas suportados pelo recurso de "per-app language" do sistema (Android 13+).
+  Referenciado pelo <application android:localeConfig> no manifest.
+-->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="en" />
+    <locale android:name="pt" />
+</locale-config>

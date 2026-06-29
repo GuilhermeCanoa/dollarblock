@@ -12,6 +12,14 @@ Descrição funcional.
 
 ---
 
+## [2026-06-29] — Suporte a multi-idiomas (i18n: inglês + português)
+**Tipo:** feature
+**Épico:** adhoc
+
+App agora suporta inglês e português, trocável na aba **Profile → Idioma** (System / English / Português). Implementação via API oficial de *per-app language* do AndroidX (`AppCompatDelegate.setApplicationLocales` + `LocaleListCompat`), com `autoStoreLocales=true` no manifest (`AppLocalesMetadataHolderService`) que persiste e restaura a escolha no cold start — nativo no Android 13+ e backportado abaixo disso via `androidx.appcompat`. **System** segue o idioma do celular: `pt-BR`/`pt-PT`/… resolvem para `values-pt`; qualquer outro idioma cai no `values` padrão (inglês). Trocar o idioma recria as Activities automaticamente. A preferência também é espelhada em DataStore (`LanguagePreferences`, no padrão de `ThemePreferences`) para exibir o valor atual e entrar no reset de debug. Adicionados: `res/values-pt/strings.xml` (tradução completa), `res/xml/locales_config.xml`, `core/locale/LocaleManager`.
+
+---
+
 ## [2026-06-23] — Redesign da Home + UI totalmente em inglês
 **Tipo:** feature / refactor
 **Épico:** E6 / adhoc

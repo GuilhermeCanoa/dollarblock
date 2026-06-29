@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">DollarBlock</string>
+    <string name="app_slogan">O seu aplicativo número um para gerir o tempo</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">Início</string>
+    <string name="nav_apps">Apps</string>
+    <string name="nav_statistics">Estatísticas</string>
+    <string name="nav_profile">Perfil</string>
+
+    <!-- Home -->
+    <string name="home_title">Início</string>
+    <string name="home_money_lost_today">Dinheiro perdido hoje</string>
+    <string name="home_money_lost_subtitle">dado de graça hoje</string>
+    <string name="home_money_lost_no_data">Comece a monitorar apps para ver seu custo</string>
+    <string name="home_active_limits">Limites ativos</string>
+    <string name="home_currently_blocked">Bloqueado agora</string>
+    <string name="home_addiction_tracker">Rastreador de vício</string>
+    <string name="home_recent_events">Eventos recentes</string>
+    <string name="home_no_events">Nenhum bloqueio hoje. Continue assim.</string>
+    <string name="home_event_blocked">%1$s bloqueado</string>
+    <string name="home_event_unlocked">%1$s desbloqueado</string>
+    <string name="home_event_unlock_detail">R$ %1$s · %2$s</string>
+    <string-array name="home_quotes">
+        <item>Todo mundo já ouviu \"tempo é dinheiro\", então quando você dá seu tempo para esses apps que o desperdiçam, na verdade está entregando de graça a sua moeda mais preciosa e valiosa. Então é aqui que criamos uma forma de você realmente enxergar o valor do seu tempo, e ajudar todos os dispostos a dar um passo adiante para se libertar desse \"vício de dar tempo de graça\" e retomar o controle.</item>
+        <item>O segredo não é gastar tempo, mas investi-lo. Cada minuto que você recupera da distração é um minuto devolvido à sua própria história.</item>
+        <item>A atenção é a forma mais rara e pura de generosidade. Pare de dá-la de graça.</item>
+        <item>Seu tempo é a sua vida. Como você gasta suas horas é como você gasta seus anos.</item>
+        <item>Os apps são projetados para mantê-lo rolando a tela. Você foi feito para algo maior. Retome o controle.</item>
+    </string-array>
+    <string name="pay_method_google">Google Pay</string>
+    <string name="pay_method_simulated">Pagamento simulado</string>
+
+    <!-- Tone of voice -->
+    <string name="msg_goal_met">Meta atingida.</string>
+    <string name="msg_limit_reached">Limite atingido.</string>
+    <string name="msg_unlock_needed">Desbloqueio necessário.</string>
+    <string name="msg_on_track">Você está no caminho certo.</string>
+    <string name="msg_time_saved_today">Você economizou %1$d minutos hoje.</string>
+
+    <!-- Apps -->
+    <string name="apps_title">Apps</string>
+    <string name="apps_subtitle">Escolha o que monitorar e defina limites diários.</string>
+    <string name="apps_search_placeholder">Buscar app…</string>
+    <string name="apps_search_clear">Limpar busca</string>
+    <string name="apps_search_empty">Nenhum app encontrado para %1$s.</string>
+    <string name="apps_empty_state">Busque um app acima para começar a monitorar.</string>
+    <string name="apps_limit_dialog_title">Limite diário · %1$s</string>
+    <string name="apps_limit_dialog_body">Defina quantos minutos por dia este app pode ser usado antes de ser bloqueado.</string>
+    <string name="apps_limit_dialog_minutes_label">Minutos por dia</string>
+    <string name="apps_limit_dialog_no_limit">Sem limite</string>
+    <string name="apps_limit_dialog_save">Salvar</string>
+    <string name="apps_limit_dialog_remove">Remover limite</string>
+    <string name="apps_limit_dialog_cancel">Cancelar</string>
+    <string name="apps_limit_dialog_invalid">Informe um número de minutos maior que zero.</string>
+    <string name="apps_tap_to_set_limit">Toque para definir um limite</string>
+    <string name="apps_overtime_label">+%1$s de excedente · desbloqueio #%2$d</string>
+    <string name="apps_over_limit_text">+%1$s acima do limite</string>
+    <string name="apps_overtime_bar_label">Excedente · %1$s</string>
+    <string name="apps_unlock_window_label">Janela de desbloqueio #%1$d</string>
+
+    <!-- Statistics -->
+    <string name="statistics_title">Estatísticas</string>
+    <string name="statistics_subtitle">Acompanhe seu uso diário, semanal e mensal.</string>
+
+    <!-- Apps (monitored list) -->
+    <string name="apps_monitored_count">%1$d apps monitorados</string>
+    <string name="apps_limit_label">Limite diário</string>
+    <string name="apps_used_of_limit">%1$s de %2$s</string>
+    <string name="apps_used_no_limit">%1$s hoje · sem limite definido</string>
+    <string name="apps_monitoring_on">Monitorando</string>
+    <string name="apps_monitoring_off">Pausado</string>
+
+    <!-- Statistics -->
+    <string name="stat_period_daily">Diário</string>
+    <string name="stat_period_weekly">Semanal</string>
+    <string name="stat_period_monthly">Mensal</string>
+    <string name="stat_time_spent_daily">Tempo gasto diário</string>
+    <string name="stat_time_spent_weekly">Tempo gasto semanal</string>
+    <string name="stat_time_spent_monthly">Tempo gasto mensal</string>
+    <string name="stat_money_lost_week">Dinheiro perdido esta semana</string>
+    <string name="stat_money_lost_month">Dinheiro perdido este mês</string>
+    <string name="stat_most_used">Mais usado</string>
+    <string name="stat_usage_overview">Visão geral de uso</string>
+    <string name="stat_no_data">Ainda não há dados de uso.\nAbra apps monitorados para ver o gráfico.</string>
+
+    <!-- Profile -->
+    <string name="profile_title">Perfil</string>
+    <string name="profile_subtitle">Permissões, preferências e sua jornada de disciplina.</string>
+    <string name="profile_user_name">Você</string>
+    <string name="profile_user_tagline">Construindo disciplina, um centavo de cada vez.</string>
+    <string name="profile_streak">Sequência</string>
+    <string name="profile_saved">Economizado</string>
+    <string name="profile_goals">Metas</string>
+    <string name="profile_permissions">Permissões</string>
+    <string name="profile_preferences">Preferências</string>
+    <string name="perm_usage">Acesso de uso</string>
+    <string name="perm_usage_desc">Medir quanto tempo cada app é usado</string>
+    <string name="perm_accessibility">Acessibilidade</string>
+    <string name="perm_accessibility_desc">Detectar o app em primeiro plano e bloqueá-lo</string>
+    <string name="perm_overlay">Sobreposição</string>
+    <string name="perm_overlay_desc">Exibir a tela de bloqueio sobre o app</string>
+    <string name="perm_notifications">Notificações</string>
+    <string name="perm_notifications_desc">Alertas e serviço de monitoramento</string>
+    <string name="perm_status_granted">Concedida</string>
+    <string name="perm_status_pending">Pendente</string>
+    <string name="pref_theme">Tema</string>
+    <string name="pref_theme_dark">Escuro</string>
+    <string name="pref_theme_light">Claro</string>
+    <string name="pref_theme_system">Sistema</string>
+    <string name="pref_language">Idioma</string>
+    <string name="pref_language_system">Padrão do sistema</string>
+    <string name="pref_language_en">English</string>
+    <string name="pref_language_pt">Português</string>
+    <string name="pref_history">Histórico</string>
+    <string name="pref_history_value">Bloqueios e desbloqueios</string>
+    <string name="pref_about">Sobre o DollarBlock</string>
+
+    <!-- Profile — real stats (E8) -->
+    <string name="profile_blocks_today">Bloqueios hoje</string>
+    <string name="profile_active_limits">Limites ativos</string>
+    <string name="profile_stat_score">Pontuação</string>
+
+    <!-- History (E8) -->
+    <string name="history_title">Histórico</string>
+    <string name="history_empty">Ainda não há eventos.\nBloqueios e desbloqueios aparecerão aqui.</string>
+    <string name="history_back">Voltar</string>
+
+    <!-- Block service strings (used in AccessibilityService declaration) -->
+    <string name="block_section_title">Bloqueio de apps</string>
+    <string name="block_section_subtitle">Escolha um app e bloqueie o acesso aqui.</string>
+    <string name="block_select_label">App</string>
+    <string name="block_select_placeholder">Selecione um app</string>
+    <string name="block_loading_apps">Carregando apps…</string>
+    <string name="block_enable_button">Bloquear acesso</string>
+    <string name="block_disable_button">Desbloquear acesso</string>
+    <string name="block_blocked_list_title">Apps bloqueados (%1$d)</string>
+    <string name="block_unblock_action">Desbloquear</string>
+
+    <!-- Accessibility service status -->
+    <string name="block_a11y_needed_title">Ative o serviço de bloqueio</string>
+    <string name="block_a11y_needed_desc">O DollarBlock precisa do serviço de Acessibilidade para bloquear apps. Ative em Configurações &gt; Acessibilidade &gt; DollarBlock.</string>
+    <string name="block_a11y_button">Ativar nas Configurações</string>
+    <string name="block_a11y_active">Serviço de bloqueio ativo.</string>
+
+    <!-- Accessibility service declaration -->
+    <string name="accessibility_service_label">DollarBlock — Bloqueio de apps</string>
+    <string name="accessibility_service_description">Permite que o DollarBlock detecte qual app está aberto e bloqueie o acesso aos apps que você escolher.</string>
+
+    <!-- Block screen -->
+    <string name="block_screen_title">Acesso bloqueado</string>
+    <string name="block_screen_message">Para desbloquear este app agora, conclua o pagamento. O acesso fica liberado por %1$d minutos.</string>
+    <string name="block_screen_home">Voltar ao início</string>
+    <string name="block_screen_open_app">Abrir o DollarBlock</string>
+
+    <!-- Payment / unlock -->
+    <string name="pay_with_google">Pagar com Google Pay</string>
+    <string name="pay_simulate">Simular pagamento (teste)</string>
+    <string name="pay_info">R$ %1$s · libera por %2$d min</string>
+    <string name="pay_processing">Processando…</string>
+    <string name="pay_unavailable">O Google Pay não está disponível neste dispositivo.</string>
+    <string name="pay_error">Não foi possível concluir o pagamento.</string>
+    <string name="pay_cancelled">Pagamento cancelado.</string>
+    <string name="pay_unlocked">Acesso liberado por %1$d min.</string>
+
+    <!-- Common -->
+    <string name="unlock">Desbloquear</string>
+    <string name="coming_soon">Em breve.</string>
+    <string name="preview_sample_data">Prévia — dados de exemplo.</string>
+
+    <!-- Onboarding (E2 — first run) -->
+    <string name="onb_welcome_title">Disciplina que compensa</string>
+    <string name="onb_welcome_body">O DollarBlock é o seu coach de tempo. Escolha os apps que o distraem, defina um limite diário e cuidamos do resto: ao atingir o limite, o acesso é bloqueado.</string>
+    <string name="onb_penalty_title">Como funciona a penalidade</string>
+    <string name="onb_penalty_body">Precisa mesmo usar um app depois de atingir o limite? Você pode desbloqueá-lo na hora pagando uma pequena penalidade. Esse custo cria a fricção que faz você pensar duas vezes — e cada minuto economizado conta.</string>
+    <string name="onb_permissions_title">Vamos configurar o essencial</string>
+    <string name="onb_permissions_body">O DollarBlock precisa destas permissões para medir o uso e bloquear apps. Pedimos apenas o estritamente necessário — cada uma abre a tela do sistema correspondente.</string>
+    <string name="onb_perm_usage_why">Mede quanto tempo você passa em cada app — a base de tudo.</string>
+    <string name="onb_perm_accessibility_why">Detecta o app em primeiro plano para aplicar o bloqueio.</string>
+    <string name="onb_perm_overlay_why">Exibe a tela de bloqueio por cima do app.</string>
+    <string name="onb_perm_notifications_why">Avisa você sobre limites atingidos e o serviço de monitoramento.</string>
+    <string name="onb_perm_required">obrigatória</string>
+    <string name="onb_perm_grant">Conceder</string>
+    <string name="onb_continue">Continuar</string>
+    <string name="onb_skip">Pular para as permissões</string>
+    <string name="onb_finish">Começar a usar</string>
+    <string name="onb_finish_blocked_hint">Conceda o Acesso de uso para começar — sem ele não conseguimos medir nada.</string>
+</resources>

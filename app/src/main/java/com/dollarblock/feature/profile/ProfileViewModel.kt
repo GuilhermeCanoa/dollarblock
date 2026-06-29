@@ -5,8 +5,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dollarblock.data.local.db.DollarBlockDatabase
 import com.dollarblock.data.local.db.dao.EventDao
+import com.dollarblock.core.locale.LocaleManager
+import com.dollarblock.data.local.prefs.AppLanguage
 import com.dollarblock.data.local.prefs.AppTheme
 import com.dollarblock.data.local.prefs.BlockPreferences
+import com.dollarblock.data.local.prefs.LanguagePreferences
 import com.dollarblock.data.local.prefs.OnboardingPreferences
 import com.dollarblock.data.local.prefs.ThemePreferences
 import com.dollarblock.data.permissions.AppPermission
@@ -49,6 +52,7 @@ class ProfileViewModel @Inject constructor(
     private val onboardingPreferences: OnboardingPreferences,
     private val blockPreferences: BlockPreferences,
     private val themePreferences: ThemePreferences,
+    private val languagePreferences: LanguagePreferences,
     monitoredAppRepository: MonitoredAppRepository,
     eventDao: EventDao,
 ) : ViewModel() {
@@ -61,6 +65,20 @@ class ProfileViewModel @Inject constructor(
 
     fun setTheme(theme: AppTheme) {
         viewModelScope.launch { themePreferences.setTheme(theme) }
+    }
+
+    val language: StateFlow<AppLanguage> = languagePreferences.language
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AppLanguage.SYSTEM)
+
+    /**
+     * Troca o idioma: persiste no DataStore e aplica via [LocaleManager] (recria as
+     * Activities para refletir os novos recursos imediatamente).
+     */
+    fun setLanguage(language: AppLanguage) {
+        viewModelScope.launch {
+            languagePreferences.setLanguage(language)
+            LocaleManager.apply(language)
+        }
     }
 
     val stats: StateFlow<ProfileStats> = run {
@@ -100,6 +118,7 @@ class ProfileViewModel @Inject constructor(
             database.clearAllTables()
             onboardingPreferences.reset()
             blockPreferences.reset()
+            languagePreferences.reset()
         }
     }
 

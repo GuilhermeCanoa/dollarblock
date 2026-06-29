@@ -5,7 +5,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -59,6 +58,7 @@ import com.dollarblock.R
 import com.dollarblock.core.designsystem.DollarBlockTheme
 import com.dollarblock.core.designsystem.DollarGreenDark
 import com.dollarblock.core.designsystem.NeutralWhite
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.dollarblock.data.local.prefs.BlockPreferences
 import com.dollarblock.domain.model.PaymentMethod
@@ -81,7 +81,7 @@ import java.util.UUID
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class BlockActivity : ComponentActivity() {
+class BlockActivity : AppCompatActivity() {
 
     @Inject
     lateinit var blockPreferences: BlockPreferences

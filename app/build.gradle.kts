@@ -66,6 +66,9 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
 
+    // AppCompat — per-app language (AppCompatDelegate.setApplicationLocales + autoStoreLocales)
+    implementation(libs.androidx.appcompat)
+
     // Compose (BOM)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)

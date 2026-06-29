@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.QueryStats
 import androidx.compose.material.icons.filled.Savings
@@ -48,6 +49,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.dollarblock.BuildConfig
+import com.dollarblock.data.local.prefs.AppLanguage
 import com.dollarblock.data.local.prefs.AppTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -87,6 +89,7 @@ fun ProfileScreen(
     val permissions by viewModel.permissions.collectAsStateWithLifecycle()
     val stats by viewModel.stats.collectAsStateWithLifecycle()
     val theme by viewModel.theme.collectAsStateWithLifecycle()
+    val language by viewModel.language.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     // Re-checa as permissões sempre que a tela volta ao foreground (igual ao onboarding).
@@ -110,9 +113,11 @@ fun ProfileScreen(
         permissions = permissions,
         stats = stats,
         theme = theme,
+        language = language,
         onRequestPermission = ::requestPermission,
         onOpenHistory = onOpenHistory,
         onThemeChange = viewModel::setTheme,
+        onLanguageChange = viewModel::setLanguage,
         onResetAllData = viewModel::resetAllData,
         modifier = modifier,
     )
@@ -123,20 +128,31 @@ private fun ProfileScreenContent(
     permissions: PermissionsState,
     stats: ProfileStats,
     theme: AppTheme,
+    language: AppLanguage,
     onRequestPermission: (AppPermission) -> Unit,
     onOpenHistory: () -> Unit,
     onThemeChange: (AppTheme) -> Unit,
+    onLanguageChange: (AppLanguage) -> Unit,
     onResetAllData: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var showResetDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
+    var showLanguageDialog by remember { mutableStateOf(false) }
 
     if (showThemeDialog) {
         ThemePickerDialog(
             current = theme,
             onSelect = { onThemeChange(it); showThemeDialog = false },
             onDismiss = { showThemeDialog = false },
+        )
+    }
+
+    if (showLanguageDialog) {
+        LanguagePickerDialog(
+            current = language,
+            onSelect = { onLanguageChange(it); showLanguageDialog = false },
+            onDismiss = { showLanguageDialog = false },
         )
     }
 
@@ -253,6 +269,12 @@ private fun ProfileScreenContent(
                         },
                     ),
                     onClick = { showThemeDialog = true },
+                )
+                SettingRow(
+                    icon = Icons.Filled.Language,
+                    title = stringResource(R.string.pref_language),
+                    value = stringResource(languageLabelRes(language)),
+                    onClick = { showLanguageDialog = true },
                 )
                 SettingRow(
                     icon = Icons.Filled.History,
@@ -536,7 +558,57 @@ private fun ThemePickerDialog(
         },
         confirmButton = {},
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.apps_limit_dialog_cancel)) }
+        },
+    )
+}
+
+private fun languageLabelRes(language: AppLanguage): Int = when (language) {
+    AppLanguage.SYSTEM -> R.string.pref_language_system
+    AppLanguage.ENGLISH -> R.string.pref_language_en
+    AppLanguage.PORTUGUESE -> R.string.pref_language_pt
+}
+
+@Composable
+private fun LanguagePickerDialog(
+    current: AppLanguage,
+    onSelect: (AppLanguage) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.pref_language)) },
+        text = {
+            Column {
+                listOf(
+                    AppLanguage.SYSTEM,
+                    AppLanguage.ENGLISH,
+                    AppLanguage.PORTUGUESE,
+                ).forEach { option ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSelect(option) }
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        androidx.compose.material3.RadioButton(
+                            selected = current == option,
+                            onClick = { onSelect(option) },
+                        )
+                        Text(
+                            text = stringResource(languageLabelRes(option)),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.apps_limit_dialog_cancel)) }
         },
     )
 }
@@ -557,9 +629,11 @@ private fun ProfileScreenPreview() {
             ),
             stats = ProfileStats(activeLimitsCount = 3, moneyLostToday = 8.33, blocksToday = 4),
             theme = AppTheme.DARK,
+            language = AppLanguage.SYSTEM,
             onRequestPermission = {},
             onOpenHistory = {},
             onThemeChange = {},
+            onLanguageChange = {},
             onResetAllData = {},
         )
     }
