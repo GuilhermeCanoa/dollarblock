@@ -27,4 +27,7 @@ interface EventDao {
 
     @Query("SELECT * FROM unlock_events ORDER BY timestamp DESC LIMIT :limit")
     fun recentUnlocks(limit: Int): Flow<List<UnlockEventEntity>>
+
+    @Query("SELECT COUNT(*) FROM unlock_events WHERE timestamp >= :startMs")
+    suspend fun countUnlocksSince(startMs: Long): Int
 }

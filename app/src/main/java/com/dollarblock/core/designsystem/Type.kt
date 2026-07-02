@@ -39,6 +39,17 @@ val InterFamily = FontFamily(
     inter(400), inter(500), inter(600), inter(700),
 )
 
+/**
+ * Numerais tabulares (`tnum`) para todo valor de dinheiro e tempo — dígitos de
+ * largura fixa, estética de painel financeiro/taxímetro; o count-up anima sem
+ * o texto "dançar". Combinar com tamanho/peso do contexto via `copy()`.
+ */
+val TabularNumerals = TextStyle(
+    fontFamily = InterFamily,
+    fontWeight = FontWeight.Bold,
+    fontFeatureSettings = "tnum",
+)
+
 val DollarBlockTypography = Typography(
     displaySmall = TextStyle(
         fontFamily = JakartaFamily,

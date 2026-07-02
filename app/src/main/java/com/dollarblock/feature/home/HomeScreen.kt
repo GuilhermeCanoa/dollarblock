@@ -1,11 +1,8 @@
 package com.dollarblock.feature.home
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -32,10 +29,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -47,8 +48,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dollarblock.R
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import com.dollarblock.core.designsystem.BlockingRed
 import com.dollarblock.core.designsystem.DollarBlockTheme
 import com.dollarblock.core.designsystem.NeutralWhite
+import com.dollarblock.core.designsystem.TabularNumerals
 import com.dollarblock.core.designsystem.components.MetricCard
 import com.dollarblock.core.designsystem.components.glow
 import com.dollarblock.core.designsystem.components.ScreenHeader
@@ -112,21 +115,37 @@ private fun MoneyLostHero(
     moneyLost: Double?,
     modifier: Modifier = Modifier,
 ) {
-    // Bloco-herói com gradiente de marca a 135° (Velvet → Emerald → Mint) e halo
-    // de brilho, reforçando a relação dinheiro × tempo (styleguide §2).
+    // O taxímetro: bloco-herói com count-up de odômetro. Verde (marca) quando o
+    // dia está limpo; "sangra" vermelho quando há dinheiro sendo doado.
     val shape = RoundedCornerShape(24.dp)
+    val burning = (moneyLost ?: 0.0) >= 0.01
     val gradient = Brush.linearGradient(
-        colors = DollarBlockTheme.colors.gradientStops,
+        colors = if (burning) {
+            listOf(Color(0xFF2A0E12), Color(0xFF6E1D1D), BlockingRed)
+        } else {
+            DollarBlockTheme.colors.gradientStops
+        },
         start = Offset(0f, 0f),
         end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY),
     )
+    val glowColor = if (burning) BlockingRed else DollarBlockTheme.colors.glow
+
+    // Count-up de taxímetro: o valor sobe de 0 até o prejuízo ao entrar na tela.
+    val animatedValue = remember { Animatable(0f) }
+    LaunchedEffect(moneyLost) {
+        animatedValue.animateTo(
+            targetValue = (moneyLost ?: 0.0).toFloat(),
+            animationSpec = tween(durationMillis = 1400, easing = FastOutSlowInEasing),
+        )
+    }
+
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .glow(DollarBlockTheme.colors.glow, shape, radius = 28.dp, alpha = 0.4f)
+            .glow(glowColor, shape, radius = 28.dp, alpha = 0.4f)
             .clip(shape)
             .background(gradient)
-            .border(1.dp, DollarBlockTheme.colors.glow.copy(alpha = 0.35f), shape),
+            .border(1.dp, glowColor.copy(alpha = 0.35f), shape),
     ) {
         Column(
             modifier = Modifier
@@ -141,20 +160,27 @@ private fun MoneyLostHero(
                 letterSpacing = 1.5.sp,
                 color = NeutralWhite.copy(alpha = 0.85f),
             )
-            AnimatedContent(
-                targetState = moneyLost,
-                transitionSpec = {
-                    slideInVertically { it } + fadeIn() togetherWith slideOutVertically { -it } + fadeOut()
-                },
-                label = "money_lost_anim",
-            ) { value ->
+            Text(
+                text = if (moneyLost != null) formatReais(animatedValue.value.toDouble()) else "—",
+                style = TabularNumerals,
+                fontSize = 56.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = NeutralWhite,
+                lineHeight = 62.sp,
+            )
+            val equivalence = moneyLost?.let { HomeMetrics.equivalence(it) }
+            if (equivalence != null) {
                 Text(
-                    text = if (value != null) formatReais(value) else "—",
-                    style = MaterialTheme.typography.displaySmall,
-                    fontSize = 64.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = NeutralWhite,
-                    lineHeight = 70.sp,
+                    text = when (equivalence) {
+                        is MoneyEquivalence.Pizzas ->
+                            pluralStringResource(R.plurals.home_equiv_pizzas, equivalence.count, equivalence.count)
+                        is MoneyEquivalence.Coffees ->
+                            pluralStringResource(R.plurals.home_equiv_coffees, equivalence.count, equivalence.count)
+                        is MoneyEquivalence.CoffeeFraction ->
+                            stringResource(R.string.home_equiv_coffee_fraction, equivalence.percent)
+                    },
+                    style = MaterialTheme.typography.labelLarge,
+                    color = NeutralWhite.copy(alpha = 0.9f),
                 )
             }
             Text(

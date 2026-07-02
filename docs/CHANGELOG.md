@@ -12,6 +12,20 @@ Descrição funcional.
 
 ---
 
+## [2026-07-02] — Rebrand "Taxímetro" + Passe do Dia (R$ 1 até a meia-noite)
+**Tipo:** feature / regra
+**Épico:** E11
+
+Mudança de identidade e de regra de negócio (spec: `docs/specs/E11-taximetro-passe-do-dia.md`):
+
+- **Passe do dia**: o desbloqueio pago deixa de ser janela de 5 min medida em tempo de uso e passa a liberar o app bloqueado até a **meia-noite local** (wall-clock), por **R$ 1,00** — no máximo 1 pagamento/dia por app. `UnlockGrant` agora guarda `unlockUntilMs` (serialização v2 `pkg|untilMs`; grants antigos de 3 partes são descartados no parse). `DollarBlockAccessibilityService` simplificado: gate de unlock é `now < unlockUntilMs`. ⚠️ O amount do Lambda `unlock-charge` (fora do repo) precisa ser ajustado para 1.00 BRL.
+- **Voz nova ("gerente do banco de tempo")**: copy pass completo em `values/strings.xml` + `values-pt/strings.xml` — tom seco/irônico/deadpan (fatura, extrato, recibos, resgate, movimentações, contrato). MANIFESTO.md atualizado com o passe do dia e a seção "Como falamos".
+- **Home = taxímetro**: hero com count-up animado (Animatable), numerais tabulares (token `TabularNumerals` em `Type.kt`), gradiente que fica **vermelho** quando há prejuízo (verde marca quando o dia está limpo) e linha de equivalência concreta ("= 2 cafés", "= 1 pizza inteira") via `HomeMetrics.equivalence()` (função pura + testes).
+- **Tela de bloqueio = fatura**: recibo em papel com tipografia mono, carimbo "BLOQUEADO" estampado em diagonal com animação de spring + haptic, e copy escalonada pelo nº de resgates pagos no dia (`EventDao.countUnlocksSince` + `EventsRepository.unlocksPaidToday()`).
+- Aba Apps: removida a "Barra 3" (progresso da janela de 5 min) — sem sentido no modelo de passe do dia.
+
+---
+
 ## [2026-06-29] — Suporte a multi-idiomas (i18n: inglês + português)
 **Tipo:** feature
 **Épico:** adhoc

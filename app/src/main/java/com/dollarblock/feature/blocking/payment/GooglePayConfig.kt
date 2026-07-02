@@ -7,7 +7,6 @@ import com.google.android.gms.wallet.Wallet
 import com.google.android.gms.wallet.WalletConstants
 import org.json.JSONArray
 import org.json.JSONObject
-import java.util.concurrent.TimeUnit
 
 /**
  * Configuração da Google Pay API para o DollarBlock.
@@ -18,13 +17,13 @@ import java.util.concurrent.TimeUnit
  */
 object GooglePayConfig {
 
-    /** Valor (mock) cobrado para desbloquear. */
-    const val PRICE = "4.99"
+    /**
+     * Passe do dia: um pagamento libera o app bloqueado até a meia-noite local.
+     * Este valor alimenta o sheet do Google Pay e o registro local; o valor efetivamente
+     * cobrado é fixo no Lambda `unlock-charge` e precisa ser mantido em sincronia.
+     */
+    const val PRICE = "1.00"
     const val CURRENCY_CODE = "BRL"
-
-    /** Duração da liberação após o pagamento. */
-    const val UNLOCK_WINDOW_MINUTES = 5
-    val UNLOCK_WINDOW_MS: Long = TimeUnit.MINUTES.toMillis(UNLOCK_WINDOW_MINUTES.toLong())
 
     private const val ENVIRONMENT = WalletConstants.ENVIRONMENT_TEST
 

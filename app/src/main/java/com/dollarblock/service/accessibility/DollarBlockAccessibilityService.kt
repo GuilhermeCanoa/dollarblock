@@ -28,10 +28,10 @@ import javax.inject.Inject
 
 /**
  * Detecta o app em primeiro plano e bloqueia (abre [BlockActivity]) quando um app
- * monitorado atinge o limite diário de uso e não há janela de desbloqueio ativa.
+ * monitorado atinge o limite diário de uso e não há passe do dia ativo.
  *
- * A janela de desbloqueio é medida em **tempo real de uso** via [UsageStatsProvider.getUsageMillisSince]
- * — não há session tracking; o próprio SO registra foreground time com precisão.
+ * O passe do dia (pós-pagamento) expira por wall-clock na meia-noite local
+ * ([BlockPreferences.UnlockGrant.unlockUntilMs]) — basta comparar com o relógio.
  */
 @AndroidEntryPoint
 class DollarBlockAccessibilityService : AccessibilityService() {
@@ -135,8 +135,9 @@ class DollarBlockAccessibilityService : AccessibilityService() {
 
                 if (usedMillis >= limitMillis) {
                     val grant = blockPreferences.getUnlockGrant(packageName)
-                    if (grant == null) {
-                        // Sem unlock → bloqueia se o app estiver em foreground
+                    val now = System.currentTimeMillis()
+                    if (grant == null || now >= grant.unlockUntilMs) {
+                        // Sem passe do dia ativo → bloqueia se o app estiver em foreground
                         handler.post {
                             if (lastForegroundPackage == packageName) {
                                 assertBlock(packageName) { !isUnlockActiveSync(packageName) }
@@ -145,21 +146,8 @@ class DollarBlockAccessibilityService : AccessibilityService() {
                         break
                     }
 
-                    val usageSinceGrant = usageStatsProvider.getUsageMillisSince(
-                        packageName, grant.grantedAtMs,
-                    )
-                    if (usageSinceGrant >= grant.durationMs) {
-                        // Janela de desbloqueio esgotada → bloqueia se em foreground
-                        handler.post {
-                            if (lastForegroundPackage == packageName) {
-                                assertBlock(packageName) { !isUnlockActiveSync(packageName) }
-                            }
-                        }
-                        break
-                    }
-
-                    // Ainda dentro da janela — dorme proporcionalmente ao tempo restante
-                    val remaining = grant.durationMs - usageSinceGrant
+                    // Passe do dia ativo — dorme até perto da meia-noite
+                    val remaining = grant.unlockUntilMs - now
                     delay(remaining.coerceIn(MIN_POLL_INTERVAL_MS, MAX_POLL_INTERVAL_MS))
                 } else {
                     delay((limitMillis - usedMillis).coerceIn(MIN_POLL_INTERVAL_MS, MAX_POLL_INTERVAL_MS))
@@ -168,23 +156,14 @@ class DollarBlockAccessibilityService : AccessibilityService() {
         }
     }
 
-    /** Verifica se há unlock ativo via UsageStats (suspend — uso em coroutine). */
-    private suspend fun isUnlockActive(packageName: String): Boolean {
+    /** Passe do dia ativo = ainda não chegou a meia-noite local do dia do pagamento. */
+    private fun isUnlockActive(packageName: String): Boolean {
         val grant = blockPreferences.getUnlockGrant(packageName) ?: return false
-        val usageSince = usageStatsProvider.getUsageMillisSince(packageName, grant.grantedAtMs)
-        return usageSince < grant.durationMs
+        return System.currentTimeMillis() < grant.unlockUntilMs
     }
 
-    /**
-     * Verifica unlock ativo de forma síncrona (wall-clock) — usada no lambda [assertBlock]
-     * que roda na main thread. Conservador: se há grant recente (< 10× duração), considera ativo.
-     */
-    private fun isUnlockActiveSync(packageName: String): Boolean {
-        val grant = blockPreferences.getUnlockGrant(packageName) ?: return false
-        // Se o grant foi concedido há menos de 10× a duração, pode ainda estar ativo.
-        // A verificação precisa (via UsageStats) é feita no polling loop.
-        return System.currentTimeMillis() < grant.grantedAtMs + grant.durationMs * 10
-    }
+    /** Mantida como alias: a checagem já é síncrona (wall-clock puro). */
+    private fun isUnlockActiveSync(packageName: String): Boolean = isUnlockActive(packageName)
 
     private fun stopTracking() {
         trackingJob?.cancel()

@@ -22,11 +22,11 @@ O cérebro humano responde a perdas muito mais do que a ganhos. Isso não é fra
 
 1. **Você escolhe os apps** que quer monitorar — redes sociais, jogos, o que for.
 2. **Você define um limite diário** — 30 minutos de Instagram, 1 hora de YouTube.
-3. **Quando o limite é atingido**, o app é bloqueado. A tela do DollarBlock toma o lugar.
-4. **Para continuar**, você paga uma penalidade — diretamente pelo Google Pay, sem fricção, em segundos.
+3. **Quando o limite é atingido**, o app é bloqueado. A tela do DollarBlock toma o lugar — a sua fatura chegou.
+4. **Para continuar**, você compra um **passe do dia**: um pagamento único, direto pelo Google Pay, libera aquele app até a meia-noite.
 5. O dinheiro sai de verdade. Isso muda tudo.
 
-O desbloqueio dura uma janela curta (15 minutos por padrão). Depois, bloqueia de novo. Cada vez que você cede, custa mais — financeiramente e psicologicamente.
+Um pagamento por app, por dia, no máximo. À meia-noite o passe expira, o limite reseta e o taxímetro volta a contar. Simples como uma corrida de táxi: estourou o limite, ou desce do carro ou paga a bandeirada.
 
 ---
 
@@ -51,9 +51,24 @@ Com o tempo, o padrão muda: a associação entre abrir o Instagram e perder din
 
 ## Filosofia
 
-DollarBlock não julga você. Não manda notificações motivacionais. Não tem mascote.
+DollarBlock não julga você. Não te manda frases motivacionais. Te manda a conta.
+
+Não tem mascote. Tem um taxímetro.
 
 Ele só coloca um preço no que você diz que não quer mais fazer — e deixa você decidir se vale a pena.
+
+---
+
+## Como falamos
+
+A voz do DollarBlock é a de um **gerente de banco do seu tempo**: seco, irônico, deadpan. Nunca grita, nunca usa emoji, nunca motiva — apresenta a fatura. O humor vem da precisão contábil aplicada a algo patético, nunca de piada explícita.
+
+- ✅ **Fatos com preço:** "47 min de Instagram hoje. R$ 2,18. Um café."
+- ✅ **Ironia por subestimação:** "O TikTok agradece a doação."
+- ❌ **Motivacional:** "Você consegue! 💪" — nunca.
+- ❌ **Bronca moralista:** "Você está viciado" — o app não julga, ele cobra.
+
+Vocabulário da casa: *taxímetro, fatura, extrato, recibo, resgate, passe do dia, prejuízo, movimentações, contrato.*
 
 ---
 

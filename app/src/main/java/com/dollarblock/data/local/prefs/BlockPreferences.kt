@@ -12,15 +12,17 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.ZoneId
 import javax.inject.Inject
 import javax.inject.Singleton
 
 private val Context.dollarBlockDataStore by preferencesDataStore(name = "dollarblock_prefs")
 
 /**
- * Persiste janelas de desbloqueio pós-pagamento (grantedAtMs, durationMs).
- * A verificação de expiração por tempo de uso real é feita no serviço de acessibilidade
- * via [com.dollarblock.data.usage.UsageStatsProvider.getUsageMillisSince].
+ * Persiste passes do dia pós-pagamento: um pagamento libera o app até a meia-noite local
+ * ([UnlockGrant.unlockUntilMs]). A expiração é wall-clock — o serviço de acessibilidade
+ * só compara `now < unlockUntilMs`.
  */
 @Singleton
 class BlockPreferences @Inject constructor(
@@ -31,10 +33,10 @@ class BlockPreferences @Inject constructor(
 
     private val unlockGrantsKey = stringSetPreferencesKey("unlock_grants")
 
-    /** package → (grantedAtMs, durationMs) — concedido após pagamento. */
+    /** package → passe do dia concedido após pagamento. */
     private val _unlockGrants = MutableStateFlow<Map<String, UnlockGrant>>(emptyMap())
 
-    data class UnlockGrant(val grantedAtMs: Long, val durationMs: Long)
+    data class UnlockGrant(val unlockUntilMs: Long)
 
     init {
         scope.launch {
@@ -43,9 +45,10 @@ class BlockPreferences @Inject constructor(
         }
     }
 
-    /** Registra uma janela de desbloqueio de [durationMs] a partir de agora. */
-    fun grantUnlock(packageName: String, durationMs: Long) {
-        _unlockGrants.update { it + (packageName to UnlockGrant(System.currentTimeMillis(), durationMs)) }
+    /** Registra um passe do dia: o app fica liberado até a meia-noite local. */
+    fun grantUnlockForToday(packageName: String) {
+        val until = endOfTodayMillis()
+        _unlockGrants.update { it + (packageName to UnlockGrant(until)) }
         persist()
     }
 
@@ -56,9 +59,7 @@ class BlockPreferences @Inject constructor(
         val grants = _unlockGrants.value
         scope.launch {
             dataStore.edit { prefs ->
-                prefs[unlockGrantsKey] = grants.map { (pkg, g) ->
-                    "$pkg|${g.grantedAtMs}|${g.durationMs}"
-                }.toSet()
+                prefs[unlockGrantsKey] = serializeGrants(grants)
             }
         }
     }
@@ -69,13 +70,30 @@ class BlockPreferences @Inject constructor(
         scope.launch { dataStore.edit { it.clear() } }
     }
 
-    private fun parseGrants(raw: Set<String>): Map<String, UnlockGrant> =
-        raw.mapNotNull { entry ->
-            val parts = entry.split('|')
-            if (parts.size != 3) return@mapNotNull null
-            val pkg = parts[0]
-            val grantedAt = parts[1].toLongOrNull() ?: return@mapNotNull null
-            val duration = parts[2].toLongOrNull() ?: return@mapNotNull null
-            pkg to UnlockGrant(grantedAt, duration)
-        }.toMap()
+    companion object {
+        /** Meia-noite local do fim do dia que contém [nowMs]. */
+        fun endOfDayMillis(nowMs: Long, zone: ZoneId): Long =
+            Instant.ofEpochMilli(nowMs).atZone(zone).toLocalDate()
+                .plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
+
+        private fun endOfTodayMillis(): Long =
+            endOfDayMillis(System.currentTimeMillis(), ZoneId.systemDefault())
+
+        /** Formato v2: `"pkg|unlockUntilMs"`. */
+        fun serializeGrants(grants: Map<String, UnlockGrant>): Set<String> =
+            grants.map { (pkg, g) -> "$pkg|${g.unlockUntilMs}" }.toSet()
+
+        /**
+         * Entradas no formato antigo de 3 partes (`pkg|grantedAt|duration`, janela de 5 min)
+         * são ignoradas — grants pré-migração simplesmente expiram.
+         */
+        fun parseGrants(raw: Set<String>): Map<String, UnlockGrant> =
+            raw.mapNotNull { entry ->
+                val parts = entry.split('|')
+                if (parts.size != 2) return@mapNotNull null
+                val pkg = parts[0]
+                val until = parts[1].toLongOrNull() ?: return@mapNotNull null
+                pkg to UnlockGrant(until)
+            }.toMap()
+    }
 }

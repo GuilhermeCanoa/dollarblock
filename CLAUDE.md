@@ -92,10 +92,11 @@ Single Gradle module (`:app`) with Clean Architecture packages. Dependency rule:
 ### Payment (E9 — real Stripe charge, test mode)
 
 `feature/blocking/payment/` wires a **real Stripe charge through an AWS backend**, in Stripe *test* mode:
-- `GooglePayConfig.kt` — `ENVIRONMENT_TEST`, gateway `"stripe"` with a `pk_test_` publishable key. `UNLOCK_WINDOW_MINUTES` = 5.
+- `GooglePayConfig.kt` — `ENVIRONMENT_TEST`, gateway `"stripe"` with a `pk_test_` publishable key. `PRICE = "1.00"` BRL (**day pass** — E11); the amount actually charged is fixed in the `unlock-charge` Lambda and must be kept in sync.
 - `BlockActivity.handlePaymentData` extracts the Google Pay token, isolates the Stripe token `id` via `StripeToken.extractId`, and calls `PaymentApiClient.charge()` → `POST /unlock-charge` (live API Gateway + Lambda + Stripe). Unlock is granted **only** on `status == "succeeded"`; idempotency via a per-request UUID.
-- On success, `BlockPreferences.grantUnlock(pkg, window)` frees the app for the window, then re-blocks; the unlock is logged through `EventsRepository.recordUnlock`.
-- A debug-only "Simular pagamento" fallback bypasses the charge.
+- On success, `BlockPreferences.grantUnlockForToday(pkg)` frees the app until **local midnight** (wall-clock `unlockUntilMs`; at most one payment per app per day by construction); the unlock is logged through `EventsRepository.recordUnlock`.
+- A debug-only "Simulate payment" fallback bypasses the charge.
+- Brand voice (E11): deadpan "time-bank manager" tone — taxímetro/fatura/extrato/recibos vocabulary; see MANIFESTO.md "Como falamos" before writing any user-facing string.
 
 Production (`pk_live_`/`sk_live_`, `ENVIRONMENT_PRODUCTION`, merchantId, key out of source) is not yet activated. See `docs/PAYMENTS_SETUP.md` and `docs/BACKEND_STRIPE.md`.
 

@@ -70,6 +70,31 @@ class HomeMetricsTest {
     }
 
     @Test
+    fun `equivalencia despreza valores menores que 1 porcento de um cafe`() {
+        assertNull(HomeMetrics.equivalence(0.0))
+        assertNull(HomeMetrics.equivalence(0.05))
+    }
+
+    @Test
+    fun `equivalencia abaixo de um cafe vira fracao de cafe`() {
+        val equiv = HomeMetrics.equivalence(3.0) // café = R$ 6
+
+        assertEquals(MoneyEquivalence.CoffeeFraction(50), equiv)
+    }
+
+    @Test
+    fun `equivalencia entre cafe e pizza vira cafes inteiros`() {
+        assertEquals(MoneyEquivalence.Coffees(1), HomeMetrics.equivalence(6.0))
+        assertEquals(MoneyEquivalence.Coffees(4), HomeMetrics.equivalence(29.9))
+    }
+
+    @Test
+    fun `equivalencia a partir de uma pizza vira pizzas`() {
+        assertEquals(MoneyEquivalence.Pizzas(1), HomeMetrics.equivalence(45.0))
+        assertEquals(MoneyEquivalence.Pizzas(2), HomeMetrics.equivalence(95.0))
+    }
+
+    @Test
     fun `app nao monitorado com limite nao conta como bloqueado`() {
         val metrics = HomeMetrics.compute(
             listOf(app("a", monitored = false, limit = 10, used = 999)),

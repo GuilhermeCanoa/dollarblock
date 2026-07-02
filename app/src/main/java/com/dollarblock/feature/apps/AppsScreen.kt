@@ -337,17 +337,6 @@ private fun AppListItem(
                         progress = if (row.isMonitored) overtimeTotalRatio else 0f,
                         color = DollarBlockTheme.colors.penalty,
                     )
-
-                    // Barra 3: progresso dentro da janela de desbloqueio atual (5 min)
-                    Spacer(Modifier.height(8.dp))
-                    val windowMinutes = UNLOCK_WINDOW_MINUTES
-                    val overtimeRatio = (overtimeMinutes % windowMinutes).toFloat() / windowMinutes
-                    val windowsUsed = overtimeMinutes / windowMinutes
-                    UsageBar(
-                        label = stringResource(R.string.apps_unlock_window_label, windowsUsed + 1),
-                        progress = if (row.isMonitored) (if (overtimeRatio == 0f) 1f else overtimeRatio) else 0f,
-                        color = DollarBlockTheme.colors.alert,
-                    )
                 }
             }
         }
@@ -378,8 +367,6 @@ private fun UsageBar(
         )
     }
 }
-
-private const val UNLOCK_WINDOW_MINUTES = 5
 
 @Composable
 private fun AppAvatar(icon: ImageBitmap?, letter: Char, modifier: Modifier = Modifier) {

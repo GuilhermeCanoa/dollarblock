@@ -10,9 +10,14 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts.StartIntentSenderForResult
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,20 +26,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -42,11 +43,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -55,9 +60,11 @@ import androidx.compose.ui.unit.sp
 import com.dollarblock.BuildConfig
 import com.dollarblock.MainActivity
 import com.dollarblock.R
+import com.dollarblock.core.designsystem.BlockingRed
 import com.dollarblock.core.designsystem.DollarBlockTheme
 import com.dollarblock.core.designsystem.DollarGreenDark
 import com.dollarblock.core.designsystem.NeutralWhite
+import kotlinx.coroutines.delay
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.dollarblock.data.local.prefs.BlockPreferences
@@ -95,6 +102,7 @@ class BlockActivity : AppCompatActivity() {
 
     private val readyToPay = MutableStateFlow(false)
     private val paymentInProgress = MutableStateFlow(false)
+    private val unlocksPaidToday = MutableStateFlow(0)
 
     private val paymentLauncher =
         registerForActivityResult(StartIntentSenderForResult()) { result ->
@@ -129,6 +137,7 @@ class BlockActivity : AppCompatActivity() {
         appLabel = intent.getStringExtra(EXTRA_LABEL) ?: getString(R.string.app_name)
         paymentsClient = GooglePayConfig.paymentsClient(this)
         checkReadyToPay()
+        lifecycleScope.launch { unlocksPaidToday.value = eventsRepository.unlocksPaidToday() }
 
         onBackPressedDispatcher.addCallback(
             this,
@@ -141,8 +150,10 @@ class BlockActivity : AppCompatActivity() {
             DollarBlockTheme {
                 val ready by readyToPay.collectAsState()
                 val processing by paymentInProgress.collectAsState()
+                val paidToday by unlocksPaidToday.collectAsState()
                 BlockScreen(
                     appLabel = appLabel,
+                    unlocksPaidToday = paidToday,
                     googlePayReady = ready,
                     paymentInProgress = processing,
                     showDebugSimulate = BuildConfig.DEBUG,
@@ -233,7 +244,7 @@ class BlockActivity : AppCompatActivity() {
 
     private fun onPaymentSuccess(method: String) {
         if (targetPackage.isNotEmpty()) {
-            blockPreferences.grantUnlock(targetPackage, GooglePayConfig.UNLOCK_WINDOW_MS)
+            blockPreferences.grantUnlockForToday(targetPackage)
             lifecycleScope.launch {
                 eventsRepository.recordUnlock(
                     packageName = targetPackage,
@@ -244,7 +255,7 @@ class BlockActivity : AppCompatActivity() {
                 )
             }
         }
-        toast(getString(R.string.pay_unlocked, GooglePayConfig.UNLOCK_WINDOW_MINUTES))
+        toast(getString(R.string.pay_unlocked))
         openTargetApp()
     }
 
@@ -293,6 +304,7 @@ class BlockActivity : AppCompatActivity() {
 @Composable
 private fun BlockScreen(
     appLabel: String,
+    unlocksPaidToday: Int,
     googlePayReady: Boolean,
     paymentInProgress: Boolean,
     showDebugSimulate: Boolean,
@@ -337,49 +349,22 @@ private fun BlockScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            Image(
-                painter = painterResource(R.drawable.db_shield),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(108.dp)
-                    .shadow(28.dp, RoundedCornerShape(28.dp), ambientColor = mintGlow, spotColor = mintGlow)
-                    .clip(RoundedCornerShape(28.dp)),
-            )
-            Spacer(Modifier.height(24.dp))
             Text(
                 text = stringResource(R.string.block_screen_title),
                 style = MaterialTheme.typography.headlineLarge,
                 color = NeutralWhite,
                 textAlign = TextAlign.Center,
             )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = appLabel,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = NeutralWhite,
-                textAlign = TextAlign.Center,
-            )
-            Spacer(Modifier.height(16.dp))
-            Text(
-                text = stringResource(
-                    R.string.block_screen_message,
-                    GooglePayConfig.UNLOCK_WINDOW_MINUTES,
+            Spacer(Modifier.height(20.dp))
+            InvoiceReceipt(
+                appLabel = appLabel,
+                message = stringResource(
+                    when {
+                        unlocksPaidToday >= 2 -> R.string.block_screen_message_many
+                        unlocksPaidToday == 1 -> R.string.block_screen_message_repeat
+                        else -> R.string.block_screen_message
+                    },
                 ),
-                style = MaterialTheme.typography.bodyLarge,
-                color = NeutralWhite.copy(alpha = 0.85f),
-                textAlign = TextAlign.Center,
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = stringResource(
-                    R.string.pay_info,
-                    GooglePayConfig.PRICE,
-                    GooglePayConfig.UNLOCK_WINDOW_MINUTES,
-                ),
-                style = MaterialTheme.typography.labelLarge,
-                color = NeutralWhite,
-                textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(32.dp))
 
@@ -428,6 +413,126 @@ private fun BlockScreen(
                 }
             }
         }
+    }
+}
+
+/**
+ * A fatura: papel de recibo com tipografia mono, valor grande e carimbo
+ * "BLOQUEADO" estampado em diagonal com haptic (o momento-assinatura do app).
+ */
+@Composable
+private fun InvoiceReceipt(
+    appLabel: String,
+    message: String,
+    modifier: Modifier = Modifier,
+) {
+    val paper = Color(0xFFF7F4EC)
+    val ink = Color(0xFF1C2B26)
+
+    // Animação de estampa: o carimbo "cai" no recibo (escala 2.4 → 1) com haptic no impacto.
+    val stampScale = remember { Animatable(2.4f) }
+    val stampAlpha = remember { Animatable(0f) }
+    val haptic = LocalHapticFeedback.current
+    LaunchedEffect(Unit) {
+        delay(400)
+        stampAlpha.animateTo(1f, tween(120))
+        stampScale.animateTo(
+            targetValue = 1f,
+            animationSpec = spring(dampingRatio = 0.45f, stiffness = Spring.StiffnessMedium),
+        )
+        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+    }
+
+    Box(modifier = modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(10.dp))
+                .background(paper)
+                .padding(horizontal = 20.dp, vertical = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                text = stringResource(R.string.block_receipt_header),
+                fontFamily = FontFamily.Monospace,
+                fontSize = 12.sp,
+                letterSpacing = 2.sp,
+                color = ink.copy(alpha = 0.55f),
+            )
+            Spacer(Modifier.height(10.dp))
+            Text(
+                text = appLabel,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold,
+                fontSize = 22.sp,
+                color = ink,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(14.dp))
+            DashedDivider(ink.copy(alpha = 0.35f))
+            Spacer(Modifier.height(14.dp))
+            Text(
+                text = message,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 13.sp,
+                lineHeight = 19.sp,
+                color = ink.copy(alpha = 0.8f),
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(14.dp))
+            DashedDivider(ink.copy(alpha = 0.35f))
+            Spacer(Modifier.height(14.dp))
+            Text(
+                text = "R$ " + GooglePayConfig.PRICE.replace('.', ','),
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold,
+                fontSize = 36.sp,
+                color = ink,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = stringResource(R.string.block_receipt_caption),
+                fontFamily = FontFamily.Monospace,
+                fontSize = 12.sp,
+                color = ink.copy(alpha = 0.6f),
+            )
+        }
+
+        Text(
+            text = stringResource(R.string.block_stamp),
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.Black,
+            fontSize = 30.sp,
+            letterSpacing = 3.sp,
+            color = BlockingRed,
+            modifier = Modifier
+                .align(Alignment.Center)
+                .graphicsLayer {
+                    rotationZ = -14f
+                    scaleX = stampScale.value
+                    scaleY = stampScale.value
+                    alpha = stampAlpha.value
+                }
+                .border(3.dp, BlockingRed, RoundedCornerShape(6.dp))
+                .padding(horizontal = 14.dp, vertical = 6.dp),
+        )
+    }
+}
+
+@Composable
+private fun DashedDivider(color: Color, modifier: Modifier = Modifier) {
+    Canvas(
+        modifier
+            .fillMaxWidth()
+            .height(1.dp),
+    ) {
+        drawLine(
+            color = color,
+            start = Offset(0f, 0f),
+            end = Offset(size.width, 0f),
+            strokeWidth = 2f,
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f)),
+        )
     }
 }
 

@@ -47,12 +47,16 @@ class EventsRepositoryImpl @Inject constructor(
     }
 
     override fun blockAttemptsToday(): Flow<Int> {
-        val startOfDay = LocalDate.now()
-            .atStartOfDay(ZoneId.systemDefault())
-            .toInstant()
-            .toEpochMilli()
-        return eventDao.countBlocksSince(startOfDay)
+        return eventDao.countBlocksSince(startOfTodayMillis())
     }
+
+    override suspend fun unlocksPaidToday(): Int =
+        eventDao.countUnlocksSince(startOfTodayMillis())
+
+    private fun startOfTodayMillis(): Long = LocalDate.now()
+        .atStartOfDay(ZoneId.systemDefault())
+        .toInstant()
+        .toEpochMilli()
 
     override fun recentEvents(limit: Int): Flow<List<RecentEvent>> =
         combine(
