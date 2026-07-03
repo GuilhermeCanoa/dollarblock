@@ -30,4 +30,16 @@ interface EventDao {
 
     @Query("SELECT COUNT(*) FROM unlock_events WHERE timestamp >= :startMs")
     suspend fun countUnlocksSince(startMs: Long): Int
+
+    @Query("SELECT amount FROM unlock_events")
+    fun observeUnlockAmounts(): Flow<List<String>>
+
+    @Query("SELECT packageName, timestamp FROM block_events")
+    fun observeBlockStamps(): Flow<List<EventStamp>>
+
+    @Query("SELECT packageName, timestamp FROM unlock_events")
+    fun observeUnlockStamps(): Flow<List<EventStamp>>
 }
+
+/** Projeção mínima de um evento para agregações por app/dia. */
+data class EventStamp(val packageName: String, val timestamp: Long)

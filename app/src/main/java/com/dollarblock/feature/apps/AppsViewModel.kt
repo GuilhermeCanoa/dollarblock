@@ -34,11 +34,32 @@ data class AppUsageRow(
 data class AppsUiState(
     val monitoredRows: List<AppUsageRow> = emptyList(),
     val deactivatedRows: List<AppUsageRow> = emptyList(),
+    val suggestedRows: List<AppUsageRow> = emptyList(),
     val searchSuggestions: List<AppUsageRow> = emptyList(),
     val isLoading: Boolean = true,
     val editingLimitFor: AppUsageRow? = null,
     val searchQuery: String = "",
 )
+
+/** Aviso exibido após o usuário trocar um limite já existente (aumento ou redução). */
+data class LimitChangeNotice(
+    val increased: Boolean,
+    val previousMinutes: Int,
+    val newMinutes: Int,
+)
+
+/**
+ * Classifica a troca de limite: só há aviso quando havia limite antes e o novo é diferente.
+ * Definir o primeiro limite ou remover o limite não gera aviso.
+ */
+fun classifyLimitChange(previousMinutes: Int?, newMinutes: Int?): LimitChangeNotice? {
+    if (previousMinutes == null || newMinutes == null || previousMinutes == newMinutes) return null
+    return LimitChangeNotice(
+        increased = newMinutes > previousMinutes,
+        previousMinutes = previousMinutes,
+        newMinutes = newMinutes,
+    )
+}
 
 @HiltViewModel
 class AppsViewModel @Inject constructor(
@@ -51,6 +72,11 @@ class AppsViewModel @Inject constructor(
     private val loadingInstalled = MutableStateFlow(true)
     private val editingLimitForPackage = MutableStateFlow<String?>(null)
     private val searchQuery = MutableStateFlow("")
+
+    private val _limitChangeNotice = MutableStateFlow<LimitChangeNotice?>(null)
+
+    /** Aviso pós-troca de limite (irônico no aumento, seco no corte); null quando não há nada a dizer. */
+    val limitChangeNotice: StateFlow<LimitChangeNotice?> = _limitChangeNotice
 
     private data class BaseState(
         val installed: List<InstalledApp>,
@@ -97,9 +123,15 @@ class AppsViewModel @Inject constructor(
         val suggestions = if (query.isBlank()) emptyList() else {
             allRows.filter { !trackedPackages.contains(it.packageName) && it.label.contains(query, ignoreCase = true) }
         }
+        // Sugeridos: só os efetivamente instalados (allRows vem do PackageManager) e ainda
+        // não rastreados — se nenhum estiver instalado, a seção simplesmente não aparece.
+        val suggestedRows = SUGGESTED_PACKAGES.mapNotNull { pkg ->
+            allRows.find { it.packageName == pkg && !it.isTracked }
+        }
         AppsUiState(
             monitoredRows = monitoredRows,
             deactivatedRows = deactivatedRows,
+            suggestedRows = suggestedRows,
             searchSuggestions = suggestions,
             isLoading = isLoadingInstalled,
             editingLimitFor = allRows.find { it.packageName == editingPackage },
@@ -165,13 +197,30 @@ class AppsViewModel @Inject constructor(
 
     /** Salva o novo limite diário (em minutos) e fecha o diálogo. Use null para remover o limite. */
     fun confirmDailyLimit(packageName: String, minutes: Int?) {
+        val previousMinutes = uiState.value.editingLimitFor
+            ?.takeIf { it.packageName == packageName }
+            ?.dailyLimitMinutes
+        _limitChangeNotice.value = classifyLimitChange(previousMinutes, minutes)
         viewModelScope.launch {
             monitoredAppRepository.setDailyLimit(packageName, minutes)
         }
         editingLimitForPackage.value = null
     }
 
+    /** Fecha o aviso de troca de limite. */
+    fun dismissLimitChangeNotice() {
+        _limitChangeNotice.value = null
+    }
+
     private companion object {
         const val SYNC_INTERVAL_MS = 5_000L
+
+        /** Ralos de tempo clássicos, sugeridos por padrão quando instalados e fora do taxímetro. */
+        val SUGGESTED_PACKAGES = listOf(
+            "com.instagram.android",
+            "com.facebook.katana",
+            "com.zhiliaoapp.musically", // TikTok
+            "com.google.android.youtube",
+        )
     }
 }

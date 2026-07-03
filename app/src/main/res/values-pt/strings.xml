@@ -18,6 +18,20 @@
     <string name="home_currently_blocked">Bloqueado agora</string>
     <string name="home_addiction_tracker">Rastreador de vício</string>
     <string name="home_recent_events">Movimentações</string>
+    <string name="home_money_spent">Dinheiro gasto</string>
+    <string name="home_money_saved">Dinheiro economizado</string>
+    <string name="home_card_info_ok">Entendi</string>
+    <string name="home_card_info_open_apps">Ver apps</string>
+    <string name="home_info_damage_title">Prejuízo de hoje</string>
+    <string name="home_info_damage_body">Seus minutos de hoje nos apps monitorados, convertidos em dinheiro: minutos × R$ 0,046 (um salário de R$ 2.000/mês dividido pelos 43.200 minutos do mês). Não é multa — é o preço de mercado do seu scroll.</string>
+    <string name="home_info_spent_title">Dinheiro gasto</string>
+    <string name="home_info_spent_body">Tudo o que você pagou de verdade em passes do dia, desde o início. Sai direto dos seus recibos de resgate. Dinheiro real — o contrato era esse.</string>
+    <string name="home_info_saved_title">Dinheiro economizado</string>
+    <string name="home_info_saved_body">Cada dia em que um app bateu no limite e você saiu da tela de bloqueio sem pagar conta como um passe do dia não comprado, ao preço de hoje. Dias em que você pagou não contam. Resistir é o único desconto da casa.</string>
+    <string name="home_info_blocked_title">Bloqueado agora</string>
+    <string name="home_info_blocked_body">Apps monitorados que bateram no limite diário e estão trancados neste momento. O taxímetro parou; a fatura está na mesa.</string>
+    <string name="home_info_addiction_title">Rastreador de vício</string>
+    <string name="home_info_addiction_body">Quantas vezes você tentou abrir um app bloqueado hoje. Cada tentativa é arquivada. A gente não julga — a gente conta.</string>
     <string name="home_no_events">Nenhum bloqueio hoje. O mercado está impressionado.</string>
     <string name="home_event_blocked">%1$s bloqueado</string>
     <string name="home_event_unlocked">%1$s resgatado</string>
@@ -64,7 +78,7 @@
     <string name="apps_limit_dialog_save">Salvar</string>
     <string name="apps_limit_dialog_remove">Remover limite</string>
     <string name="apps_limit_dialog_cancel">Cancelar</string>
-    <string name="apps_limit_dialog_invalid">Informe um número de minutos maior que zero.</string>
+    <string name="apps_limit_dialog_invalid">Informe entre 1 e 1440 minutos. O dia só tem 24 horas.</string>
     <string name="apps_tap_to_set_limit">Toque para definir um limite</string>
     <string name="apps_overtime_label">+%1$s de excedente · resgate #%2$d</string>
     <string name="apps_over_limit_text">+%1$s acima do limite</string>
@@ -76,6 +90,12 @@
     <string name="apps_deactivated_delete_confirm_body">Isso apaga o app dos seus registros. Dá pra adicionar de novo depois, mas o histórico não volta.</string>
     <string name="apps_deactivated_delete_confirm_action">Excluir</string>
     <string name="apps_deactivated_delete_confirm_cancel">Cancelar</string>
+    <string name="apps_suggested_header">Os suspeitos de sempre</string>
+    <string name="apps_limit_increased_title">Limite aumentado</string>
+    <string name="apps_limit_increased_body">De %1$s para %2$s por dia. Jeito fácil de caber no orçamento: mudar o orçamento. O taxímetro continua correndo do mesmo jeito — você só vai perder o dinheiro sem perceber. Tem certeza de que o plano é esse?</string>
+    <string name="apps_limit_decreased_title">Limite reduzido</string>
+    <string name="apps_limit_decreased_body">De %1$s para %2$s por dia. Anotado: tempo é dinheiro, e você resolveu ficar com o seu. O taxímetro respeita.</string>
+    <string name="apps_limit_notice_ok">Anotado</string>
 
     <!-- Statistics -->
     <string name="statistics_title">Extrato</string>

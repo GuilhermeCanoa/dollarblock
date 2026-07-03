@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dollarblock.domain.model.RecentEvent
 import com.dollarblock.domain.repository.EventsRepository
+import com.dollarblock.domain.repository.MoneySummaryRepository
 import com.dollarblock.domain.repository.MonitoredAppRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -20,25 +21,32 @@ data class HomeUiState(
     val moneyLostToday: Double? = null,
     val currentlyBlockedCount: Int = 0,
     val addictionAttempts: Int = 0,
+    val moneySpentTotal: Double? = null,
+    val moneySavedTotal: Double? = null,
 )
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val monitoredAppRepository: MonitoredAppRepository,
     eventsRepository: EventsRepository,
+    moneySummaryRepository: MoneySummaryRepository,
 ) : ViewModel() {
 
     val uiState: StateFlow<HomeUiState> = combine(
         eventsRepository.recentEvents(RECENT_EVENTS_LIMIT),
         monitoredAppRepository.observeMonitoredAppsUsage(),
         eventsRepository.blockAttemptsToday(),
-    ) { events, monitoredUsage, blockAttempts ->
+        moneySummaryRepository.observeTotalSpent(),
+        moneySummaryRepository.observeTotalSaved(),
+    ) { events, monitoredUsage, blockAttempts, totalSpent, totalSaved ->
         val metrics = HomeMetrics.compute(monitoredUsage)
         HomeUiState(
             recentEvents = events,
             moneyLostToday = metrics.moneyLostToday,
             currentlyBlockedCount = metrics.currentlyBlockedCount,
             addictionAttempts = blockAttempts,
+            moneySpentTotal = totalSpent,
+            moneySavedTotal = totalSaved,
         )
     }.stateIn(
         scope = viewModelScope,

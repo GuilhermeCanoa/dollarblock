@@ -68,6 +68,7 @@ fun AppsScreen(
     viewModel: AppsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val limitChangeNotice by viewModel.limitChangeNotice.collectAsStateWithLifecycle()
     var pendingDelete by remember { mutableStateOf<AppUsageRow?>(null) }
 
     LazyColumn(
@@ -152,6 +153,25 @@ fun AppsScreen(
                 }
             }
 
+            // Sugeridos (ralos de tempo clássicos instalados e fora do taxímetro) —
+            // sempre acima dos desativados quando ambas as seções existem.
+            if (uiState.suggestedRows.isNotEmpty()) {
+                item {
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.apps_suggested_header),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                items(uiState.suggestedRows, key = { "suggested_${it.packageName}" }) { row ->
+                    AppSuggestionItem(
+                        row = row,
+                        onAdd = { viewModel.addMonitoredFromSearch(row.packageName, row.label) },
+                    )
+                }
+            }
+
             if (uiState.deactivatedRows.isNotEmpty()) {
                 item {
                     Spacer(Modifier.height(4.dp))
@@ -178,6 +198,13 @@ fun AppsScreen(
             row = editingRow,
             onDismiss = viewModel::dismissLimitEditor,
             onConfirm = { minutes -> viewModel.confirmDailyLimit(editingRow.packageName, minutes) },
+        )
+    }
+
+    limitChangeNotice?.let { notice ->
+        LimitChangeNoticeDialog(
+            notice = notice,
+            onDismiss = viewModel::dismissLimitChangeNotice,
         )
     }
 
@@ -514,10 +541,54 @@ private fun AppAvatar(icon: ImageBitmap?, letter: Char, modifier: Modifier = Mod
     }
 }
 
+/** Teto do limite diário: o dia só tem 24 horas. */
+private const val MAX_DAILY_LIMIT_MINUTES = 24 * 60
+
 private fun formatMinutes(total: Int): String {
     val hours = total / 60
     val minutes = total % 60
     return if (hours > 0) "${hours}h ${minutes}m" else "${minutes}m"
+}
+
+/**
+ * Aviso pós-troca de limite: irônico quando o usuário afrouxa, seco e aprovador quando aperta.
+ * Copy no tom da casa (MANIFESTO.md · "Como falamos") — a fatura, nunca a bronca.
+ */
+@Composable
+private fun LimitChangeNoticeDialog(
+    notice: LimitChangeNotice,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = modifier,
+        title = {
+            Text(
+                stringResource(
+                    if (notice.increased) R.string.apps_limit_increased_title
+                    else R.string.apps_limit_decreased_title,
+                ),
+            )
+        },
+        text = {
+            Text(
+                text = stringResource(
+                    if (notice.increased) R.string.apps_limit_increased_body
+                    else R.string.apps_limit_decreased_body,
+                    formatMinutes(notice.previousMinutes),
+                    formatMinutes(notice.newMinutes),
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.apps_limit_notice_ok))
+            }
+        },
+    )
 }
 
 /**
@@ -535,7 +606,8 @@ private fun DailyLimitDialog(
         mutableStateOf(row.dailyLimitMinutes?.toString() ?: "")
     }
     val minutes = text.trim().toIntOrNull()
-    val isInvalid = text.isNotBlank() && (minutes == null || minutes <= 0)
+    val isInvalid = text.isNotBlank() &&
+        (minutes == null || minutes <= 0 || minutes > MAX_DAILY_LIMIT_MINUTES)
 
     AlertDialog(
         onDismissRequest = onDismiss,

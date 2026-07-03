@@ -12,6 +12,35 @@ Descrição funcional.
 
 ---
 
+## [2026-07-03] — E13: cards Dinheiro gasto/economizado, balões nos cards, avisos de limite e apps sugeridos
+**Tipo:** feature
+**Épico:** E13 (adhoc) — spec: `docs/specs/E13-cards-dinheiro-avisos-limite-sugeridos.md`
+
+- **Home · Dinheiro gasto:** novo card com a soma de tudo que o usuário já pagou por passes do
+  dia (unlock_events, todas as datas). Fonte atrás de `MoneySummaryRepository` (domain) com impl
+  Room em módulo Hilt próprio (`MoneySummaryModule`) — trocar por API = trocar o binding.
+- **Home · Dinheiro economizado:** para cada par (app, dia) com evento de bloqueio e nenhum
+  pagamento naquele dia, conta 1 passe do dia resistido × preço atual do passe
+  (`PricingRepository`). Critério usa os eventos do histórico, não os botões da tela de bloqueio;
+  agregação por app/dia porque o serviço registra vários block_events por sessão. Cálculo puro em
+  `domain/model/MoneyReport` (testado em `MoneyReportTest`).
+- **Home · balões informativos:** todo card (taxímetro-herói, gasto, economizado, Bloqueado agora,
+  Rastreador de vício) abre ao toque um diálogo explicando o que significa e como a conta é feita.
+  O card "Bloqueado agora" deixou de navegar direto para Apps; o balão ganhou a ação "Ver apps".
+- **Apps · aviso de troca de limite:** aumentar um limite existente exibe mensagem irônica
+  deadpan; reduzir exibe reconhecimento seco. Primeiro limite/remoção não avisam
+  (`classifyLimitChange`, testado).
+- **Apps · sugeridos:** Instagram, Facebook, TikTok e YouTube aparecem numa seção "Os suspeitos
+  de sempre" quando instalados e fora do taxímetro, acima de "Desativados"; toque adiciona ao
+  monitoramento. Nada aparece se nenhum estiver instalado.
+- **Apps · validação de limite:** o limite diário agora aceita apenas 1–1440 minutos (o dia só
+  tem 24 horas); antes valores como 2060 min eram salvos sem crítica.
+- **Bugfix (formatação BRL):** em aparelhos pt-BR os valores saíam "R$ 0.00" — o swap
+  vírgula/ponto de `formatReais` assumia `String.format` em inglês. Corrigido com `Locale.US`
+  explícito na Home, Statistics e Profile.
+
+---
+
 ## [2026-07-03] — Correções: bloqueio contínuo, carimbo, passe do dia e apps desativados
 **Tipo:** bugfix
 **Épico:** adhoc

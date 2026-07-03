@@ -614,7 +614,10 @@ private fun LanguagePickerDialog(
 }
 
 private fun formatReais(value: Double): String =
-    "R$ %,.2f".format(value).replace(',', 'X').replace('.', ',').replace('X', '.')
+    // Locale.US fixa "1,234.56"; o swap converte para "1.234,56". Sem locale explícito,
+    // um device pt-BR já formata com vírgula e o swap inverte errado.
+    "R$ %,.2f".format(java.util.Locale.US, value)
+        .replace(',', 'X').replace('.', ',').replace('X', '.')
 
 @Preview(showBackground = true)
 @Composable

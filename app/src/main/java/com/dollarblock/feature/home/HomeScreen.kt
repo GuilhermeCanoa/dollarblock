@@ -6,6 +6,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,16 +23,22 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
+import androidx.compose.material.icons.filled.Paid
+import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -72,6 +79,7 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var infoCard by remember { mutableStateOf<HomeCardInfo?>(null) }
 
     Column(
         modifier = modifier
@@ -85,7 +93,27 @@ fun HomeScreen(
             subtitle = stringResource(R.string.msg_on_track),
         )
 
-        MoneyLostHero(moneyLost = uiState.moneyLostToday)
+        MoneyLostHero(
+            moneyLost = uiState.moneyLostToday,
+            onClick = { infoCard = HomeCardInfo.DAMAGE },
+        )
+
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            MetricCard(
+                title = stringResource(R.string.home_money_spent),
+                value = uiState.moneySpentTotal?.let(::formatReais) ?: "—",
+                icon = Icons.Filled.Paid,
+                modifier = Modifier.weight(1f),
+                onClick = { infoCard = HomeCardInfo.SPENT },
+            )
+            MetricCard(
+                title = stringResource(R.string.home_money_saved),
+                value = uiState.moneySavedTotal?.let(::formatReais) ?: "—",
+                icon = Icons.Filled.Savings,
+                modifier = Modifier.weight(1f),
+                onClick = { infoCard = HomeCardInfo.SAVED },
+            )
+        }
 
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             MetricCard(
@@ -93,13 +121,14 @@ fun HomeScreen(
                 value = uiState.currentlyBlockedCount.toString(),
                 icon = Icons.Filled.Lock,
                 modifier = Modifier.weight(1f),
-                onClick = onNavigateToApps,
+                onClick = { infoCard = HomeCardInfo.BLOCKED_NOW },
             )
             MetricCard(
                 title = stringResource(R.string.home_addiction_tracker),
                 value = uiState.addictionAttempts.toString(),
                 icon = Icons.Filled.Warning,
                 modifier = Modifier.weight(1f),
+                onClick = { infoCard = HomeCardInfo.ADDICTION },
             )
         }
 
@@ -110,12 +139,67 @@ fun HomeScreen(
             RecentEventsCard(events = uiState.recentEvents)
         }
     }
+
+    infoCard?.let { card ->
+        HomeCardInfoDialog(
+            card = card,
+            onDismiss = { infoCard = null },
+            onOpenApps = if (card == HomeCardInfo.BLOCKED_NOW) {
+                {
+                    infoCard = null
+                    onNavigateToApps()
+                }
+            } else null,
+        )
+    }
+}
+
+/** Cards da Home que têm um balão informativo (o que significa + como a conta é feita). */
+private enum class HomeCardInfo { DAMAGE, SPENT, SAVED, BLOCKED_NOW, ADDICTION }
+
+@Composable
+private fun HomeCardInfoDialog(
+    card: HomeCardInfo,
+    onDismiss: () -> Unit,
+    onOpenApps: (() -> Unit)?,
+) {
+    val (titleRes, bodyRes) = when (card) {
+        HomeCardInfo.DAMAGE -> R.string.home_info_damage_title to R.string.home_info_damage_body
+        HomeCardInfo.SPENT -> R.string.home_info_spent_title to R.string.home_info_spent_body
+        HomeCardInfo.SAVED -> R.string.home_info_saved_title to R.string.home_info_saved_body
+        HomeCardInfo.BLOCKED_NOW -> R.string.home_info_blocked_title to R.string.home_info_blocked_body
+        HomeCardInfo.ADDICTION -> R.string.home_info_addiction_title to R.string.home_info_addiction_body
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(titleRes)) },
+        text = {
+            Text(
+                text = stringResource(bodyRes),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.home_card_info_ok))
+            }
+        },
+        dismissButton = onOpenApps?.let { open ->
+            {
+                TextButton(onClick = open) {
+                    Text(stringResource(R.string.home_card_info_open_apps))
+                }
+            }
+        },
+    )
 }
 
 @Composable
 private fun MoneyLostHero(
     moneyLost: Double?,
     modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
 ) {
     // O taxímetro: bloco-herói com count-up de odômetro. Verde (marca) quando o
     // dia está limpo; "sangra" vermelho quando há dinheiro sendo doado.
@@ -156,7 +240,8 @@ private fun MoneyLostHero(
             .glow(glowColor, shape, radius = 28.dp, alpha = 0.4f)
             .clip(shape)
             .background(gradient)
-            .border(1.dp, glowColor.copy(alpha = 0.35f), shape),
+            .border(1.dp, glowColor.copy(alpha = 0.35f), shape)
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
     ) {
         Column(
             modifier = Modifier
@@ -207,7 +292,10 @@ private fun MoneyLostHero(
 }
 
 private fun formatReais(value: Double): String {
-    return "R$ %,.2f".format(value).replace(',', 'X').replace('.', ',').replace('X', '.')
+    // Locale.US fixa "1,234.56"; o swap converte para o formato brasileiro "1.234,56".
+    // Sem locale explícito, um device pt-BR já formata com vírgula e o swap inverte errado.
+    return "R$ %,.2f".format(java.util.Locale.US, value)
+        .replace(',', 'X').replace('.', ',').replace('X', '.')
 }
 
 @Composable
