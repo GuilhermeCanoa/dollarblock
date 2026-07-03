@@ -103,4 +103,52 @@ class HomeMetricsTest {
         assertNull(metrics.moneyLostToday)
         assertEquals(0, metrics.currentlyBlockedCount)
     }
+
+    @Test
+    fun `bestAndWorstDay retorna nulos para lista vazia`() {
+        val result = HomeMetrics.bestAndWorstDay(emptyList())
+
+        assertNull(result.best)
+        assertNull(result.worst)
+    }
+
+    @Test
+    fun `bestAndWorstDay identifica menor e maior gasto`() {
+        val result = HomeMetrics.bestAndWorstDay(
+            listOf(
+                DaySpend(epochDay = 1, amount = 5.0),
+                DaySpend(epochDay = 2, amount = 0.0),
+                DaySpend(epochDay = 3, amount = 12.0),
+            ),
+        )
+
+        assertEquals(2L, result.best!!.epochDay)
+        assertEquals(3L, result.worst!!.epochDay)
+    }
+
+    @Test
+    fun `bestAndWorstDay com um unico dia usa o mesmo dia para best e worst`() {
+        val result = HomeMetrics.bestAndWorstDay(listOf(DaySpend(epochDay = 7, amount = 3.0)))
+
+        assertEquals(7L, result.best!!.epochDay)
+        assertEquals(7L, result.worst!!.epochDay)
+    }
+
+    @Test
+    fun `crossedCoffeeMultiple detecta cruzamento de cafe inteiro`() {
+        // café = R$ 6
+        assertEquals(true, HomeMetrics.crossedCoffeeMultiple(previousLost = 5.5, newLost = 6.5))
+        assertEquals(false, HomeMetrics.crossedCoffeeMultiple(previousLost = 5.0, newLost = 5.9))
+    }
+
+    @Test
+    fun `crossedCoffeeMultiple ignora quando valor nao aumenta`() {
+        assertEquals(false, HomeMetrics.crossedCoffeeMultiple(previousLost = 6.5, newLost = 6.5))
+        assertEquals(false, HomeMetrics.crossedCoffeeMultiple(previousLost = 6.5, newLost = 5.0))
+    }
+
+    @Test
+    fun `crossedCoffeeMultiple detecta multiplos cafes de uma vez`() {
+        assertEquals(true, HomeMetrics.crossedCoffeeMultiple(previousLost = 0.0, newLost = 18.0))
+    }
 }

@@ -5,6 +5,7 @@ import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import com.dollarblock.core.locale.LocaleManager
 import com.dollarblock.data.local.prefs.LanguagePreferences
+import com.dollarblock.service.accessibility.LimitWarningNotifier
 import com.dollarblock.service.monitoring.UsageSyncScheduler
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.flow.first
@@ -28,6 +29,9 @@ class DollarBlockApp : Application(), Configuration.Provider {
     @Inject
     lateinit var languagePreferences: LanguagePreferences
 
+    @Inject
+    lateinit var limitWarningNotifier: LimitWarningNotifier
+
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
             .setWorkerFactory(workerFactory)
@@ -43,5 +47,6 @@ class DollarBlockApp : Application(), Configuration.Provider {
         LocaleManager.apply(language)
 
         usageSyncScheduler.schedule()
+        limitWarningNotifier.ensureChannel()
     }
 }

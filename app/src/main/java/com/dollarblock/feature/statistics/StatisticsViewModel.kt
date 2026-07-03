@@ -31,6 +31,8 @@ data class TopAppEntry(
     val percentage: Float,
 )
 
+data class DayHighlight(val label: String, val amount: Double)
+
 data class StatisticsUiState(
     val period: StatPeriod = StatPeriod.WEEKLY,
     val chartLines: List<AppChartLine> = emptyList(),
@@ -41,6 +43,9 @@ data class StatisticsUiState(
     val mostUsed: String = "—",
     /** null when period == DAILY (shown on Home instead). */
     val moneyLost: Double? = null,
+    /** Melhor/pior dia do período — null quando DAILY (não há o que comparar). */
+    val bestDay: DayHighlight? = null,
+    val worstDay: DayHighlight? = null,
 )
 
 @HiltViewModel
@@ -126,6 +131,28 @@ class StatisticsViewModel @Inject constructor(
             val moneyLost = if (p == StatPeriod.DAILY) null
             else (totalMillis / 60_000.0) * REAIS_PER_MINUTE
 
+            // ── Melhor/pior dia (extrato) — weekly/monthly only ──────────────
+            var bestDay: DayHighlight? = null
+            var worstDay: DayHighlight? = null
+            if (p != StatPeriod.DAILY) {
+                val spendByDay = usageRows
+                    .groupBy { it.epochDay }
+                    .mapValues { (_, rows) ->
+                        rows.sumOf { effectiveMillis(it.packageName, it.epochDay, it.usedMillis) } / 60_000.0 * REAIS_PER_MINUTE
+                    }
+                val daySpends = (startDay..endDay).map { day ->
+                    com.dollarblock.feature.home.DaySpend(day, spendByDay[day] ?: 0.0)
+                }
+                val result = HomeMetrics.bestAndWorstDay(daySpends)
+                val labelFormatter = { day: Long ->
+                    LocalDate.ofEpochDay(day)
+                        .dayOfWeek.getDisplayName(TextStyle.SHORT, Locale("pt", "BR"))
+                        .replaceFirstChar { it.uppercase() }
+                }
+                bestDay = result.best?.let { DayHighlight(labelFormatter(it.epochDay), it.amount) }
+                worstDay = result.worst?.let { DayHighlight(labelFormatter(it.epochDay), it.amount) }
+            }
+
             // ── Top apps (donut chart) ──────────────────────────────────────
             val usageByPkg = usageRows
                 .groupBy { it.packageName }
@@ -169,6 +196,8 @@ class StatisticsViewModel @Inject constructor(
                 timeSpent = timeSpent,
                 mostUsed = mostUsed,
                 moneyLost = moneyLost,
+                bestDay = bestDay,
+                worstDay = worstDay,
             )
         }.onEach { _uiState.value = it }.launchIn(viewModelScope)
     }

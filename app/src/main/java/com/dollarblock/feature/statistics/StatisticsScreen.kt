@@ -71,6 +71,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dollarblock.R
 import com.dollarblock.core.designsystem.DollarBlockTheme
+import com.dollarblock.core.designsystem.TabularNumerals
 import com.dollarblock.core.designsystem.components.MetricCard
 import com.dollarblock.core.designsystem.components.ScreenHeader
 import com.dollarblock.core.designsystem.components.SectionHeader
@@ -120,6 +121,10 @@ fun StatisticsScreen(
                 lines = uiState.chartLines,
                 xLabels = uiState.chartXLabels,
             )
+        }
+
+        if (uiState.bestDay != null || uiState.worstDay != null) {
+            StatementCard(bestDay = uiState.bestDay, worstDay = uiState.worstDay)
         }
 
         uiState.moneyLost?.let { lost ->
@@ -295,6 +300,91 @@ private fun DonutChartCard(
                 }
             }
         }
+    }
+}
+
+/**
+ * Extrato: melhor e pior dia do período lado a lado, numerais tabulares
+ * reforçando a estética de painel financeiro (styleguide — voz "gerente do
+ * banco de tempo").
+ */
+@Composable
+private fun StatementCard(
+    bestDay: DayHighlight?,
+    worstDay: DayHighlight?,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+        ),
+        border = BorderStroke(1.dp, DollarBlockTheme.colors.glow.copy(alpha = 0.15f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.stat_statement_title),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                DayHighlightEntry(
+                    label = stringResource(R.string.stat_best_day),
+                    caption = stringResource(R.string.stat_best_day_caption),
+                    highlight = bestDay,
+                    accent = DollarBlockTheme.colors.success,
+                    modifier = Modifier.weight(1f),
+                )
+                DayHighlightEntry(
+                    label = stringResource(R.string.stat_worst_day),
+                    caption = stringResource(R.string.stat_worst_day_caption),
+                    highlight = worstDay,
+                    accent = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DayHighlightEntry(
+    label: String,
+    caption: String,
+    highlight: DayHighlight?,
+    accent: Color,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(accent.copy(alpha = 0.08f))
+            .padding(12.dp),
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = highlight?.let { formatReais(it.amount) } ?: "—",
+            style = TabularNumerals.copy(fontSize = 20.sp),
+            color = accent,
+        )
+        Text(
+            text = highlight?.label ?: caption,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 

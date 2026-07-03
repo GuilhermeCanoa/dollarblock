@@ -5,9 +5,14 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,24 +47,35 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.asAndroidPath
+import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -78,12 +94,14 @@ private data class ConceptPage(
     val titleRes: Int,
     val bodyRes: Int,
     val isBrand: Boolean = false,
+    val isContract: Boolean = false,
 )
 
 private val conceptPages = listOf(
     // A primeira página é a apresentação da marca — usa o emblema do escudo.
     ConceptPage(Icons.Filled.Savings, R.string.onb_welcome_title, R.string.onb_welcome_body, isBrand = true),
-    ConceptPage(Icons.Filled.Bolt, R.string.onb_penalty_title, R.string.onb_penalty_body),
+    // A segunda página é literalmente um contrato — recebe estética de recibo/papel.
+    ConceptPage(Icons.Filled.Bolt, R.string.onb_penalty_title, R.string.onb_penalty_body, isContract = true),
 )
 
 /**
@@ -163,7 +181,7 @@ fun OnboardingScreen(
                 Text(stringResource(R.string.onb_skip))
             }
         } else {
-            PrimaryActionButton(
+            SignButton(
                 text = stringResource(R.string.onb_finish),
                 onClick = {
                     viewModel.completeOnboarding()
@@ -388,6 +406,10 @@ private fun QuickSummaryPageContent(
 
 @Composable
 private fun ConceptPageContent(page: ConceptPage, modifier: Modifier = Modifier) {
+    if (page.isContract) {
+        ContractPageContent(page, modifier)
+        return
+    }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -427,6 +449,153 @@ private fun ConceptPageContent(page: ConceptPage, modifier: Modifier = Modifier)
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = 16.dp),
         )
+    }
+}
+
+/**
+ * "O contrato" — mesma estética de papel/mono do recibo de bloqueio
+ * (ver `InvoiceReceipt` em BlockActivity.kt), reforçando que as cláusulas
+ * de penalidade são um documento a ser assinado, não uma tela de feature.
+ */
+@Composable
+private fun ContractPageContent(page: ConceptPage, modifier: Modifier = Modifier) {
+    val paper = Color(0xFFF7F4EC)
+    val ink = Color(0xFF1C2B26)
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(top = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(10.dp))
+                .background(paper)
+                .border(1.dp, ink.copy(alpha = 0.12f), RoundedCornerShape(10.dp))
+                .padding(horizontal = 24.dp, vertical = 28.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                text = stringResource(R.string.onb_contract_header),
+                fontFamily = FontFamily.Monospace,
+                fontSize = 12.sp,
+                letterSpacing = 2.sp,
+                color = ink.copy(alpha = 0.55f),
+            )
+            Spacer(Modifier.height(10.dp))
+            Text(
+                text = stringResource(page.titleRes),
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold,
+                fontSize = 22.sp,
+                color = ink,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(14.dp))
+            ContractDivider(ink.copy(alpha = 0.35f))
+            Spacer(Modifier.height(16.dp))
+            Text(
+                text = stringResource(page.bodyRes),
+                fontFamily = FontFamily.Monospace,
+                fontSize = 13.sp,
+                lineHeight = 20.sp,
+                color = ink.copy(alpha = 0.85f),
+                textAlign = TextAlign.Start,
+            )
+            Spacer(Modifier.height(16.dp))
+            ContractDivider(ink.copy(alpha = 0.35f))
+            Spacer(Modifier.height(10.dp))
+            Text(
+                text = stringResource(R.string.onb_contract_footer),
+                fontFamily = FontFamily.Monospace,
+                fontSize = 11.sp,
+                color = ink.copy(alpha = 0.5f),
+                textAlign = TextAlign.Center,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ContractDivider(color: Color, modifier: Modifier = Modifier) {
+    Canvas(
+        modifier
+            .fillMaxWidth()
+            .height(1.dp),
+    ) {
+        drawLine(
+            color = color,
+            start = Offset(0f, 0f),
+            end = Offset(size.width, 0f),
+            strokeWidth = 2f,
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f)),
+        )
+    }
+}
+
+/**
+ * O botão "Assinar" traça uma assinatura (path animado) antes de disparar
+ * onClick — o momento-assinatura do contrato, com haptic no fim do traço.
+ */
+@Composable
+private fun SignButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    var signing by remember { mutableStateOf(false) }
+    val progress = remember { Animatable(0f) }
+    val haptic = LocalHapticFeedback.current
+
+    LaunchedEffect(signing) {
+        if (signing) {
+            progress.snapTo(0f)
+            progress.animateTo(1f, tween(420, easing = LinearEasing))
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+            onClick()
+            signing = false
+        }
+    }
+
+    Box(modifier = modifier) {
+        PrimaryActionButton(
+            text = text,
+            onClick = { if (!signing) signing = true },
+            enabled = enabled && !signing,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        if (signing) {
+            // Traço de assinatura desenhado incrementalmente: mede o path com
+            // android.graphics.PathMeasure e recorta o segmento [0, progress] a cada frame.
+            Canvas(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(54.dp)
+                    .padding(horizontal = 28.dp, vertical = 18.dp),
+            ) {
+                val w = size.width
+                val h = size.height
+                val fullPath = androidx.compose.ui.graphics.Path().apply {
+                    moveTo(w * 0.08f, h * 0.6f)
+                    cubicTo(w * 0.16f, h * 0.1f, w * 0.24f, h * 0.1f, w * 0.30f, h * 0.55f)
+                    cubicTo(w * 0.36f, h * 1.0f, w * 0.42f, h * 1.0f, w * 0.48f, h * 0.45f)
+                    cubicTo(w * 0.54f, h * 0.0f, w * 0.62f, h * 0.0f, w * 0.68f, h * 0.5f)
+                    lineTo(w * 0.92f, h * 0.45f)
+                }
+                val measure = android.graphics.PathMeasure(fullPath.asAndroidPath(), false)
+                val trimmedAndroidPath = android.graphics.Path()
+                measure.getSegment(0f, measure.length * progress.value, trimmedAndroidPath, true)
+                drawPath(
+                    path = trimmedAndroidPath.asComposePath(),
+                    color = Color.White,
+                    style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round),
+                )
+            }
+        }
     }
 }
 

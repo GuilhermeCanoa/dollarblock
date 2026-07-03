@@ -36,6 +36,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -131,12 +133,21 @@ private fun MoneyLostHero(
     val glowColor = if (burning) BlockingRed else DollarBlockTheme.colors.glow
 
     // Count-up de taxímetro: o valor sobe de 0 até o prejuízo ao entrar na tela.
+    // Haptic a cada café inteiro cruzado (HomeMetrics.crossedCoffeeMultiple) — o
+    // taxímetro "sente" o próprio custo subindo.
     val animatedValue = remember { Animatable(0f) }
+    val haptic = LocalHapticFeedback.current
     LaunchedEffect(moneyLost) {
+        var lastReported = 0.0
         animatedValue.animateTo(
             targetValue = (moneyLost ?: 0.0).toFloat(),
             animationSpec = tween(durationMillis = 1400, easing = FastOutSlowInEasing),
-        )
+        ) {
+            if (HomeMetrics.crossedCoffeeMultiple(lastReported, value.toDouble())) {
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            }
+            lastReported = value.toDouble()
+        }
     }
 
     Box(

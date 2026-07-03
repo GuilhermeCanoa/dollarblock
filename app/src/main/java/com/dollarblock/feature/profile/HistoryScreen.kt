@@ -34,13 +34,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dollarblock.R
 import com.dollarblock.core.designsystem.DollarBlockTheme
+import com.dollarblock.core.designsystem.TabularNumerals
 import com.dollarblock.domain.model.PaymentMethod
 import com.dollarblock.domain.model.RecentEvent
 import java.time.Instant
@@ -130,6 +134,10 @@ private fun HistoryList(
     }
 }
 
+/**
+ * Um evento do histórico é um lançamento de recibo: ícone + descrição em mono à
+ * esquerda, valor (ou "—" para bloqueios sem cobrança) em numerais tabulares à direita.
+ */
 @Composable
 private fun HistoryEventRow(event: RecentEvent) {
     val unlocked = event is RecentEvent.Unlocked
@@ -157,31 +165,40 @@ private fun HistoryEventRow(event: RecentEvent) {
         Spacer(Modifier.size(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = stringResource(
-                    if (unlocked) R.string.home_event_unlocked else R.string.home_event_blocked,
-                    event.appLabel,
-                ),
+                text = event.appLabel,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.SemiBold,
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
             )
-            if (event is RecentEvent.Unlocked) {
-                val method = if (event.method == PaymentMethod.GOOGLE_PAY) {
-                    stringResource(R.string.pay_method_google)
+            Text(
+                text = if (unlocked) {
+                    val method = if ((event as RecentEvent.Unlocked).method == PaymentMethod.GOOGLE_PAY) {
+                        stringResource(R.string.pay_method_google)
+                    } else {
+                        stringResource(R.string.pay_method_simulated)
+                    }
+                    "${stringResource(R.string.history_entry_paid)} · $method"
                 } else {
-                    stringResource(R.string.pay_method_simulated)
-                }
-                Text(
-                    text = stringResource(R.string.home_event_unlock_detail, event.amount, method),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+                    stringResource(R.string.history_entry_locked)
+                },
+                fontFamily = FontFamily.Monospace,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = formatTime(event.timestamp),
+                fontFamily = FontFamily.Monospace,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+            )
         }
         Spacer(Modifier.size(8.dp))
         Text(
-            text = formatTime(event.timestamp),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            text = if (event is RecentEvent.Unlocked) "R$ ${event.amount}" else "—",
+            style = TabularNumerals.copy(fontSize = 16.sp),
+            color = accent,
+            textAlign = TextAlign.End,
         )
     }
 }

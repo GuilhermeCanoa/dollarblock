@@ -95,6 +95,11 @@
     <string name="stat_money_lost_month">This Month\'s Damage</string>
     <string name="stat_most_used">Most used</string>
     <string name="stat_usage_overview">Usage overview</string>
+    <string name="stat_statement_title">Statement</string>
+    <string name="stat_best_day">Best day</string>
+    <string name="stat_worst_day">Worst day</string>
+    <string name="stat_best_day_caption">lowest bill</string>
+    <string name="stat_worst_day_caption">highest bill</string>
     <string name="stat_no_data">No usage data yet.\nOpen monitored apps and the meter starts writing.</string>
 
     <!-- Profile -->
@@ -136,6 +141,8 @@
     <string name="history_title">Receipts</string>
     <string name="history_empty">No receipts yet.\nEvery block and every bailout gets filed here.</string>
     <string name="history_back">Back</string>
+    <string name="history_entry_paid">Paid</string>
+    <string name="history_entry_locked">Locked, no charge</string>
 
     <!-- Block service strings (used in AccessibilityService declaration) -->
     <string name="block_section_title">App blocking</string>
@@ -188,12 +195,17 @@
     <string name="onb_welcome_body">Instagram, TikTok and YouTube have entire teams of engineers paid to keep you scrolling. DollarBlock puts a meter on them: pick the apps that eat your day, set a daily limit, and past that limit they lock.</string>
     <string name="onb_penalty_title">The deal</string>
     <string name="onb_penalty_body">Clause 1: you pick the apps. Clause 2: you set the limits. Clause 3: past the limit, the app locks — and if you really need it back, you pay R$ 1 for a day pass, valid until midnight. The money is real. That\'s the whole point. No sob stories: the idea was yours.</string>
+    <string name="onb_contract_header">DOLLARBLOCK · AGREEMENT</string>
+    <string name="onb_contract_footer">By signing, you agree to be billed for your own excuses.</string>
     <string name="onb_permissions_title">The paperwork</string>
     <string name="onb_permissions_body">DollarBlock needs these permissions to measure usage and block apps. We only request what is strictly necessary — each one opens the corresponding system screen.</string>
     <string name="onb_perm_usage_why">Measures how much time you spend in each app — the foundation of everything.</string>
     <string name="onb_perm_accessibility_why">Detects the foreground app to apply the block.</string>
     <string name="onb_perm_overlay_why">Displays the block screen on top of the app.</string>
     <string name="onb_perm_notifications_why">Notifies you about limits reached and the monitoring service.</string>
+    <string name="notif_channel_name">Limit warnings</string>
+    <string name="notif_limit_warning_title">5 minutes of %1$s left</string>
+    <string name="notif_limit_warning_body">Prepare the card, or your dignity.</string>
     <string name="onb_perm_required">required</string>
     <string name="onb_perm_grant">Grant</string>
     <string name="onb_continue">Continue</string>

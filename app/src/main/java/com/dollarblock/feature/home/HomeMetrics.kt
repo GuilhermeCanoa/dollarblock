@@ -30,6 +30,12 @@ sealed interface MoneyEquivalence {
     data class Pizzas(val count: Int) : MoneyEquivalence
 }
 
+/** Um dia do extrato, identificado por epoch day, com o total gasto (uso convertido em BRL). */
+data class DaySpend(val epochDay: Long, val amount: Double)
+
+/** Melhor (menor gasto) e pior (maior gasto) dia de um período, para destaque no extrato. */
+data class BestWorstDay(val best: DaySpend?, val worst: DaySpend?)
+
 object HomeMetrics {
 
     private const val MONTHLY_SALARY = 2000.0
@@ -51,6 +57,29 @@ object HomeMetrics {
             val percent = (moneyLost / COFFEE_PRICE * 100).toInt()
             if (percent < 1) null else MoneyEquivalence.CoffeeFraction(percent)
         }
+    }
+
+    /**
+     * Destaca o melhor (menor gasto) e o pior (maior gasto) dia dentre [daySpends].
+     * Dias com gasto zero contam como candidatos a "melhor dia" (dia sem prejuízo).
+     * Retorna nulos quando a lista está vazia.
+     */
+    fun bestAndWorstDay(daySpends: List<DaySpend>): BestWorstDay {
+        if (daySpends.isEmpty()) return BestWorstDay(null, null)
+        val best = daySpends.minByOrNull { it.amount }
+        val worst = daySpends.maxByOrNull { it.amount }
+        return BestWorstDay(best, worst)
+    }
+
+    /**
+     * true quando o count-up cruzou um múltiplo inteiro de café (para disparar haptic
+     * no taxímetro da Home). Compara o inteiro de cafés antes e depois do frame.
+     */
+    fun crossedCoffeeMultiple(previousLost: Double, newLost: Double): Boolean {
+        if (newLost <= previousLost) return false
+        val before = (previousLost / COFFEE_PRICE).toInt()
+        val after = (newLost / COFFEE_PRICE).toInt()
+        return after > before
     }
 
     fun compute(monitoredUsage: List<MonitoredAppUsage>): DailyMetrics {

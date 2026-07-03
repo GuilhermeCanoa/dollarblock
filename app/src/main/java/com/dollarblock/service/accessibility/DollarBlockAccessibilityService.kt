@@ -41,6 +41,10 @@ class DollarBlockAccessibilityService : AccessibilityService() {
     @Inject lateinit var monitoredAppDao: MonitoredAppDao
     @Inject lateinit var usageStatsProvider: UsageStatsProvider
     @Inject lateinit var monitoredAppRepository: MonitoredAppRepository
+    @Inject lateinit var limitWarningNotifier: LimitWarningNotifier
+
+    /** Último uso observado por app, para detectar o cruzamento do limiar de 5 min ([LimitWarningPolicy]). */
+    private val lastUsedMillisByPackage = mutableMapOf<String, Long>()
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val handler = Handler(Looper.getMainLooper())
@@ -132,6 +136,12 @@ class DollarBlockAccessibilityService : AccessibilityService() {
 
                 val usedMillis = effectiveUsageMillis(app, foregroundSinceMillis)
                 monitoredAppRepository.syncTodayUsage(packageName, foregroundSinceMillis)
+
+                val previousUsedMillis = lastUsedMillisByPackage[packageName] ?: 0L
+                if (LimitWarningPolicy.shouldWarn(previousUsedMillis, usedMillis, limitMillis)) {
+                    limitWarningNotifier.notifyLimitApproaching(resolveLabel(packageName))
+                }
+                lastUsedMillisByPackage[packageName] = usedMillis
 
                 if (usedMillis >= limitMillis) {
                     val grant = blockPreferences.getUnlockGrant(packageName)
