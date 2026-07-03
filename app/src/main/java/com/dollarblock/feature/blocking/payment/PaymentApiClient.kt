@@ -11,8 +11,11 @@ object PaymentApiClient {
 
     private const val TAG = "DollarBlockPay"
 
-    private const val ENDPOINT =
-        "https://duj02ll1zl.execute-api.us-east-1.amazonaws.com/test/unlock-charge"
+    private const val BASE_URL = "https://duj02ll1zl.execute-api.us-east-1.amazonaws.com/test"
+    private const val CHARGE_ENDPOINT = "$BASE_URL/unlock-charge"
+    private const val PRICING_ENDPOINT = "$BASE_URL/pricing"
+
+    const val PRODUCT_DAY_PASS = "day_pass"
 
     data class ChargeResult(val status: String, val paymentIntentId: String)
 
@@ -20,17 +23,19 @@ object PaymentApiClient {
         packageName: String,
         paymentToken: String,
         idempotencyKey: String,
+        product: String = PRODUCT_DAY_PASS,
         currency: String = GooglePayConfig.CURRENCY_CODE,
     ): Result<ChargeResult> = withContext(Dispatchers.IO) {
         runCatching {
             val body = JSONObject().apply {
                 put("packageName", packageName)
+                put("product", product)
                 put("currency", currency)
                 put("paymentToken", paymentToken)
                 put("idempotencyKey", idempotencyKey)
             }.toString()
 
-            val conn = URL(ENDPOINT).openConnection() as HttpURLConnection
+            val conn = URL(CHARGE_ENDPOINT).openConnection() as HttpURLConnection
             conn.requestMethod = "POST"
             conn.setRequestProperty("Content-Type", "application/json")
             conn.doOutput = true
@@ -59,6 +64,36 @@ object PaymentApiClient {
                 status = json.getString("status"),
                 paymentIntentId = json.getString("paymentIntentId"),
             )
+        }
+    }
+
+    /**
+     * Busca a tabela de preços do backend, ex. `{"day_pass":{"BRL":"1.00","USD":"1.00"}}`.
+     * O chamador ([com.dollarblock.data.repository.PricingRepository]) decide o fallback
+     * quando isto falha — este client só reporta sucesso/erro de rede.
+     */
+    suspend fun getPricing(): Result<Map<String, Map<String, String>>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val conn = URL(PRICING_ENDPOINT).openConnection() as HttpURLConnection
+            conn.requestMethod = "GET"
+            conn.connectTimeout = 10_000
+            conn.readTimeout = 15_000
+
+            val code = conn.responseCode
+            val responseBody = if (code in 200..299) {
+                conn.inputStream.bufferedReader().readText()
+            } else {
+                conn.errorStream?.bufferedReader()?.readText().orEmpty()
+            }
+            conn.disconnect()
+
+            if (code != 200) error("HTTP $code")
+
+            val json = JSONObject(responseBody)
+            json.keys().asSequence().associateWith { product ->
+                val byCurrency = json.getJSONObject(product)
+                byCurrency.keys().asSequence().associateWith { byCurrency.getString(it) }
+            }
         }
     }
 }

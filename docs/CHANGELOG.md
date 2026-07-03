@@ -12,6 +12,68 @@ Descrição funcional.
 
 ---
 
+## [2026-07-02] — E11 Fase 5: polimento visual + avisos de limite
+**Tipo:** feature
+**Épico:** E11
+
+Estende a estética financeira/contábil da marca (spec:
+`docs/specs/E11-fase5-polimento-visual.md`) às telas que ainda usavam layout genérico, e
+adiciona o aviso passivo-agressivo de limite:
+
+- **Onboarding — "O contrato":** a página de penalidade (`onb_penalty_title`/`_body`)
+  ganhou papel/tipografia mono coerentes com o recibo de `BlockActivity` (mesmo padrão de
+  `InvoiceReceipt`, incluindo divisores tracejados). O botão final "Assinar" traça uma
+  assinatura animada (path recortado via `PathMeasure`) antes de confirmar o onboarding,
+  com haptic no fim do traço.
+- **Statement (Statistics):** novo cartão de extrato com melhor/pior dia do período
+  (semanal/mensal), numerais tabulares (`TabularNumerals`) e destaque verde/vermelho.
+  Lógica pura nova: `HomeMetrics.bestAndWorstDay`.
+- **Receipts (History):** cada evento agora é um lançamento de recibo — mono, valor em
+  numerais tabulares alinhado à direita, "Paid"/"Locked, no charge" como descrição.
+- **Aviso de limite:** notificação passivo-agressiva ("Faltam 5 min de Instagram. Prepare
+  o cartão, ou a sua dignidade.") disparada ~5 min antes do limite diário, via canal
+  `limit_warning`. Lógica pura nova: `LimitWarningPolicy.shouldWarn` (trigger único por
+  cruzamento de janela, tratando limites menores que 5 min). Novo `LimitWarningNotifier`
+  injetado no `DollarBlockAccessibilityService`.
+- **Haptics do taxímetro:** o count-up da Home vibra ao cruzar cada café inteiro de
+  prejuízo (`HomeMetrics.crossedCoffeeMultiple`).
+
+Validado com `:app:testDebugUnitTest` (34 testes, incluindo os novos de
+`HomeMetricsTest` e `LimitWarningPolicyTest`) e no emulador: onboarding completo (contrato
++ assinatura), tela de extrato com melhor/pior dia, tela de recibos.
+
+---
+
+## [2026-07-02] — Preço dinâmico do passe do dia (backend + app)
+**Tipo:** feature / regra
+**Épico:** E11
+
+Corrige a divergência apontada no changelog anterior: o Lambda `unlock-charge` (repo
+separado `dollarblock-payment`, fora deste repositório) cobrava R$ 4,99 enquanto o app
+exibia R$ 1,00. Preço agora é server-authoritative e configurável sem deploy de código
+(spec: `docs/specs/E11-preco-dinamico.md`):
+
+- **Backend** (`dollarblock-payment`): `pricing.js` passa a ler a tabela de preços de
+  variáveis de ambiente da Lambda (`PRICE_DAY_PASS_BRL_CENTS`/`_USD_CENTS`, default 100 =
+  R$1,00/US$1,00) em vez de valor hardcoded. `POST /unlock-charge` agora exige `product`
+  (`"day_pass"`) além de `currency`, rejeita produto/moeda desconhecidos com 400 e nunca
+  aceita amount do cliente. Nova rota `GET /pricing` (mesma API Gateway/Lambda) devolve a
+  tabela formatada (`{"day_pass":{"BRL":"1.00","USD":"1.00"}}`) para o app exibir sem
+  hardcode. `infra/template.yaml` ganhou os parâmetros de preço e a função `PricingFunction`
+  — nenhum recurso novo com custo fixo.
+- **App**: `PaymentApiClient.getPricing()` consulta `/pricing`; novo
+  `PricingRepository` (com `PricingPreferences`/DataStore) resolve o preço a exibir com
+  cache local e fallback para `GooglePayConfig.DEFAULT_PRICE` ("1.00") se a rede falhar.
+  `BlockActivity` busca o preço no `onCreate` e o usa de ponta a ponta: `transactionInfo`
+  do Google Pay, `InvoiceReceipt` (fatura) e `EventsRepository.recordUnlock` — uma única
+  fonte, sem valor duplicado.
+- Multimoedas preparado (tabela já tem BRL+USD) mas **não ativado**: `CURRENCY_CODE`
+  continua fixo em BRL nesta entrega.
+- ⚠️ Deploy do stack `dollarblock-payment-test` atualizado (código Lambda + rota nova)
+  ainda pendente — aguardando autorização de custo AWS (regra global do projeto).
+
+---
+
 ## [2026-07-02] — Rebrand "Taxímetro" + Passe do Dia (R$ 1 até a meia-noite)
 **Tipo:** feature / regra
 **Épico:** E11

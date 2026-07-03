@@ -68,6 +68,7 @@ import kotlinx.coroutines.delay
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.dollarblock.data.local.prefs.BlockPreferences
+import com.dollarblock.data.repository.PricingRepository
 import com.dollarblock.domain.model.PaymentMethod
 import com.dollarblock.domain.repository.EventsRepository
 import com.dollarblock.feature.blocking.payment.GooglePayConfig
@@ -96,6 +97,9 @@ class BlockActivity : AppCompatActivity() {
     @Inject
     lateinit var eventsRepository: EventsRepository
 
+    @Inject
+    lateinit var pricingRepository: PricingRepository
+
     private lateinit var paymentsClient: PaymentsClient
     private var targetPackage: String = ""
     private var appLabel: String = ""
@@ -103,6 +107,7 @@ class BlockActivity : AppCompatActivity() {
     private val readyToPay = MutableStateFlow(false)
     private val paymentInProgress = MutableStateFlow(false)
     private val unlocksPaidToday = MutableStateFlow(0)
+    private val dayPassPrice = MutableStateFlow(GooglePayConfig.DEFAULT_PRICE)
 
     private val paymentLauncher =
         registerForActivityResult(StartIntentSenderForResult()) { result ->
@@ -138,6 +143,7 @@ class BlockActivity : AppCompatActivity() {
         paymentsClient = GooglePayConfig.paymentsClient(this)
         checkReadyToPay()
         lifecycleScope.launch { unlocksPaidToday.value = eventsRepository.unlocksPaidToday() }
+        lifecycleScope.launch { dayPassPrice.value = pricingRepository.getDayPassPrice() }
 
         onBackPressedDispatcher.addCallback(
             this,
@@ -151,9 +157,11 @@ class BlockActivity : AppCompatActivity() {
                 val ready by readyToPay.collectAsState()
                 val processing by paymentInProgress.collectAsState()
                 val paidToday by unlocksPaidToday.collectAsState()
+                val price by dayPassPrice.collectAsState()
                 BlockScreen(
                     appLabel = appLabel,
                     unlocksPaidToday = paidToday,
+                    price = price,
                     googlePayReady = ready,
                     paymentInProgress = processing,
                     showDebugSimulate = BuildConfig.DEBUG,
@@ -174,7 +182,8 @@ class BlockActivity : AppCompatActivity() {
 
     private fun startPayment() {
         paymentInProgress.value = true
-        val request = PaymentDataRequest.fromJson(GooglePayConfig.paymentDataRequest().toString())
+        val request =
+            PaymentDataRequest.fromJson(GooglePayConfig.paymentDataRequest(dayPassPrice.value).toString())
         paymentsClient.loadPaymentData(request).addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 val paymentData = task.result
@@ -249,7 +258,7 @@ class BlockActivity : AppCompatActivity() {
                 eventsRepository.recordUnlock(
                     packageName = targetPackage,
                     appLabel = appLabel,
-                    amount = GooglePayConfig.PRICE,
+                    amount = dayPassPrice.value,
                     currency = GooglePayConfig.CURRENCY_CODE,
                     method = method,
                 )
@@ -305,6 +314,7 @@ class BlockActivity : AppCompatActivity() {
 private fun BlockScreen(
     appLabel: String,
     unlocksPaidToday: Int,
+    price: String,
     googlePayReady: Boolean,
     paymentInProgress: Boolean,
     showDebugSimulate: Boolean,
@@ -358,6 +368,7 @@ private fun BlockScreen(
             Spacer(Modifier.height(20.dp))
             InvoiceReceipt(
                 appLabel = appLabel,
+                price = price,
                 message = stringResource(
                     when {
                         unlocksPaidToday >= 2 -> R.string.block_screen_message_many
@@ -423,6 +434,7 @@ private fun BlockScreen(
 @Composable
 private fun InvoiceReceipt(
     appLabel: String,
+    price: String,
     message: String,
     modifier: Modifier = Modifier,
 ) {
@@ -483,7 +495,7 @@ private fun InvoiceReceipt(
             DashedDivider(ink.copy(alpha = 0.35f))
             Spacer(Modifier.height(14.dp))
             Text(
-                text = "R$ " + GooglePayConfig.PRICE.replace('.', ','),
+                text = "R$ " + price.replace('.', ','),
                 fontFamily = FontFamily.Monospace,
                 fontWeight = FontWeight.Bold,
                 fontSize = 36.sp,

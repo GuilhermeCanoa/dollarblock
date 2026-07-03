@@ -1,15 +1,25 @@
 # DollarBlock — Backend de cobrança real (Stripe)
 
-> **Status:** ✅ **Implementado e funcionando em modo TESTE.** O app cobra de fato via
-> Stripe (conta teste) através de um backend AWS serverless já no ar:
-> `POST https://duj02ll1zl.execute-api.us-east-1.amazonaws.com/test/unlock-charge`.
-> O fluxo de produção (`pk_live_`/`sk_live_`, `ENVIRONMENT_PRODUCTION`) ainda não foi ativado.
+> **Status:** ✅ **Implementado e funcionando em modo TESTE**, com **preço dinâmico**
+> (spec: `docs/specs/E11-preco-dinamico.md`). O app cobra de fato via Stripe (conta teste)
+> através de um backend AWS serverless (repo separado `dollarblock-payment`, `C:\dev\dollarblock-payment`):
+> `POST https://duj02ll1zl.execute-api.us-east-1.amazonaws.com/test/unlock-charge` e
+> `GET https://duj02ll1zl.execute-api.us-east-1.amazonaws.com/test/pricing`.
+> O preço (`day_pass`, hoje R$1,00) vive em variável de ambiente da Lambda
+> (`PRICE_DAY_PASS_BRL_CENTS`), não mais hardcoded — o cliente só envia `product`+`currency`,
+> nunca o valor. O fluxo de produção (`pk_live_`/`sk_live_`, `ENVIRONMENT_PRODUCTION`) ainda
+> não foi ativado.
 >
 > No app, ver `feature/blocking/payment/`: `GooglePayConfig` (gateway `stripe` + `pk_test_`),
-> `PaymentApiClient` (chamada ao endpoint), `StripeToken` (extração do `id` do token) e
-> `BlockActivity.handlePaymentData` (orquestra a cobrança e só desbloqueia em `succeeded`).
+> `PaymentApiClient` (chamada aos endpoints `/unlock-charge` e `/pricing`), `StripeToken`
+> (extração do `id` do token) e `BlockActivity.handlePaymentData` (orquestra a cobrança e só
+> desbloqueia em `succeeded`). `data/repository/PricingRepository` resolve o preço a exibir
+> com cache em `PricingPreferences` (DataStore) e fallback para `GooglePayConfig.DEFAULT_PRICE`.
 >
-> As seções abaixo descrevem a especificação/arquitetura que guiou essa implementação e o
+> ⚠️ Deploy do stack `dollarblock-payment-test` com o código de preço dinâmico está pendente
+> de autorização de custo AWS (regra global do projeto) — ver "Notas / Decisões" do spec.
+>
+> As seções abaixo descrevem a especificação/arquitetura que guiou a implementação inicial e o
 > que falta para produção.
 
 Objetivo: transformar o pagamento de teste (Google Pay `ENVIRONMENT_TEST`) em **cobrança
@@ -81,7 +91,7 @@ Request:
 ```json
 {
   "packageName": "com.google.android.youtube",
-  "amount": "4.99",
+  "product": "day_pass",
   "currency": "BRL",
   "paymentToken": "<token do Google Pay / Stripe>",
   "idempotencyKey": "<uuid gerado no app>"
@@ -94,9 +104,19 @@ Response (sucesso):
 ```
 
 Regras no backend:
-- **Validar o valor no servidor** (não confiar no `amount` do app — usar tabela de preços).
+- **Validar o valor no servidor** — o app nunca envia `amount`; envia `product`+`currency`
+  e o backend resolve o preço em `pricing.js` (via env vars da Lambda).
 - Usar **idempotencyKey** para não cobrar duas vezes.
-- Registrar a transação (DynamoDB) com packageName, valor, status, timestamp.
+- Registrar a transação (DynamoDB) com packageName, product, valor, status, timestamp.
+
+`GET /pricing`
+
+Response:
+```json
+{ "day_pass": { "BRL": "1.00", "USD": "1.00" } }
+```
+
+Usado pelo app para exibir o preço sem hardcode (`PricingRepository`, cache em DataStore).
 
 ---
 

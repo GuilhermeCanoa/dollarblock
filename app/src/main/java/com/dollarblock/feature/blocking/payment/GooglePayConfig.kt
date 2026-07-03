@@ -18,11 +18,13 @@ import org.json.JSONObject
 object GooglePayConfig {
 
     /**
-     * Passe do dia: um pagamento libera o app bloqueado até a meia-noite local.
-     * Este valor alimenta o sheet do Google Pay e o registro local; o valor efetivamente
-     * cobrado é fixo no Lambda `unlock-charge` e precisa ser mantido em sincronia.
+     * Preço padrão do passe do dia, usado como fallback quando
+     * [com.dollarblock.data.repository.PricingRepository] não tem cache nem consegue
+     * consultar `GET /pricing` (offline no primeiro uso). O valor cobrado de fato é
+     * sempre resolvido no backend a partir de `product`+`currency` — o cliente nunca
+     * define o valor cobrado, apenas o exibe.
      */
-    const val PRICE = "1.00"
+    const val DEFAULT_PRICE = "1.00"
     const val CURRENCY_CODE = "BRL"
 
     private const val ENVIRONMENT = WalletConstants.ENVIRONMENT_TEST
@@ -41,9 +43,9 @@ object GooglePayConfig {
         put("allowedPaymentMethods", JSONArray().put(baseCardPaymentMethod()))
     }
 
-    fun paymentDataRequest(): JSONObject = baseRequest().apply {
+    fun paymentDataRequest(price: String): JSONObject = baseRequest().apply {
         put("allowedPaymentMethods", JSONArray().put(cardPaymentMethodWithTokenization()))
-        put("transactionInfo", transactionInfo())
+        put("transactionInfo", transactionInfo(price))
         put("merchantInfo", JSONObject().put("merchantName", "DollarBlock"))
     }
 
@@ -80,9 +82,9 @@ object GooglePayConfig {
             )
         }
 
-    private fun transactionInfo(): JSONObject =
+    private fun transactionInfo(price: String): JSONObject =
         JSONObject().apply {
-            put("totalPrice", PRICE)
+            put("totalPrice", price)
             put("totalPriceStatus", "FINAL")
             put("currencyCode", CURRENCY_CODE)
         }
