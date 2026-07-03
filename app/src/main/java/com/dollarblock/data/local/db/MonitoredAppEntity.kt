@@ -15,5 +15,4 @@ data class MonitoredAppEntity(
     val isMonitored: Boolean,
     val dailyLimitMinutes: Int?,
     val createdAt: Long,
-    val usageBaselineMillis: Long = 0L,
 )

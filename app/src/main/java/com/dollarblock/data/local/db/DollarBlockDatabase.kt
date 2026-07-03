@@ -15,7 +15,7 @@ import com.dollarblock.data.local.db.entity.UnlockEventEntity
         MonitoredAppEntity::class,
         DailyUsageEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = false,
 )
 abstract class DollarBlockDatabase : RoomDatabase() {
@@ -33,6 +33,12 @@ abstract class DollarBlockDatabase : RoomDatabase() {
         val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE block_events ADD COLUMN reason TEXT NOT NULL DEFAULT 'DAILY_LIMIT'")
+            }
+        }
+
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE monitored_apps DROP COLUMN usageBaselineMillis")
             }
         }
     }

@@ -12,6 +12,33 @@ Descrição funcional.
 
 ---
 
+## [2026-07-03] — E12: uso de tempo = 100% da métrica do celular
+**Tipo:** regra
+**Épico:** E12
+
+Remove o "baseline" (`usageBaselineMillis`) que descontava, do uso comparado ao limite
+diário e exibido na UI, o tempo já gasto no app antes de ele ser monitorado pelo DollarBlock.
+Agora o limite diário, a UI (Apps/Home) e o Statistics usam 100% do uso bruto reportado pelo
+`UsageStatsManager`/`UsageEvents` desde a meia-noite local — sem métrica própria de "uso
+líquido". Consequência: se o usuário já usou 1h de um app hoje e configura um limite de
+50 min, o app bloqueia no próximo evento de foreground, sem esperar novo uso.
+
+- Room `DollarBlockDatabase` v3→v4: `MIGRATION_3_4` remove a coluna `usageBaselineMillis` de
+  `monitored_apps`.
+- `MonitoredAppRepositoryImpl.setMonitored`/`observeMonitoredAppsUsage` param de captura/
+  subtração de baseline removido.
+- `DollarBlockAccessibilityService.effectiveUsageMillis` agora só repassa o uso bruto via
+  `UsageEvents` (sem ajuste).
+- `StatisticsViewModel`: `baselineByApp`/`effectiveMillis` removidos; todos os agregados
+  (totais, top apps, gráfico, melhor/pior dia) usam `usedMillis` bruto direto.
+- Passe do dia (unlock total até meia-noite) não muda.
+- `docs/REGRAS_CONTROLE_TEMPO.md` atualizado: §2/§3/§7 refletem uso 100% bruto (sem baseline);
+  §5/§6/§8/§10 corrigidos para o modelo atual de "passe do dia" (E11) — o documento ainda
+  descrevia o modelo antigo (R$4,99 / janela de 5 min de uso real), pré-E11.
+- Spec: `docs/specs/E12-uso-100-porcento-real.md`. Fora de escopo: "tempo comprado" como
+  add-on por app ao limite configurado — não existe hoje (só o passe do dia existe);
+  registrado como follow-up pendente de decisão de produto.
+
 ## [2026-07-02] — E11 Fase 5: polimento visual + avisos de limite
 **Tipo:** feature
 **Épico:** E11

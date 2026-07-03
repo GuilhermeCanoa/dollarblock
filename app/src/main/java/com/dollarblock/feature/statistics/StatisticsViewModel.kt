@@ -85,7 +85,6 @@ class StatisticsViewModel @Inject constructor(
         dataJob?.cancel()
         val today = LocalDate.now(ZoneId.systemDefault())
         val todayEpoch = today.toEpochDay()
-        val zone = ZoneId.systemDefault()
 
         val mondayEpoch = todayEpoch - (today.dayOfWeek.value - 1)
         val (startDay, endDay) = when (p) {
@@ -102,27 +101,13 @@ class StatisticsViewModel @Inject constructor(
 
             val appNames = monitoredApps.associate { it.packageName to it.appName }
 
-            // Baseline por app: subtrai uso pré-DollarBlock apenas no dia em que o app foi adicionado.
-            val baselineByApp = monitoredApps.associate { app ->
-                val createdDay = java.time.Instant.ofEpochMilli(app.createdAt)
-                    .atZone(zone)
-                    .toLocalDate()
-                    .toEpochDay()
-                app.packageName to (createdDay to app.usageBaselineMillis)
-            }
-
-            fun effectiveMillis(packageName: String, epochDay: Long, rawMillis: Long): Long {
-                val (createdDay, baseline) = baselineByApp[packageName] ?: return rawMillis
-                return if (epochDay == createdDay) (rawMillis - baseline).coerceAtLeast(0L) else rawMillis
-            }
-
             // ── Métricas globais ────────────────────────────────────────────
-            val totalMillis = usageRows.sumOf { effectiveMillis(it.packageName, it.epochDay, it.usedMillis) }
+            val totalMillis = usageRows.sumOf { it.usedMillis }
             val timeSpent = formatMillis(totalMillis)
 
             val mostUsedPkg = usageRows
                 .groupBy { it.packageName }
-                .mapValues { (pkg, rows) -> rows.sumOf { effectiveMillis(pkg, it.epochDay, it.usedMillis) } }
+                .mapValues { (_, rows) -> rows.sumOf { it.usedMillis } }
                 .filter { it.value > 0 }
                 .maxByOrNull { it.value }?.key
             val mostUsed = mostUsedPkg?.let { appNames[it] ?: it } ?: ""
@@ -138,7 +123,7 @@ class StatisticsViewModel @Inject constructor(
                 val spendByDay = usageRows
                     .groupBy { it.epochDay }
                     .mapValues { (_, rows) ->
-                        rows.sumOf { effectiveMillis(it.packageName, it.epochDay, it.usedMillis) } / 60_000.0 * REAIS_PER_MINUTE
+                        rows.sumOf { it.usedMillis } / 60_000.0 * REAIS_PER_MINUTE
                     }
                 val daySpends = (startDay..endDay).map { day ->
                     com.dollarblock.feature.home.DaySpend(day, spendByDay[day] ?: 0.0)
@@ -156,7 +141,7 @@ class StatisticsViewModel @Inject constructor(
             // ── Top apps (donut chart) ──────────────────────────────────────
             val usageByPkg = usageRows
                 .groupBy { it.packageName }
-                .mapValues { (pkg, rows) -> rows.sumOf { effectiveMillis(pkg, it.epochDay, it.usedMillis) } }
+                .mapValues { (_, rows) -> rows.sumOf { it.usedMillis } }
                 .filter { it.value > 0 }
             val sorted = usageByPkg.entries.sortedByDescending { it.value }
             val top5 = sorted.take(5)
@@ -183,8 +168,8 @@ class StatisticsViewModel @Inject constructor(
             // ── Dados do gráfico (linha por app; DAILY não exibe gráfico) ───
             val (chartLines, chartXLabels) = when (p) {
                 StatPeriod.DAILY -> emptyList<AppChartLine>() to emptyList()
-                StatPeriod.WEEKLY -> buildWeeklyChartPerApp(usageRows, monitoredApps, appNames, ::effectiveMillis, todayEpoch)
-                StatPeriod.MONTHLY -> buildMonthlyChartPerApp(usageRows, monitoredApps, appNames, ::effectiveMillis, todayEpoch)
+                StatPeriod.WEEKLY -> buildWeeklyChartPerApp(usageRows, monitoredApps, appNames, todayEpoch)
+                StatPeriod.MONTHLY -> buildMonthlyChartPerApp(usageRows, monitoredApps, appNames, todayEpoch)
             }
 
             StatisticsUiState(
@@ -208,7 +193,6 @@ class StatisticsViewModel @Inject constructor(
         rows: List<com.dollarblock.data.local.db.DailyUsageEntity>,
         monitoredApps: List<com.dollarblock.data.local.db.MonitoredAppEntity>,
         appNames: Map<String, String>,
-        effective: (String, Long, Long) -> Long,
         todayEpoch: Long,
     ): Pair<List<AppChartLine>, List<String>> {
         if (monitoredApps.isEmpty()) return emptyList<AppChartLine>() to emptyList()
@@ -224,7 +208,7 @@ class StatisticsViewModel @Inject constructor(
         val lines = monitoredApps.map { app ->
             val points = epochs.map { epoch ->
                 rows.filter { it.packageName == app.packageName && it.epochDay == epoch }
-                    .sumOf { effective(it.packageName, it.epochDay, it.usedMillis) }
+                    .sumOf { it.usedMillis }
                     .toFloat()
             }
             AppChartLine(appName = appNames[app.packageName] ?: app.packageName, points = points)
@@ -236,7 +220,6 @@ class StatisticsViewModel @Inject constructor(
         rows: List<com.dollarblock.data.local.db.DailyUsageEntity>,
         monitoredApps: List<com.dollarblock.data.local.db.MonitoredAppEntity>,
         appNames: Map<String, String>,
-        effective: (String, Long, Long) -> Long,
         todayEpoch: Long,
     ): Pair<List<AppChartLine>, List<String>> {
         if (monitoredApps.isEmpty()) return emptyList<AppChartLine>() to emptyList()
@@ -250,7 +233,7 @@ class StatisticsViewModel @Inject constructor(
         val lines = monitoredApps.map { app ->
             val points = weekRanges.map { (_, weekStart, weekEnd) ->
                 rows.filter { it.packageName == app.packageName && it.epochDay in weekStart..weekEnd }
-                    .sumOf { effective(it.packageName, it.epochDay, it.usedMillis) }
+                    .sumOf { it.usedMillis }
                     .toFloat()
             }
             AppChartLine(appName = appNames[app.packageName] ?: app.packageName, points = points)

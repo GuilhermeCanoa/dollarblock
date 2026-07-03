@@ -102,11 +102,11 @@ Production (`pk_live_`/`sk_live_`, `ENVIRONMENT_PRODUCTION`, merchantId, key out
 
 ### Room schema
 
-`DollarBlockDatabase` is at **version 2** (`MonitoredAppEntity` gained `createdAt` + `usageBaselineMillis`).
+`DollarBlockDatabase` is at **version 4** (`MonitoredAppEntity` gained `createdAt` in v2, `usageBaselineMillis` was added in v2 and dropped again in v4 — usage is always 100% of the device's raw `UsageStatsManager`/`UsageEvents` measurement, no DollarBlock-side baseline/adjustment).
 
 | Entity | PK | Notes |
 |---|---|---|
-| `MonitoredAppEntity` | `packageName` | App name + monitoring flag + `dailyLimitMinutes?` + `createdAt` + `usageBaselineMillis` (pre-DollarBlock usage subtracted on the day the app was added — see Statistics baseline below) |
+| `MonitoredAppEntity` | `packageName` | App name + monitoring flag + `dailyLimitMinutes?` + `createdAt` |
 | `DailyUsageEntity` | `id` | Unique index on `(packageName, epochDay)` |
 | `BlockEventEntity` | `id` | One row per blocking trigger |
 | `UnlockEventEntity` | `id` | FK to `BlockEvent`; holds `penaltyAmount` (simulated) + `unlockUntil` |
@@ -135,11 +135,14 @@ Two devs work in parallel. `CONTRIBUTING.md` defines the workflow (feature-verti
 - **E4** Monitoring — `UsageStatsManager` reads + periodic sync to `DailyUsageEntity` ✅
 - **E5** Blocking engine ✅ — manual on/off per app + usage-triggered blocking (foreground polling)
 - **E6** Home dashboard ✅ — Daily Score / Time Saved / Active Limits over monitored apps with limits
-- **E7** Statistics ✅ — daily/weekly/monthly aggregation + per-app weekly score over `DailyUsageEntity` (with per-app baseline)
+- **E7** Statistics ✅ — daily/weekly/monthly aggregation + per-app weekly score over `DailyUsageEntity` (raw usage, no baseline — see E12)
 - **E8** Profile & History ✅ — real permission status (re-checked on resume) + real today's stats header + `HistoryScreen` (full block/unlock timeline, grouped by day) on a nested `HISTORY_ROUTE`
 - **E9** Google Pay + **real Stripe charge via AWS backend** ✅ (test mode); production keys/env pending
 - **E10** Quality (transversal) — parallel-dev workflow + per-feature DI/Navigation + unit-test
   scaffolding (`HomeMetrics`) + pre-push test gate ✅; DAO/ViewModel tests + CI pending
+- **E12** Uso = 100% da métrica do celular ✅ — `usageBaselineMillis` removido (Room v3→v4); limite
+  diário, UI e Statistics comparam/exibem uso bruto do `UsageStatsManager`/`UsageEvents` desde a
+  meia-noite, sem baseline por app. Ver `docs/specs/E12-uso-100-porcento-real.md`.
 
 Docs: `docs/ROADMAP.md` (epics + acceptance criteria), `docs/ARCHITECTURE.md` (ADRs + data model).
 

@@ -28,13 +28,12 @@ class MonitoredAppRepositoryImpl @Inject constructor(
             val usageByPackage = usageToday.associateBy { it.packageName }
             apps.map { app ->
                 val rawMillis = usageByPackage[app.packageName]?.usedMillis ?: 0L
-                val usedMillis = (rawMillis - app.usageBaselineMillis).coerceAtLeast(0L)
                 MonitoredAppUsage(
                     packageName = app.packageName,
                     appName = app.appName,
                     isMonitored = app.isMonitored,
                     dailyLimitMinutes = app.dailyLimitMinutes,
-                    usedMinutesToday = (usedMillis / 60_000L).toInt(),
+                    usedMinutesToday = (rawMillis / 60_000L).toInt(),
                 )
             }
         }
@@ -46,16 +45,7 @@ class MonitoredAppRepositoryImpl @Inject constructor(
         val existing = monitoredAppDao.getByPackage(packageName)
         if (existing != null) {
             monitoredAppDao.setMonitored(packageName, isMonitored)
-            if (isMonitored && existing.usageBaselineMillis == 0L) {
-                val baseline = usageStatsProvider.getTodayUsageMillisViaEvents(packageName)
-                monitoredAppDao.setUsageBaseline(packageName, baseline)
-            }
         } else {
-            val baseline = if (isMonitored) {
-                usageStatsProvider.getTodayUsageMillisViaEvents(packageName)
-            } else {
-                0L
-            }
             monitoredAppDao.upsert(
                 MonitoredAppEntity(
                     packageName = packageName,
@@ -63,7 +53,6 @@ class MonitoredAppRepositoryImpl @Inject constructor(
                     isMonitored = isMonitored,
                     dailyLimitMinutes = null,
                     createdAt = System.currentTimeMillis(),
-                    usageBaselineMillis = baseline,
                 ),
             )
         }

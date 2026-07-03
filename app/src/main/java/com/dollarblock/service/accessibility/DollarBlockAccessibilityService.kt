@@ -182,18 +182,15 @@ class DollarBlockAccessibilityService : AccessibilityService() {
     }
 
     /**
-     * Uso efetivo em millis = uso bruto via UsageEvents − baseline capturado na ativação.
+     * Uso do dia em millis, 100% via UsageEvents (sem baseline/ajuste).
      */
     private suspend fun effectiveUsageMillis(
         app: MonitoredAppEntity,
         foregroundSinceMillis: Long?,
-    ): Long {
-        val raw = usageStatsProvider.getTodayUsageMillisViaEvents(
-            packageName = app.packageName,
-            ongoingSessionSince = foregroundSinceMillis,
-        )
-        return (raw - app.usageBaselineMillis).coerceAtLeast(0L)
-    }
+    ): Long = usageStatsProvider.getTodayUsageMillisViaEvents(
+        packageName = app.packageName,
+        ongoingSessionSince = foregroundSinceMillis,
+    )
 
     private fun assertBlock(packageName: String, stillBlocked: () -> Boolean) {
         val label = resolveLabel(packageName)
