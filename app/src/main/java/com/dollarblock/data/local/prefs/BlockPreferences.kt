@@ -9,6 +9,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -35,6 +37,9 @@ class BlockPreferences @Inject constructor(
 
     /** package → passe do dia concedido após pagamento. */
     private val _unlockGrants = MutableStateFlow<Map<String, UnlockGrant>>(emptyMap())
+
+    /** Observável para a UI (ex.: indicador de "passe do dia ativo" na lista de apps). */
+    val unlockGrants: StateFlow<Map<String, UnlockGrant>> = _unlockGrants.asStateFlow()
 
     data class UnlockGrant(val unlockUntilMs: Long)
 

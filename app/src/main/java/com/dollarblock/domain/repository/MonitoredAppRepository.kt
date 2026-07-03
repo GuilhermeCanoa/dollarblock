@@ -14,6 +14,9 @@ interface MonitoredAppRepository {
     /** Define (ou remove, com null) o limite diário de uso em minutos para um app já monitorado. */
     suspend fun setDailyLimit(packageName: String, dailyLimitMinutes: Int?)
 
+    /** Remove permanentemente o registro de um app desativado (histórico + limite). */
+    suspend fun deleteMonitoredApp(packageName: String)
+
     /**
      * Força uma sincronização imediata do uso de hoje (fora do ciclo do Worker).
      * Quando [foregroundPackage]/[foregroundSinceMillis] são informados (app monitorado

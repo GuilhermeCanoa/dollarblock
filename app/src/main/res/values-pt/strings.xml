@@ -69,6 +69,13 @@
     <string name="apps_overtime_label">+%1$s de excedente · resgate #%2$d</string>
     <string name="apps_over_limit_text">+%1$s acima do limite</string>
     <string name="apps_overtime_bar_label">Excedente · %1$s</string>
+    <string name="apps_unlocked_today_badge">Passe do dia ativo</string>
+    <string name="apps_deactivated_count">%1$d desativados</string>
+    <string name="apps_deactivated_delete">Excluir de vez</string>
+    <string name="apps_deactivated_delete_confirm_title">Excluir %1$s?</string>
+    <string name="apps_deactivated_delete_confirm_body">Isso apaga o app dos seus registros. Dá pra adicionar de novo depois, mas o histórico não volta.</string>
+    <string name="apps_deactivated_delete_confirm_action">Excluir</string>
+    <string name="apps_deactivated_delete_confirm_cancel">Cancelar</string>
 
     <!-- Statistics -->
     <string name="statistics_title">Extrato</string>

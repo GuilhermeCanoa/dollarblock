@@ -11,6 +11,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts.StartIntentSenderForResult
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -472,14 +473,20 @@ private fun InvoiceReceipt(
                 color = ink.copy(alpha = 0.55f),
             )
             Spacer(Modifier.height(10.dp))
-            Text(
-                text = appLabel,
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.Bold,
-                fontSize = 22.sp,
-                color = ink,
-                textAlign = TextAlign.Center,
-            )
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = appLabel,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 22.sp,
+                    color = ink,
+                    textAlign = TextAlign.Center,
+                )
+                StampText(stampScale = stampScale, stampAlpha = stampAlpha)
+            }
             Spacer(Modifier.height(14.dp))
             DashedDivider(ink.copy(alpha = 0.35f))
             Spacer(Modifier.height(14.dp))
@@ -509,26 +516,31 @@ private fun InvoiceReceipt(
                 color = ink.copy(alpha = 0.6f),
             )
         }
-
-        Text(
-            text = stringResource(R.string.block_stamp),
-            fontFamily = FontFamily.Monospace,
-            fontWeight = FontWeight.Black,
-            fontSize = 30.sp,
-            letterSpacing = 3.sp,
-            color = BlockingRed,
-            modifier = Modifier
-                .align(Alignment.Center)
-                .graphicsLayer {
-                    rotationZ = -14f
-                    scaleX = stampScale.value
-                    scaleY = stampScale.value
-                    alpha = stampAlpha.value
-                }
-                .border(3.dp, BlockingRed, RoundedCornerShape(6.dp))
-                .padding(horizontal = 14.dp, vertical = 6.dp),
-        )
     }
+}
+
+@Composable
+private fun StampText(
+    stampScale: Animatable<Float, AnimationVector1D>,
+    stampAlpha: Animatable<Float, AnimationVector1D>,
+) {
+    Text(
+        text = stringResource(R.string.block_stamp),
+        fontFamily = FontFamily.Monospace,
+        fontWeight = FontWeight.Black,
+        fontSize = 30.sp,
+        letterSpacing = 3.sp,
+        color = BlockingRed,
+        modifier = Modifier
+            .graphicsLayer {
+                rotationZ = -14f
+                scaleX = stampScale.value
+                scaleY = stampScale.value
+                alpha = stampAlpha.value
+            }
+            .border(3.dp, BlockingRed, RoundedCornerShape(6.dp))
+            .padding(horizontal = 14.dp, vertical = 6.dp),
+    )
 }
 
 @Composable

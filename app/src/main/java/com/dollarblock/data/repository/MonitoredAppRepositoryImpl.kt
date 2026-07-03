@@ -75,6 +75,10 @@ class MonitoredAppRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun deleteMonitoredApp(packageName: String) {
+        monitoredAppDao.delete(packageName)
+    }
+
     override suspend fun syncTodayUsage(foregroundPackage: String?, foregroundSinceMillis: Long?) {
         val today = usageStatsProvider.currentEpochDay()
         val monitoredPackages = monitoredAppDao.getMonitoredPackages().toSet()

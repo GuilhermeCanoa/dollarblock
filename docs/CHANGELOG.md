@@ -12,6 +12,29 @@ Descrição funcional.
 
 ---
 
+## [2026-07-03] — Correções: bloqueio contínuo, carimbo, passe do dia e apps desativados
+**Tipo:** bugfix
+**Épico:** adhoc
+
+Quatro correções na experiência de bloqueio e na aba Apps:
+
+- `DollarBlockAccessibilityService.scheduleTracking`: o loop de polling não se rearmava
+  após disparar um bloqueio (`break`), então se o usuário fechasse a `BlockActivity` e
+  continuasse no app monitorado, o bloqueio não era reafirmado. Agora o loop continua
+  (`continue` em vez de `break`) e reavalia a cada `REASSERT_POLL_INTERVAL_MS` (2s).
+- `BlockActivity.InvoiceReceipt`: o carimbo "BLOQUEADO" era centralizado no card inteiro
+  (`Alignment.Center` sobre toda a `Column`), colidindo com qualquer texto que caísse no
+  meio vertical do recibo. Agora o carimbo é centralizado especificamente sobre a linha do
+  nome do app (label envolvido em um `Box` próprio).
+- `AppsViewModel`/`AppsScreen`: apps com passe do dia ativo (`BlockPreferences.unlockGrants`)
+  agora exibem um badge "Passe do dia ativo" na lista de Apps — antes esse estado não tinha
+  nenhuma sinalização na UI (dado existia só no serviço de acessibilidade/BlockActivity).
+- Desativar o monitoramento de um app não remove mais o registro da lista: ele passa para
+  uma seção "Desativados" na mesma tela, com switch para reativar e um botão de lixeira
+  para excluir permanentemente (`MonitoredAppDao.delete` novo).
+
+---
+
 ## [2026-07-03] — E12: uso de tempo = 100% da métrica do celular
 **Tipo:** regra
 **Épico:** E12

@@ -147,13 +147,16 @@ class DollarBlockAccessibilityService : AccessibilityService() {
                     val grant = blockPreferences.getUnlockGrant(packageName)
                     val now = System.currentTimeMillis()
                     if (grant == null || now >= grant.unlockUntilMs) {
-                        // Sem passe do dia ativo → bloqueia se o app estiver em foreground
+                        // Sem passe do dia ativo → bloqueia se o app estiver em foreground.
+                        // Não damos break: se o usuário fechar a BlockActivity e continuar no
+                        // app monitorado, o loop precisa continuar reafirmando o bloqueio.
                         handler.post {
                             if (lastForegroundPackage == packageName) {
                                 assertBlock(packageName) { !isUnlockActiveSync(packageName) }
                             }
                         }
-                        break
+                        delay(REASSERT_POLL_INTERVAL_MS)
+                        continue
                     }
 
                     // Passe do dia ativo — dorme até perto da meia-noite
@@ -239,5 +242,6 @@ class DollarBlockAccessibilityService : AccessibilityService() {
         const val RECORD_DEDUPE_MS = 5_000L
         const val MIN_POLL_INTERVAL_MS = 3_000L
         const val MAX_POLL_INTERVAL_MS = 30_000L
+        const val REASSERT_POLL_INTERVAL_MS = 2_000L
     }
 }

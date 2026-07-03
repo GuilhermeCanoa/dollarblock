@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dollarblock.data.apps.InstalledApp
 import com.dollarblock.data.apps.InstalledAppsProvider
+import com.dollarblock.data.local.prefs.BlockPreferences
+import com.dollarblock.domain.model.MonitoredAppUsage
 import com.dollarblock.domain.repository.MonitoredAppRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -23,12 +25,15 @@ data class AppUsageRow(
     val label: String,
     val icon: ImageBitmap?,
     val isMonitored: Boolean,
+    val isTracked: Boolean,
     val dailyLimitMinutes: Int?,
     val usedMinutesToday: Int,
+    val unlockedToday: Boolean,
 )
 
 data class AppsUiState(
     val monitoredRows: List<AppUsageRow> = emptyList(),
+    val deactivatedRows: List<AppUsageRow> = emptyList(),
     val searchSuggestions: List<AppUsageRow> = emptyList(),
     val isLoading: Boolean = true,
     val editingLimitFor: AppUsageRow? = null,
@@ -39,6 +44,7 @@ data class AppsUiState(
 class AppsViewModel @Inject constructor(
     private val installedAppsProvider: InstalledAppsProvider,
     private val monitoredAppRepository: MonitoredAppRepository,
+    private val blockPreferences: BlockPreferences,
 ) : ViewModel() {
 
     private val installedApps = MutableStateFlow<List<InstalledApp>>(emptyList())
@@ -46,32 +52,54 @@ class AppsViewModel @Inject constructor(
     private val editingLimitForPackage = MutableStateFlow<String?>(null)
     private val searchQuery = MutableStateFlow("")
 
-    val uiState: StateFlow<AppsUiState> = combine(
+    private data class BaseState(
+        val installed: List<InstalledApp>,
+        val monitoredUsage: List<MonitoredAppUsage>,
+        val isLoadingInstalled: Boolean,
+        val editingPackage: String?,
+        val query: String,
+    )
+
+    private val baseState = combine(
         installedApps,
         monitoredAppRepository.observeMonitoredAppsUsage(),
         loadingInstalled,
         editingLimitForPackage,
         searchQuery,
     ) { installed, monitoredUsage, isLoadingInstalled, editingPackage, query ->
+        BaseState(installed, monitoredUsage, isLoadingInstalled, editingPackage, query)
+    }
+
+    val uiState: StateFlow<AppsUiState> = combine(
+        baseState,
+        blockPreferences.unlockGrants,
+    ) { base, unlockGrants ->
+        val (installed, monitoredUsage, isLoadingInstalled, editingPackage, query) = base
         val usageByPackage = monitoredUsage.associateBy { it.packageName }
+        val now = System.currentTimeMillis()
         val allRows = installed.map { app ->
             val usage = usageByPackage[app.packageName]
+            val grant = unlockGrants[app.packageName]
             AppUsageRow(
                 packageName = app.packageName,
                 label = app.label,
                 icon = app.icon,
                 isMonitored = usage?.isMonitored ?: false,
+                isTracked = usage != null,
                 dailyLimitMinutes = usage?.dailyLimitMinutes,
                 usedMinutesToday = usage?.usedMinutesToday ?: 0,
+                unlockedToday = grant != null && now < grant.unlockUntilMs,
             )
         }
         val monitoredRows = allRows.filter { it.isMonitored }
-        val monitoredPackages = monitoredRows.map { it.packageName }.toSet()
+        val deactivatedRows = allRows.filter { it.isTracked && !it.isMonitored }
+        val trackedPackages = allRows.filter { it.isTracked }.map { it.packageName }.toSet()
         val suggestions = if (query.isBlank()) emptyList() else {
-            allRows.filter { !monitoredPackages.contains(it.packageName) && it.label.contains(query, ignoreCase = true) }
+            allRows.filter { !trackedPackages.contains(it.packageName) && it.label.contains(query, ignoreCase = true) }
         }
         AppsUiState(
             monitoredRows = monitoredRows,
+            deactivatedRows = deactivatedRows,
             searchSuggestions = suggestions,
             isLoading = isLoadingInstalled,
             editingLimitFor = allRows.find { it.packageName == editingPackage },
@@ -110,6 +138,13 @@ class AppsViewModel @Inject constructor(
             if (monitored) {
                 monitoredAppRepository.syncTodayUsage()
             }
+        }
+    }
+
+    /** Remove permanentemente um app desativado da lista de "Desativados". */
+    fun deleteDeactivatedApp(packageName: String) {
+        viewModelScope.launch {
+            monitoredAppRepository.deleteMonitoredApp(packageName)
         }
     }
 

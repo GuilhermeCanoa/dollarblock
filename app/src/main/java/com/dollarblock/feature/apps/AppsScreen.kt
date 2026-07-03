@@ -33,6 +33,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -67,6 +68,7 @@ fun AppsScreen(
     viewModel: AppsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var pendingDelete by remember { mutableStateOf<AppUsageRow?>(null) }
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -149,6 +151,24 @@ fun AppsScreen(
                     )
                 }
             }
+
+            if (uiState.deactivatedRows.isNotEmpty()) {
+                item {
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.apps_deactivated_count, uiState.deactivatedRows.size),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                items(uiState.deactivatedRows, key = { "deactivated_${it.packageName}" }) { row ->
+                    DeactivatedAppListItem(
+                        row = row,
+                        onReactivate = { viewModel.setMonitored(row.packageName, row.label, true) },
+                        onRequestDelete = { pendingDelete = row },
+                    )
+                }
+            }
         }
     }
 
@@ -158,6 +178,30 @@ fun AppsScreen(
             row = editingRow,
             onDismiss = viewModel::dismissLimitEditor,
             onConfirm = { minutes -> viewModel.confirmDailyLimit(editingRow.packageName, minutes) },
+        )
+    }
+
+    pendingDelete?.let { row ->
+        AlertDialog(
+            onDismissRequest = { pendingDelete = null },
+            title = { Text(stringResource(R.string.apps_deactivated_delete_confirm_title, row.label)) },
+            text = { Text(stringResource(R.string.apps_deactivated_delete_confirm_body)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.deleteDeactivatedApp(row.packageName)
+                    pendingDelete = null
+                }) {
+                    Text(
+                        text = stringResource(R.string.apps_deactivated_delete_confirm_action),
+                        color = DollarBlockTheme.colors.penalty,
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingDelete = null }) {
+                    Text(stringResource(R.string.apps_deactivated_delete_confirm_cancel))
+                }
+            },
         )
     }
 }
@@ -271,11 +315,29 @@ private fun AppListItem(
                         .weight(1f)
                         .clickable(onClick = onClickLimit),
                 ) {
-                    Text(
-                        text = row.label,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = row.label,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        if (row.unlockedToday) {
+                            Spacer(Modifier.size(8.dp))
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(DollarBlockTheme.colors.glow.copy(alpha = 0.18f))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.apps_unlocked_today_badge),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = DollarBlockTheme.colors.glow,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                            }
+                        }
+                    }
                     Text(
                         text = if (limit != null) {
                             stringResource(
@@ -338,6 +400,54 @@ private fun AppListItem(
                         color = DollarBlockTheme.colors.penalty,
                     )
                 }
+            }
+        }
+    }
+}
+
+/** Item da lista de "Desativados": permite reativar com um toque ou excluir de vez. */
+@Composable
+private fun DeactivatedAppListItem(
+    row: AppUsageRow,
+    onReactivate: () -> Unit,
+    onRequestDelete: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
+        ),
+        border = BorderStroke(1.dp, DollarBlockTheme.colors.glow.copy(alpha = 0.08f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            AppAvatar(icon = row.icon, letter = row.label.firstOrNull() ?: '?')
+            Spacer(Modifier.size(12.dp))
+            Text(
+                text = row.label,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f),
+            )
+            Switch(
+                checked = false,
+                onCheckedChange = { onReactivate() },
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                    checkedTrackColor = MaterialTheme.colorScheme.primary,
+                ),
+            )
+            IconButton(onClick = onRequestDelete) {
+                Icon(
+                    imageVector = Icons.Filled.Delete,
+                    contentDescription = stringResource(R.string.apps_deactivated_delete),
+                    tint = DollarBlockTheme.colors.penalty,
+                )
             }
         }
     }

@@ -67,6 +67,13 @@
     <string name="apps_overtime_label">+%1$s overtime · bailout #%2$d</string>
     <string name="apps_over_limit_text">+%1$s over limit</string>
     <string name="apps_overtime_bar_label">Overtime · %1$s</string>
+    <string name="apps_unlocked_today_badge">Day pass active</string>
+    <string name="apps_deactivated_count">%1$d deactivated</string>
+    <string name="apps_deactivated_delete">Delete for good</string>
+    <string name="apps_deactivated_delete_confirm_title">Delete %1$s?</string>
+    <string name="apps_deactivated_delete_confirm_body">This erases the app from your records. It can be added back later, but its history won\'t follow.</string>
+    <string name="apps_deactivated_delete_confirm_action">Delete</string>
+    <string name="apps_deactivated_delete_confirm_cancel">Cancel</string>
 
     <!-- Statistics -->
     <string name="statistics_title">Statement</string>

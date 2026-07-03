@@ -28,4 +28,7 @@ interface MonitoredAppDao {
 
     @Query("UPDATE monitored_apps SET dailyLimitMinutes = :dailyLimitMinutes WHERE packageName = :packageName")
     suspend fun setDailyLimit(packageName: String, dailyLimitMinutes: Int?)
+
+    @Query("DELETE FROM monitored_apps WHERE packageName = :packageName")
+    suspend fun delete(packageName: String)
 }
