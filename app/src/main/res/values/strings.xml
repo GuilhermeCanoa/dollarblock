@@ -94,6 +94,10 @@
     <string name="apps_limit_decreased_title">Limit cut</string>
     <string name="apps_limit_decreased_body">From %1$s to %2$s a day. Noted: time is money, and you\'d rather keep yours. The meter respects that.</string>
     <string name="apps_limit_notice_ok">Noted</string>
+    <string name="apps_sabotage_warning_title">Smooth move</string>
+    <string name="apps_sabotage_warning_body">You\'re over the %1$s budget, and instead of paying the fare, you\'re just switching off the meter. Very clever. You\'re only fooling yourself — the clock doesn\'t care either way.</string>
+    <string name="apps_sabotage_warning_confirm">Turn it off anyway</string>
+    <string name="apps_sabotage_warning_cancel">Keep the meter on</string>
 
     <!-- Statistics -->
     <string name="statistics_title">Statement</string>

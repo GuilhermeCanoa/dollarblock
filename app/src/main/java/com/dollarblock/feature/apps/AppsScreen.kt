@@ -322,6 +322,7 @@ private fun AppListItem(
     val limit = row.dailyLimitMinutes
     val overtimeMinutes = if (limit != null) (row.usedMinutesToday - limit).coerceAtLeast(0) else 0
     val overLimit = limit != null && row.usedMinutesToday >= limit
+    var showSabotageWarning by remember(row.packageName) { mutableStateOf(false) }
     val displayedUsed = if (limit != null) minOf(row.usedMinutesToday, limit) else row.usedMinutesToday
 
     Card(
@@ -396,7 +397,13 @@ private fun AppListItem(
                 }
                 Switch(
                     checked = row.isMonitored,
-                    onCheckedChange = onToggle,
+                    onCheckedChange = { checked ->
+                        if (!checked && overLimit) {
+                            showSabotageWarning = true
+                        } else {
+                            onToggle(checked)
+                        }
+                    },
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
                         checkedTrackColor = MaterialTheme.colorScheme.primary,
@@ -430,6 +437,55 @@ private fun AppListItem(
             }
         }
     }
+
+    if (showSabotageWarning) {
+        SabotageWarningDialog(
+            appLabel = row.label,
+            onConfirm = {
+                showSabotageWarning = false
+                onToggle(false)
+            },
+            onDismiss = { showSabotageWarning = false },
+        )
+    }
+}
+
+/**
+ * Aviso exibido ao desativar o monitoramento de um app que já passou do limite hoje —
+ * é a saída fácil de driblar a fatura sem pagar. Tom da casa (MANIFESTO.md · "Como falamos").
+ */
+@Composable
+private fun SabotageWarningDialog(
+    appLabel: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = modifier,
+        title = { Text(stringResource(R.string.apps_sabotage_warning_title)) },
+        text = {
+            Text(
+                text = stringResource(R.string.apps_sabotage_warning_body, appLabel),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(
+                    text = stringResource(R.string.apps_sabotage_warning_confirm),
+                    color = DollarBlockTheme.colors.penalty,
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.apps_sabotage_warning_cancel))
+            }
+        },
+    )
 }
 
 /** Item da lista de "Desativados": permite reativar com um toque ou excluir de vez. */

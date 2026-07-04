@@ -96,6 +96,10 @@
     <string name="apps_limit_decreased_title">Limite reduzido</string>
     <string name="apps_limit_decreased_body">De %1$s para %2$s por dia. Anotado: tempo é dinheiro, e você resolveu ficar com o seu. O taxímetro respeita.</string>
     <string name="apps_limit_notice_ok">Anotado</string>
+    <string name="apps_sabotage_warning_title">Muito esperto</string>
+    <string name="apps_sabotage_warning_body">Passou do limite de %1$s e, em vez de pagar a fatura, resolveu desligar o taxímetro. Muito esperto. Só que quem tá sendo enganado aqui é você mesmo — o relógio não liga pra isso.</string>
+    <string name="apps_sabotage_warning_confirm">Desligar mesmo assim</string>
+    <string name="apps_sabotage_warning_cancel">Deixar o taxímetro ligado</string>
 
     <!-- Statistics -->
     <string name="statistics_title">Extrato</string>
