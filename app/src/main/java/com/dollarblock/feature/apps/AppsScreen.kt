@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -57,6 +56,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dollarblock.R
 import com.dollarblock.core.designsystem.DollarBlockTheme
+import com.dollarblock.core.designsystem.components.DollarBlockDialog
 import com.dollarblock.core.designsystem.components.ScreenHeader
 
 /**
@@ -209,26 +209,17 @@ fun AppsScreen(
     }
 
     pendingDelete?.let { row ->
-        AlertDialog(
+        DollarBlockDialog(
             onDismissRequest = { pendingDelete = null },
-            title = { Text(stringResource(R.string.apps_deactivated_delete_confirm_title, row.label)) },
-            text = { Text(stringResource(R.string.apps_deactivated_delete_confirm_body)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.deleteDeactivatedApp(row.packageName)
-                    pendingDelete = null
-                }) {
-                    Text(
-                        text = stringResource(R.string.apps_deactivated_delete_confirm_action),
-                        color = DollarBlockTheme.colors.penalty,
-                    )
-                }
+            title = stringResource(R.string.apps_deactivated_delete_confirm_title, row.label),
+            body = stringResource(R.string.apps_deactivated_delete_confirm_body),
+            confirmText = stringResource(R.string.apps_deactivated_delete_confirm_action),
+            confirmDestructive = true,
+            onConfirm = {
+                viewModel.deleteDeactivatedApp(row.packageName)
+                pendingDelete = null
             },
-            dismissButton = {
-                TextButton(onClick = { pendingDelete = null }) {
-                    Text(stringResource(R.string.apps_deactivated_delete_confirm_cancel))
-                }
-            },
+            dismissText = stringResource(R.string.apps_deactivated_delete_confirm_cancel),
         )
     }
 }
@@ -461,30 +452,15 @@ private fun SabotageWarningDialog(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    AlertDialog(
+    DollarBlockDialog(
         onDismissRequest = onDismiss,
         modifier = modifier,
-        title = { Text(stringResource(R.string.apps_sabotage_warning_title)) },
-        text = {
-            Text(
-                text = stringResource(R.string.apps_sabotage_warning_body, appLabel),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(
-                    text = stringResource(R.string.apps_sabotage_warning_confirm),
-                    color = DollarBlockTheme.colors.penalty,
-                )
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.apps_sabotage_warning_cancel))
-            }
-        },
+        title = stringResource(R.string.apps_sabotage_warning_title),
+        body = stringResource(R.string.apps_sabotage_warning_body, appLabel),
+        confirmText = stringResource(R.string.apps_sabotage_warning_cancel),
+        onConfirm = onDismiss,
+        dismissText = stringResource(R.string.apps_sabotage_warning_confirm),
+        onDismiss = onConfirm,
     )
 }
 
@@ -616,34 +592,21 @@ private fun LimitChangeNoticeDialog(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    AlertDialog(
+    DollarBlockDialog(
         onDismissRequest = onDismiss,
         modifier = modifier,
-        title = {
-            Text(
-                stringResource(
-                    if (notice.increased) R.string.apps_limit_increased_title
-                    else R.string.apps_limit_decreased_title,
-                ),
-            )
-        },
-        text = {
-            Text(
-                text = stringResource(
-                    if (notice.increased) R.string.apps_limit_increased_body
-                    else R.string.apps_limit_decreased_body,
-                    formatMinutes(notice.previousMinutes),
-                    formatMinutes(notice.newMinutes),
-                ),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.apps_limit_notice_ok))
-            }
-        },
+        title = stringResource(
+            if (notice.increased) R.string.apps_limit_increased_title
+            else R.string.apps_limit_decreased_title,
+        ),
+        body = stringResource(
+            if (notice.increased) R.string.apps_limit_increased_body
+            else R.string.apps_limit_decreased_body,
+            formatMinutes(notice.previousMinutes),
+            formatMinutes(notice.newMinutes),
+        ),
+        confirmText = stringResource(R.string.apps_limit_notice_ok),
+        onConfirm = onDismiss,
     )
 }
 
@@ -665,64 +628,42 @@ private fun DailyLimitDialog(
     val isInvalid = text.isNotBlank() &&
         (minutes == null || minutes <= 0 || minutes > MAX_DAILY_LIMIT_MINUTES)
 
-    AlertDialog(
+    DollarBlockDialog(
         onDismissRequest = onDismiss,
         modifier = modifier,
-        title = {
-            Text(text = stringResource(R.string.apps_limit_dialog_title, row.label))
+        title = stringResource(R.string.apps_limit_dialog_title, row.label),
+        body = stringResource(R.string.apps_limit_dialog_body),
+        confirmText = stringResource(R.string.apps_limit_dialog_save),
+        confirmEnabled = !isInvalid,
+        onConfirm = { onConfirm(minutes) },
+        dismissText = if (row.dailyLimitMinutes != null) {
+            stringResource(R.string.apps_limit_dialog_remove)
+        } else {
+            stringResource(R.string.apps_limit_dialog_cancel)
         },
-        text = {
-            Column {
-                Text(
-                    text = stringResource(R.string.apps_limit_dialog_body),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Spacer(Modifier.height(16.dp))
-                OutlinedTextField(
-                    value = text,
-                    onValueChange = { input -> text = input.filter { it.isDigit() } },
-                    label = { Text(stringResource(R.string.apps_limit_dialog_minutes_label)) },
-                    placeholder = { Text(stringResource(R.string.apps_limit_dialog_no_limit)) },
-                    singleLine = true,
-                    isError = isInvalid,
-                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                if (isInvalid) {
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        text = stringResource(R.string.apps_limit_dialog_invalid),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = DollarBlockTheme.colors.penalty,
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = { onConfirm(minutes) },
-                enabled = !isInvalid,
-            ) {
-                Text(stringResource(R.string.apps_limit_dialog_save))
-            }
-        },
-        dismissButton = {
-            Row {
-                if (row.dailyLimitMinutes != null) {
-                    TextButton(onClick = { onConfirm(null) }) {
-                        Text(
-                            text = stringResource(R.string.apps_limit_dialog_remove),
-                            color = DollarBlockTheme.colors.penalty,
-                        )
-                    }
-                }
-                TextButton(onClick = onDismiss) {
-                    Text(stringResource(R.string.apps_limit_dialog_cancel))
-                }
-            }
-        },
-    )
+        onDismiss = if (row.dailyLimitMinutes != null) {
+            { onConfirm(null) }
+        } else onDismiss,
+    ) {
+        OutlinedTextField(
+            value = text,
+            onValueChange = { input -> text = input.filter { it.isDigit() } },
+            label = { Text(stringResource(R.string.apps_limit_dialog_minutes_label)) },
+            placeholder = { Text(stringResource(R.string.apps_limit_dialog_no_limit)) },
+            singleLine = true,
+            isError = isInvalid,
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        if (isInvalid) {
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = stringResource(R.string.apps_limit_dialog_invalid),
+                style = MaterialTheme.typography.labelSmall,
+                color = DollarBlockTheme.colors.penalty,
+            )
+        }
+    }
 }
 
 @Preview(showBackground = true)

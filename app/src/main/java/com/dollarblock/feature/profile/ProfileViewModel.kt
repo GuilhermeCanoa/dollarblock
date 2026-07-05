@@ -9,9 +9,12 @@ import com.dollarblock.core.locale.LocaleManager
 import com.dollarblock.data.local.prefs.AppLanguage
 import com.dollarblock.data.local.prefs.AppTheme
 import com.dollarblock.data.local.prefs.BlockPreferences
+import com.dollarblock.data.local.prefs.CurrencyPreference
 import com.dollarblock.data.local.prefs.LanguagePreferences
+import com.dollarblock.data.local.prefs.MoneyPreferences
 import com.dollarblock.data.local.prefs.OnboardingPreferences
 import com.dollarblock.data.local.prefs.ThemePreferences
+import com.dollarblock.domain.model.AppCurrency
 import com.dollarblock.data.permissions.AppPermission
 import com.dollarblock.data.permissions.PermissionsProvider
 import com.dollarblock.data.permissions.PermissionsState
@@ -35,6 +38,7 @@ data class ProfileStats(
     val activeLimitsCount: Int = 0,
     val moneyLostToday: Double? = null,
     val blocksToday: Int = 0,
+    val currency: AppCurrency = AppCurrency.BRL,
 )
 
 /**
@@ -53,6 +57,7 @@ class ProfileViewModel @Inject constructor(
     private val blockPreferences: BlockPreferences,
     private val themePreferences: ThemePreferences,
     private val languagePreferences: LanguagePreferences,
+    private val moneyPreferences: MoneyPreferences,
     monitoredAppRepository: MonitoredAppRepository,
     eventDao: EventDao,
 ) : ViewModel() {
@@ -89,19 +94,28 @@ class ProfileViewModel @Inject constructor(
         combine(
             monitoredAppRepository.observeMonitoredAppsUsage(),
             eventDao.countBlocksInRange(startOfDay, endOfDay),
-        ) { monitoredUsage, blocksToday ->
+            moneyPreferences.settings,
+        ) { monitoredUsage, blocksToday, moneySettings ->
             // Mesma lógica pura da Home — limites ativos e tempo economizado de hoje.
-            val metrics = HomeMetrics.compute(monitoredUsage)
+            val metrics = HomeMetrics.compute(monitoredUsage, moneySettings.monthlySalary)
             ProfileStats(
                 activeLimitsCount = metrics.currentlyBlockedCount,
                 moneyLostToday = metrics.moneyLostToday,
                 blocksToday = blocksToday,
+                currency = moneySettings.currency,
             )
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = ProfileStats(),
         )
+    }
+
+    val currencyPreference: StateFlow<CurrencyPreference> = moneyPreferences.currencyPreference
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), CurrencyPreference.SYSTEM)
+
+    fun setCurrencyPreference(preference: CurrencyPreference) {
+        viewModelScope.launch { moneyPreferences.setCurrencyPreference(preference) }
     }
 
     /** Re-lê o estado das permissões. Barato — seguro chamar em cada ON_RESUME. */
@@ -119,6 +133,7 @@ class ProfileViewModel @Inject constructor(
             onboardingPreferences.reset()
             blockPreferences.reset()
             languagePreferences.reset()
+            moneyPreferences.reset()
         }
     }
 

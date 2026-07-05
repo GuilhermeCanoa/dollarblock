@@ -7,6 +7,8 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.graphics.drawable.toBitmap
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -19,7 +21,22 @@ import javax.inject.Singleton
 class InstalledAppsProvider @Inject constructor(
     @ApplicationContext private val context: Context,
 ) {
-    suspend fun getLaunchableApps(): List<InstalledApp> = withContext(Dispatchers.IO) {
+    // Carregar label + ícone de ~100 apps leva segundos; sem cache, a aba Apps refazia
+    // esse trabalho a cada navegação. O cache vive enquanto o processo viver — apps
+    // instalados/removidos nesse meio-tempo só aparecem na próxima morte do processo,
+    // troca aceitável pela abertura instantânea da aba.
+    @Volatile
+    private var cachedApps: List<InstalledApp>? = null
+    private val cacheMutex = Mutex()
+
+    suspend fun getLaunchableApps(): List<InstalledApp> {
+        cachedApps?.let { return it }
+        return cacheMutex.withLock {
+            cachedApps ?: loadLaunchableApps().also { cachedApps = it }
+        }
+    }
+
+    private suspend fun loadLaunchableApps(): List<InstalledApp> = withContext(Dispatchers.IO) {
         val pm = context.packageManager
         val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
         pm.queryIntentActivities(intent, 0)

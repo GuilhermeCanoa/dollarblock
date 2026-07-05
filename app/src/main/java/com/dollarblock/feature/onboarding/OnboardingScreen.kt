@@ -231,13 +231,13 @@ private fun QuickSummaryPageContent(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = "Quick Summary",
+            text = stringResource(R.string.onb_summary_title),
             style = MaterialTheme.typography.headlineMedium,
             color = onSurface,
             textAlign = TextAlign.Center,
         )
         Text(
-            text = "Here's how you used your phone\nin the last 7 days.",
+            text = stringResource(R.string.onb_summary_body),
             style = MaterialTheme.typography.bodyMedium,
             color = onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -264,20 +264,20 @@ private fun QuickSummaryPageContent(
             }
             Spacer(Modifier.height(24.dp))
             Text(
-                text = "Usage Access needed",
+                text = stringResource(R.string.onb_summary_need_usage_title),
                 style = MaterialTheme.typography.titleMedium,
                 color = onSurface,
                 textAlign = TextAlign.Center,
             )
             Text(
-                text = "Allow DollarBlock to read your screen time\nso we can show your top apps here.",
+                text = stringResource(R.string.onb_summary_need_usage_body),
                 style = MaterialTheme.typography.bodyMedium,
                 color = onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(top = 8.dp, bottom = 24.dp),
             )
             PrimaryActionButton(
-                text = "Grant Usage Access",
+                text = stringResource(R.string.onb_summary_grant),
                 onClick = onGrantUsageAccess,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -317,7 +317,7 @@ private fun QuickSummaryPageContent(
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "Total",
+                        text = stringResource(R.string.onb_summary_total),
                         style = MaterialTheme.typography.labelSmall,
                         color = onSurfaceVariant,
                     )

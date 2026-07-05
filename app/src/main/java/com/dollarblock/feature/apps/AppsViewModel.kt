@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.dollarblock.data.apps.InstalledApp
 import com.dollarblock.data.apps.InstalledAppsProvider
 import com.dollarblock.data.local.prefs.BlockPreferences
+import com.dollarblock.data.usage.UsageStatsProvider
 import com.dollarblock.domain.model.MonitoredAppUsage
 import com.dollarblock.domain.repository.MonitoredAppRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -66,9 +67,11 @@ class AppsViewModel @Inject constructor(
     private val installedAppsProvider: InstalledAppsProvider,
     private val monitoredAppRepository: MonitoredAppRepository,
     private val blockPreferences: BlockPreferences,
+    private val usageStatsProvider: UsageStatsProvider,
 ) : ViewModel() {
 
     private val installedApps = MutableStateFlow<List<InstalledApp>>(emptyList())
+    private val weeklyUsage = MutableStateFlow<Map<String, Long>>(emptyMap())
     private val loadingInstalled = MutableStateFlow(true)
     private val editingLimitForPackage = MutableStateFlow<String?>(null)
     private val searchQuery = MutableStateFlow("")
@@ -99,7 +102,8 @@ class AppsViewModel @Inject constructor(
     val uiState: StateFlow<AppsUiState> = combine(
         baseState,
         blockPreferences.unlockGrants,
-    ) { base, unlockGrants ->
+        weeklyUsage,
+    ) { base, unlockGrants, weeklyUsageByPkg ->
         val (installed, monitoredUsage, isLoadingInstalled, editingPackage, query) = base
         val usageByPackage = monitoredUsage.associateBy { it.packageName }
         val now = System.currentTimeMillis()
@@ -123,11 +127,17 @@ class AppsViewModel @Inject constructor(
         val suggestions = if (query.isBlank()) emptyList() else {
             allRows.filter { !trackedPackages.contains(it.packageName) && it.label.contains(query, ignoreCase = true) }
         }
-        // Sugeridos: só os efetivamente instalados (allRows vem do PackageManager) e ainda
-        // não rastreados — se nenhum estiver instalado, a seção simplesmente não aparece.
-        val suggestedRows = SUGGESTED_PACKAGES.mapNotNull { pkg ->
-            allRows.find { it.packageName == pkg && !it.isTracked }
-        }
+        // Sugeridos ("os suspeitos de sempre"): primeiro os top 5 apps mais usados do
+        // próprio usuário na semana (recomendação personalizada), depois os ralos de
+        // tempo clássicos. Sempre apenas apps instalados (allRows vem do PackageManager)
+        // e ainda fora do taxímetro; sem candidatos, a seção simplesmente não aparece.
+        val topUsedPackages = weeklyUsageByPkg.entries
+            .sortedByDescending { it.value }
+            .map { it.key }
+            .take(5)
+        val suggestedRows = (topUsedPackages + SUGGESTED_PACKAGES)
+            .distinct()
+            .mapNotNull { pkg -> allRows.find { it.packageName == pkg && !it.isTracked } }
         AppsUiState(
             monitoredRows = monitoredRows,
             deactivatedRows = deactivatedRows,
@@ -147,6 +157,9 @@ class AppsViewModel @Inject constructor(
         viewModelScope.launch {
             installedApps.value = installedAppsProvider.getLaunchableApps()
             loadingInstalled.value = false
+        }
+        viewModelScope.launch {
+            weeklyUsage.value = usageStatsProvider.getWeeklyUsageByPackage()
         }
         viewModelScope.launch {
             while (isActive) {

@@ -23,7 +23,7 @@
     <string name="home_card_info_ok">Entendi</string>
     <string name="home_card_info_open_apps">Ver apps</string>
     <string name="home_info_damage_title">Prejuízo de hoje</string>
-    <string name="home_info_damage_body">Seus minutos de hoje nos apps monitorados, convertidos em dinheiro: minutos × R$ 0,046 (um salário de R$ 2.000/mês dividido pelos 43.200 minutos do mês). Não é multa — é o preço de mercado do seu scroll.</string>
+    <string name="home_info_damage_body">Seus minutos de hoje nos apps monitorados, convertidos em dinheiro: seu salário líquido mensal (R$ 2.000 por padrão — adicione o seu no card da Home) dividido pelos 43.200 minutos do mês. Não é multa — é o preço de mercado do seu scroll.</string>
     <string name="home_info_spent_title">Dinheiro gasto</string>
     <string name="home_info_spent_body">Tudo o que você pagou de verdade em passes do dia, desde o início. Sai direto dos seus recibos de resgate. Dinheiro real — o contrato era esse.</string>
     <string name="home_info_saved_title">Dinheiro economizado</string>
@@ -162,6 +162,30 @@
     <string name="pref_history">Recibos</string>
     <string name="pref_history_value">Cada bloqueio e cada resgate</string>
     <string name="pref_about">Sobre o DollarBlock</string>
+    <string name="about_body">O DollarBlock coloca um preço no tempo que você disse que não queria mais perder. Você escolhe os apps, você define os limites e, passado o limite, o app tranca — desbloquear hoje custa um passe do dia. Nada aqui é escondido: o app não é vírus, não sequestra o seu celular e nunca obriga pagamento nenhum. Você sempre pode escolher não pagar, e pode desativar a monitoria de qualquer app na aba Apps quando quiser. A gente só cumpre o combinado que você fez com você mesmo.</string>
+    <string name="pref_currency">Moeda</string>
+    <string name="pref_currency_body">Só para exibição — o passe do dia continua cobrado em reais.</string>
+    <string name="pref_currency_system">Automática (pelo país)</string>
+    <string name="pref_currency_brl">Real (R$)</string>
+    <string name="pref_currency_usd">Dólar ($)</string>
+
+    <!-- Salário (calibragem do taxímetro) -->
+    <string name="home_salary_card_title">Adicione o seu salário</string>
+    <string name="home_salary_card_title_set">Salário no taxímetro</string>
+    <string name="home_salary_card_subtitle">O taxímetro está rodando com uma referência de %1$s/mês. O seu provavelmente é outro.</string>
+    <string name="home_salary_card_subtitle_set">Taxímetro calibrado em %1$s/mês · toque para ajustar</string>
+    <string name="home_salary_dialog_title">Quanto vale o seu tempo?</string>
+    <string name="home_salary_dialog_body">Coloque seu salário líquido pra gente simular melhor quanto o seu tempo vale — e, portanto, quanto dinheiro você perde em redes sociais. Você vai ver que este app sai barato perto da educação que você vai ganhar.</string>
+    <string name="home_salary_dialog_provoke">Não sabe seu salário líquido mensal? É hora de ir atrás de saber… vida adulta, amigão.</string>
+    <string name="home_salary_dialog_label">Salário líquido mensal</string>
+    <string name="home_salary_dialog_save">Calibrar o taxímetro</string>
+    <string name="home_salary_dialog_remove">Voltar ao padrão</string>
+
+    <!-- Aviso diário de permissões -->
+    <string name="perm_nag_title">O taxímetro está rodando às cegas</string>
+    <string name="perm_nag_body">Sem estas permissões, o DollarBlock não mede, não bloqueia e não cobra — por enquanto é só enfeite. Regularize a papelada:</string>
+    <string name="perm_nag_fix">Regularizar a papelada</string>
+    <string name="perm_nag_later">Seguir no escuro</string>
 
     <!-- Profile — real stats (E8) -->
     <string name="profile_blocks_today">Bloqueios hoje</string>
@@ -206,6 +230,9 @@
     <string name="block_receipt_caption">passe do dia · vale até a meia-noite</string>
     <string name="block_screen_home">Ficar com meu dinheiro</string>
     <string name="block_screen_open_app">Abrir o DollarBlock</string>
+    <string name="block_understand_link">Entenda o bloqueio de tela</string>
+    <string name="block_understand_title">O combinado não sai caro</string>
+    <string name="block_understand_body">Este bloqueio não é sequestro — é o combinado que você mesmo fez. O DollarBlock não é vírus, não trava o seu celular e nunca te obriga a pagar: pagar é só o atalho pra quem quer o app de volta hoje. Você pode fechar esta tela e seguir o seu dia, e pode, a qualquer momento, desativar a monitoria deste app na aba Apps. A gente só cobra o que foi combinado — nada além.</string>
 
     <!-- Payment / unlock -->
     <string name="pay_with_google">Pagar com Google Pay</string>
@@ -227,7 +254,13 @@
     <string name="onb_penalty_title">O contrato</string>
     <string name="onb_penalty_body">Cláusula 1: você escolhe os apps. Cláusula 2: você define os limites. Cláusula 3: passou do limite, o app tranca — e se precisar mesmo dele, paga R$ 1 por um passe do dia, válido até a meia-noite. O dinheiro sai de verdade. Esse é exatamente o ponto. Sem choro: a ideia foi sua.</string>
     <string name="onb_contract_header">DOLLARBLOCK · ACORDO</string>
-    <string name="onb_contract_footer">Ao assinar, você concorda em ser cobrado pelas suas próprias desculpas.</string>
+    <string name="onb_contract_footer">Ao topar o desafio, você concorda em ser cobrado pelas suas próprias desculpas.</string>
+    <string name="onb_summary_title">Resumo rápido</string>
+    <string name="onb_summary_body">Aqui estão os apps que estão roubando o seu tempo — e, portanto, o seu dinheiro. São eles que você vai querer atacar.</string>
+    <string name="onb_summary_total">Total</string>
+    <string name="onb_summary_need_usage_title">Falta o Acesso de uso</string>
+    <string name="onb_summary_need_usage_body">Libere o Acesso de uso para o DollarBlock ler o seu tempo de tela e mostrar os suspeitos aqui.</string>
+    <string name="onb_summary_grant">Conceder Acesso de uso</string>
     <string name="onb_permissions_title">A burocracia</string>
     <string name="onb_permissions_body">O DollarBlock precisa destas permissões para medir o uso e bloquear apps. Pedimos apenas o estritamente necessário — cada uma abre a tela do sistema correspondente.</string>
     <string name="onb_perm_usage_why">Mede quanto tempo você passa em cada app — a base de tudo.</string>
@@ -241,6 +274,6 @@
     <string name="onb_perm_grant">Conceder</string>
     <string name="onb_continue">Continuar</string>
     <string name="onb_skip">Pular para as permissões</string>
-    <string name="onb_finish">Assinar</string>
+    <string name="onb_finish">Topo o desafio</string>
     <string name="onb_finish_blocked_hint">Conceda o Acesso de uso para começar — sem ele não conseguimos medir nada.</string>
 </resources>

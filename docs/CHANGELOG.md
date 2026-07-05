@@ -12,6 +12,34 @@ Descrição funcional.
 
 ---
 
+## [2026-07-04] — E14: salário configurável, moeda de exibição, diálogos temáticos e polimento de UX
+**Tipo:** feature + bugfix
+**Épico:** E14 (adhoc) — spec: `docs/specs/E14-salario-moeda-dialogos-tematicos.md`
+
+- **Bugfix (aba Apps lenta):** `InstalledAppsProvider` cacheia os apps lançáveis por processo —
+  a lista aparecia com segundos de atraso a cada navegação porque label+ícone de todos os apps
+  eram recarregados do `PackageManager` toda vez.
+- **Home · salário configurável:** card "Adicione o seu salário" abre modal (copy provocativo)
+  que substitui a referência fixa de R$ 2.000/mês no taxímetro (`MoneyPreferences` +
+  `HomeMetrics.perMinuteRate`). Vale para Home, Extrato e Perfil.
+- **Moeda de exibição (Perfil):** Automática (BR/pt → Real, resto → Dólar, igual ao idioma),
+  Real ou Dólar — só formatação dos valores derivados do salário; passe do dia segue em BRL.
+- **Diálogos temáticos:** novo `DollarBlockDialog` no design system; todos os `AlertDialog`
+  genéricos do app migrados. Regra "proibido pop-up genérico" adicionada ao
+  `docs/STYLEGUIDE_ANDROID.md` §4.
+- **Aviso diário de permissões:** sem as permissões o app avisa (1×/dia de navegação) com o
+  modal "O taxímetro está rodando às cegas", listando o que falta e levando ao Perfil.
+- **Tela de bloqueio · transparência:** link "Entenda o bloqueio de tela" no rodapé explica que
+  o app não sequestra o celular, pagar é opcional e a monitoria pode ser desativada na aba Apps.
+  Texto equivalente no "Sobre o DollarBlock" (Perfil). Carimbo BLOQUEADO reduzido e movido para
+  o lado direito do nome do app (nome legível de novo).
+- **Onboarding:** "Assinar" → "Topo o desafio"; página Quick Summary internacionalizada com o
+  copy "Aqui estão os apps que estão roubando o seu tempo…".
+- **Apps · sugeridos personalizados:** "Os suspeitos de sempre" agora abre com o top 5 de uso
+  real da última semana, seguido da lista fixa de redes sociais.
+- **Pagamento simulado:** botão removido da tela de bloqueio; fluxo preservado atrás da flag de
+  dev `BlockingDevFlags.SIMULATED_PAYMENTS` (debug only).
+
 ## [2026-07-03] — E13: cards Dinheiro gasto/economizado, balões nos cards, avisos de limite e apps sugeridos
 **Tipo:** feature
 **Épico:** E13 (adhoc) — spec: `docs/specs/E13-cards-dinheiro-avisos-limite-sugeridos.md`

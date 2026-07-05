@@ -73,6 +73,8 @@ import com.dollarblock.R
 import com.dollarblock.core.designsystem.DollarBlockTheme
 import com.dollarblock.core.designsystem.TabularNumerals
 import com.dollarblock.core.designsystem.components.MetricCard
+import com.dollarblock.domain.model.AppCurrency
+import com.dollarblock.domain.model.MoneyFormat
 import com.dollarblock.core.designsystem.components.ScreenHeader
 import com.dollarblock.core.designsystem.components.SectionHeader
 import kotlin.math.roundToInt
@@ -124,13 +126,17 @@ fun StatisticsScreen(
         }
 
         if (uiState.bestDay != null || uiState.worstDay != null) {
-            StatementCard(bestDay = uiState.bestDay, worstDay = uiState.worstDay)
+            StatementCard(
+                bestDay = uiState.bestDay,
+                worstDay = uiState.worstDay,
+                currency = uiState.moneySettings.currency,
+            )
         }
 
         uiState.moneyLost?.let { lost ->
             MetricCard(
                 title = stringResource(uiState.period.moneyLostRes!!),
-                value = formatReais(lost),
+                value = MoneyFormat.format(lost, uiState.moneySettings.currency),
                 icon = Icons.Filled.AttachMoney,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -312,6 +318,7 @@ private fun DonutChartCard(
 private fun StatementCard(
     bestDay: DayHighlight?,
     worstDay: DayHighlight?,
+    currency: AppCurrency,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -340,6 +347,7 @@ private fun StatementCard(
                     label = stringResource(R.string.stat_best_day),
                     caption = stringResource(R.string.stat_best_day_caption),
                     highlight = bestDay,
+                    currency = currency,
                     accent = DollarBlockTheme.colors.success,
                     modifier = Modifier.weight(1f),
                 )
@@ -347,6 +355,7 @@ private fun StatementCard(
                     label = stringResource(R.string.stat_worst_day),
                     caption = stringResource(R.string.stat_worst_day_caption),
                     highlight = worstDay,
+                    currency = currency,
                     accent = MaterialTheme.colorScheme.error,
                     modifier = Modifier.weight(1f),
                 )
@@ -360,6 +369,7 @@ private fun DayHighlightEntry(
     label: String,
     caption: String,
     highlight: DayHighlight?,
+    currency: AppCurrency,
     accent: Color,
     modifier: Modifier = Modifier,
 ) {
@@ -376,7 +386,7 @@ private fun DayHighlightEntry(
         )
         Spacer(Modifier.height(4.dp))
         Text(
-            text = highlight?.let { formatReais(it.amount) } ?: "—",
+            text = highlight?.let { MoneyFormat.format(it.amount, currency) } ?: "—",
             style = TabularNumerals.copy(fontSize = 20.sp),
             color = accent,
         )
@@ -598,12 +608,6 @@ private val StatPeriod.moneyLostRes: Int?
         StatPeriod.WEEKLY -> R.string.stat_money_lost_week
         StatPeriod.MONTHLY -> R.string.stat_money_lost_month
     }
-
-private fun formatReais(value: Double): String =
-    // Locale.US fixa "1,234.56"; o swap converte para "1.234,56". Sem locale explícito,
-    // um device pt-BR já formata com vírgula e o swap inverte errado.
-    "R$ %,.2f".format(java.util.Locale.US, value)
-        .replace(',', 'X').replace('.', ',').replace('X', '.')
 
 @Preview(showBackground = true)
 @Composable

@@ -2,6 +2,8 @@ package com.dollarblock.feature.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dollarblock.data.local.prefs.MoneyPreferences
+import com.dollarblock.domain.model.MoneySettings
 import com.dollarblock.domain.model.RecentEvent
 import com.dollarblock.domain.repository.EventsRepository
 import com.dollarblock.domain.repository.MoneySummaryRepository
@@ -23,36 +25,52 @@ data class HomeUiState(
     val addictionAttempts: Int = 0,
     val moneySpentTotal: Double? = null,
     val moneySavedTotal: Double? = null,
+    val moneySettings: MoneySettings = MoneySettings(),
 )
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val monitoredAppRepository: MonitoredAppRepository,
+    private val moneyPreferences: MoneyPreferences,
     eventsRepository: EventsRepository,
     moneySummaryRepository: MoneySummaryRepository,
 ) : ViewModel() {
 
-    val uiState: StateFlow<HomeUiState> = combine(
+    private val baseState = combine(
         eventsRepository.recentEvents(RECENT_EVENTS_LIMIT),
         monitoredAppRepository.observeMonitoredAppsUsage(),
         eventsRepository.blockAttemptsToday(),
         moneySummaryRepository.observeTotalSpent(),
         moneySummaryRepository.observeTotalSaved(),
     ) { events, monitoredUsage, blockAttempts, totalSpent, totalSaved ->
-        val metrics = HomeMetrics.compute(monitoredUsage)
         HomeUiState(
             recentEvents = events,
-            moneyLostToday = metrics.moneyLostToday,
-            currentlyBlockedCount = metrics.currentlyBlockedCount,
             addictionAttempts = blockAttempts,
             moneySpentTotal = totalSpent,
             moneySavedTotal = totalSaved,
+        ) to monitoredUsage
+    }
+
+    val uiState: StateFlow<HomeUiState> = combine(
+        baseState,
+        moneyPreferences.settings,
+    ) { (base, monitoredUsage), settings ->
+        val metrics = HomeMetrics.compute(monitoredUsage, settings.monthlySalary)
+        base.copy(
+            moneyLostToday = metrics.moneyLostToday,
+            currentlyBlockedCount = metrics.currentlyBlockedCount,
+            moneySettings = settings,
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = HomeUiState(),
     )
+
+    /** Salva o salário líquido mensal; null volta para a referência padrão. */
+    fun setMonthlySalary(value: Double?) {
+        viewModelScope.launch { moneyPreferences.setMonthlySalary(value) }
+    }
 
     init {
         viewModelScope.launch {

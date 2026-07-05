@@ -34,15 +34,12 @@ import androidx.compose.material.icons.filled.Shield
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,10 +64,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dollarblock.R
 import com.dollarblock.core.designsystem.DollarBlockTheme
 import com.dollarblock.core.designsystem.components.BrandShield
+import com.dollarblock.core.designsystem.components.DollarBlockDialog
 import com.dollarblock.core.designsystem.components.ScreenHeader
 import com.dollarblock.core.designsystem.components.SectionHeader
+import com.dollarblock.data.local.prefs.CurrencyPreference
 import com.dollarblock.data.permissions.AppPermission
 import com.dollarblock.data.permissions.PermissionsState
+import com.dollarblock.domain.model.MoneyFormat
 
 /**
  * Profile — identidade do usuário, estatísticas, permissões e preferências.
@@ -90,6 +90,7 @@ fun ProfileScreen(
     val stats by viewModel.stats.collectAsStateWithLifecycle()
     val theme by viewModel.theme.collectAsStateWithLifecycle()
     val language by viewModel.language.collectAsStateWithLifecycle()
+    val currencyPreference by viewModel.currencyPreference.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     // Re-checa as permissões sempre que a tela volta ao foreground (igual ao onboarding).
@@ -114,10 +115,12 @@ fun ProfileScreen(
         stats = stats,
         theme = theme,
         language = language,
+        currencyPreference = currencyPreference,
         onRequestPermission = ::requestPermission,
         onOpenHistory = onOpenHistory,
         onThemeChange = viewModel::setTheme,
         onLanguageChange = viewModel::setLanguage,
+        onCurrencyChange = viewModel::setCurrencyPreference,
         onResetAllData = viewModel::resetAllData,
         modifier = modifier,
     )
@@ -129,16 +132,20 @@ private fun ProfileScreenContent(
     stats: ProfileStats,
     theme: AppTheme,
     language: AppLanguage,
+    currencyPreference: CurrencyPreference,
     onRequestPermission: (AppPermission) -> Unit,
     onOpenHistory: () -> Unit,
     onThemeChange: (AppTheme) -> Unit,
     onLanguageChange: (AppLanguage) -> Unit,
+    onCurrencyChange: (CurrencyPreference) -> Unit,
     onResetAllData: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var showResetDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
+    var showCurrencyDialog by remember { mutableStateOf(false) }
+    var showAboutDialog by remember { mutableStateOf(false) }
 
     if (showThemeDialog) {
         ThemePickerDialog(
@@ -156,20 +163,28 @@ private fun ProfileScreenContent(
         )
     }
 
+    if (showCurrencyDialog) {
+        CurrencyPickerDialog(
+            current = currencyPreference,
+            onSelect = { onCurrencyChange(it); showCurrencyDialog = false },
+            onDismiss = { showCurrencyDialog = false },
+        )
+    }
+
+    if (showAboutDialog) {
+        AboutDialog(onDismiss = { showAboutDialog = false })
+    }
+
     if (showResetDialog) {
-        AlertDialog(
+        DollarBlockDialog(
             onDismissRequest = { showResetDialog = false },
-            title = { Text("[DEBUG] Resetar todos os dados?") },
-            text = { Text("Apaga o banco de dados, onboarding e preferências. O app voltará à tela inicial na próxima abertura.") },
-            confirmButton = {
-                Button(
-                    onClick = { onResetAllData(); showResetDialog = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                ) { Text("Resetar") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showResetDialog = false }) { Text("Cancelar") }
-            },
+            overline = "DOLLARBLOCK · DEBUG",
+            title = "Resetar todos os dados?",
+            body = "Apaga o banco de dados, onboarding e preferências. O app voltará à tela inicial na próxima abertura.",
+            confirmText = "Resetar",
+            confirmDestructive = true,
+            onConfirm = { onResetAllData(); showResetDialog = false },
+            dismissText = "Cancelar",
         )
     }
 
@@ -193,7 +208,7 @@ private fun ProfileScreenContent(
             )
             StatTile(
                 icon = Icons.Filled.Savings,
-                value = stats.moneyLostToday?.let { formatReais(it) } ?: "—",
+                value = stats.moneyLostToday?.let { MoneyFormat.format(it, stats.currency) } ?: "—",
                 label = stringResource(R.string.home_money_lost_today),
                 modifier = Modifier.weight(1f),
             )
@@ -277,6 +292,12 @@ private fun ProfileScreenContent(
                     onClick = { showLanguageDialog = true },
                 )
                 SettingRow(
+                    icon = Icons.Filled.AttachMoney,
+                    title = stringResource(R.string.pref_currency),
+                    value = stringResource(currencyLabelRes(currencyPreference)),
+                    onClick = { showCurrencyDialog = true },
+                )
+                SettingRow(
                     icon = Icons.Filled.History,
                     title = stringResource(R.string.pref_history),
                     value = stringResource(R.string.pref_history_value),
@@ -286,6 +307,7 @@ private fun ProfileScreenContent(
                     icon = Icons.Filled.Info,
                     title = stringResource(R.string.pref_about),
                     value = null,
+                    onClick = { showAboutDialog = true },
                 )
             }
         }
@@ -519,47 +541,97 @@ private fun SettingRow(
     }
 }
 
+/** Linha de opção com rádio, compartilhada pelos pickers de tema/idioma/moeda. */
+@Composable
+private fun PickerOptionRow(
+    label: String,
+    selected: Boolean,
+    onSelect: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onSelect)
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        androidx.compose.material3.RadioButton(
+            selected = selected,
+            onClick = onSelect,
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+    }
+}
+
 @Composable
 private fun ThemePickerDialog(
     current: AppTheme,
     onSelect: (AppTheme) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AlertDialog(
+    DollarBlockDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.pref_theme)) },
-        text = {
-            Column {
-                listOf(
-                    AppTheme.DARK to R.string.pref_theme_dark,
-                    AppTheme.LIGHT to R.string.pref_theme_light,
-                    AppTheme.SYSTEM to R.string.pref_theme_system,
-                ).forEach { (option, labelRes) ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onSelect(option) }
-                            .padding(vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        androidx.compose.material3.RadioButton(
-                            selected = current == option,
-                            onClick = { onSelect(option) },
-                        )
-                        Text(
-                            text = stringResource(labelRes),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {},
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.apps_limit_dialog_cancel)) }
-        },
+        title = stringResource(R.string.pref_theme),
+        dismissText = stringResource(R.string.apps_limit_dialog_cancel),
+    ) {
+        listOf(
+            AppTheme.DARK to R.string.pref_theme_dark,
+            AppTheme.LIGHT to R.string.pref_theme_light,
+            AppTheme.SYSTEM to R.string.pref_theme_system,
+        ).forEach { (option, labelRes) ->
+            PickerOptionRow(
+                label = stringResource(labelRes),
+                selected = current == option,
+                onSelect = { onSelect(option) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun CurrencyPickerDialog(
+    current: CurrencyPreference,
+    onSelect: (CurrencyPreference) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    DollarBlockDialog(
+        onDismissRequest = onDismiss,
+        title = stringResource(R.string.pref_currency),
+        body = stringResource(R.string.pref_currency_body),
+        dismissText = stringResource(R.string.apps_limit_dialog_cancel),
+    ) {
+        listOf(
+            CurrencyPreference.SYSTEM,
+            CurrencyPreference.BRL,
+            CurrencyPreference.USD,
+        ).forEach { option ->
+            PickerOptionRow(
+                label = stringResource(currencyLabelRes(option)),
+                selected = current == option,
+                onSelect = { onSelect(option) },
+            )
+        }
+    }
+}
+
+/**
+ * Sobre o DollarBlock — o contrato explicado sem letra miúda: o app não sequestra o
+ * celular, não é vírus e pode ser desativado quando o usuário quiser.
+ */
+@Composable
+private fun AboutDialog(onDismiss: () -> Unit) {
+    DollarBlockDialog(
+        onDismissRequest = onDismiss,
+        overline = "DOLLARBLOCK · " + stringResource(R.string.app_slogan).uppercase(),
+        title = stringResource(R.string.pref_about),
+        body = stringResource(R.string.about_body),
+        confirmText = stringResource(R.string.home_card_info_ok),
+        onConfirm = onDismiss,
     )
 }
 
@@ -575,49 +647,30 @@ private fun LanguagePickerDialog(
     onSelect: (AppLanguage) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AlertDialog(
+    DollarBlockDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.pref_language)) },
-        text = {
-            Column {
-                listOf(
-                    AppLanguage.SYSTEM,
-                    AppLanguage.ENGLISH,
-                    AppLanguage.PORTUGUESE,
-                ).forEach { option ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onSelect(option) }
-                            .padding(vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        androidx.compose.material3.RadioButton(
-                            selected = current == option,
-                            onClick = { onSelect(option) },
-                        )
-                        Text(
-                            text = stringResource(languageLabelRes(option)),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {},
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.apps_limit_dialog_cancel)) }
-        },
-    )
+        title = stringResource(R.string.pref_language),
+        dismissText = stringResource(R.string.apps_limit_dialog_cancel),
+    ) {
+        listOf(
+            AppLanguage.SYSTEM,
+            AppLanguage.ENGLISH,
+            AppLanguage.PORTUGUESE,
+        ).forEach { option ->
+            PickerOptionRow(
+                label = stringResource(languageLabelRes(option)),
+                selected = current == option,
+                onSelect = { onSelect(option) },
+            )
+        }
+    }
 }
 
-private fun formatReais(value: Double): String =
-    // Locale.US fixa "1,234.56"; o swap converte para "1.234,56". Sem locale explícito,
-    // um device pt-BR já formata com vírgula e o swap inverte errado.
-    "R$ %,.2f".format(java.util.Locale.US, value)
-        .replace(',', 'X').replace('.', ',').replace('X', '.')
+private fun currencyLabelRes(preference: CurrencyPreference): Int = when (preference) {
+    CurrencyPreference.SYSTEM -> R.string.pref_currency_system
+    CurrencyPreference.BRL -> R.string.pref_currency_brl
+    CurrencyPreference.USD -> R.string.pref_currency_usd
+}
 
 @Preview(showBackground = true)
 @Composable
@@ -633,10 +686,12 @@ private fun ProfileScreenPreview() {
             stats = ProfileStats(activeLimitsCount = 3, moneyLostToday = 8.33, blocksToday = 4),
             theme = AppTheme.DARK,
             language = AppLanguage.SYSTEM,
+            currencyPreference = CurrencyPreference.SYSTEM,
             onRequestPermission = {},
             onOpenHistory = {},
             onThemeChange = {},
             onLanguageChange = {},
+            onCurrencyChange = {},
             onResetAllData = {},
         )
     }

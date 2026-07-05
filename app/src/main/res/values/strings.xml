@@ -23,7 +23,7 @@
     <string name="home_card_info_ok">Got it</string>
     <string name="home_card_info_open_apps">See apps</string>
     <string name="home_info_damage_title">Today\'s Damage</string>
-    <string name="home_info_damage_body">Your minutes in monitored apps today, converted to money: minutes × R$ 0.046 (a R$ 2,000 monthly salary spread over 43,200 minutes). Not a fine — the market price of your scroll.</string>
+    <string name="home_info_damage_body">Your minutes in monitored apps today, converted to money: your net monthly salary (R$ 2,000 by default — add yours on the Home card) spread over the 43,200 minutes of the month. Not a fine — the market price of your scroll.</string>
     <string name="home_info_spent_title">Money Spent</string>
     <string name="home_info_spent_body">Everything you actually paid for day passes, since day one. Pulled straight from your unlock receipts. Real money — that was the deal.</string>
     <string name="home_info_saved_title">Money Saved</string>
@@ -162,6 +162,30 @@
     <string name="pref_history">Receipts</string>
     <string name="pref_history_value">Every block and every bailout</string>
     <string name="pref_about">About DollarBlock</string>
+    <string name="about_body">DollarBlock puts a price on the time you said you didn\'t want to lose. You pick the apps, you set the limits, and past the limit the app locks — unlocking it today costs a day pass. Nothing here is hidden: the app is not a virus, it doesn\'t hijack your phone, and it never forces a payment. You can always choose not to pay, and you can turn off monitoring for any app in the Apps tab whenever you want. We just enforce the deal you made with yourself.</string>
+    <string name="pref_currency">Currency</string>
+    <string name="pref_currency_body">Display only — the day pass is still charged in BRL.</string>
+    <string name="pref_currency_system">Automatic (by country)</string>
+    <string name="pref_currency_brl">Real (R$)</string>
+    <string name="pref_currency_usd">Dollar ($)</string>
+
+    <!-- Salary (meter calibration) -->
+    <string name="home_salary_card_title">Add your salary</string>
+    <string name="home_salary_card_title_set">Salary on the meter</string>
+    <string name="home_salary_card_subtitle">The meter is running on a %1$s/month reference. Yours is probably different.</string>
+    <string name="home_salary_card_subtitle_set">Meter calibrated at %1$s/month · tap to adjust</string>
+    <string name="home_salary_dialog_title">What is your time worth?</string>
+    <string name="home_salary_dialog_body">Enter your net monthly salary so we can better simulate what your time is worth — and, therefore, how much money you lose on social media. You\'ll see this app is a bargain next to the education you\'re about to get.</string>
+    <string name="home_salary_dialog_provoke">Don\'t know your net monthly salary? Time to go find out. Adulthood, buddy.</string>
+    <string name="home_salary_dialog_label">Net monthly salary</string>
+    <string name="home_salary_dialog_save">Calibrate the meter</string>
+    <string name="home_salary_dialog_remove">Back to the default</string>
+
+    <!-- Daily permission warning -->
+    <string name="perm_nag_title">The meter is running blind</string>
+    <string name="perm_nag_body">Without these permissions, DollarBlock can\'t measure, can\'t block and can\'t bill — right now it\'s decoration. Settle the paperwork:</string>
+    <string name="perm_nag_fix">Fix the paperwork</string>
+    <string name="perm_nag_later">Keep flying blind</string>
 
     <!-- Profile — real stats (E8) -->
     <string name="profile_blocks_today">Blocks today</string>
@@ -206,6 +230,9 @@
     <string name="block_receipt_caption">day pass · valid until midnight</string>
     <string name="block_screen_home">Keep my money</string>
     <string name="block_screen_open_app">Open DollarBlock</string>
+    <string name="block_understand_link">Understand the screen block</string>
+    <string name="block_understand_title">A deal is a deal</string>
+    <string name="block_understand_body">This block is not a hijack — it\'s the agreement you made. DollarBlock is not a virus, doesn\'t lock your phone and never forces you to pay: paying is just the shortcut for getting this app back today. You can close this screen and get on with your day, and you can disable monitoring for this app at any time in the Apps tab. We only charge what was agreed — nothing else.</string>
 
     <!-- Payment / unlock -->
     <string name="pay_with_google">Pay with Google Pay</string>
@@ -227,7 +254,13 @@
     <string name="onb_penalty_title">The deal</string>
     <string name="onb_penalty_body">Clause 1: you pick the apps. Clause 2: you set the limits. Clause 3: past the limit, the app locks — and if you really need it back, you pay R$ 1 for a day pass, valid until midnight. The money is real. That\'s the whole point. No sob stories: the idea was yours.</string>
     <string name="onb_contract_header">DOLLARBLOCK · AGREEMENT</string>
-    <string name="onb_contract_footer">By signing, you agree to be billed for your own excuses.</string>
+    <string name="onb_contract_footer">By taking the challenge, you agree to be billed for your own excuses.</string>
+    <string name="onb_summary_title">Quick summary</string>
+    <string name="onb_summary_body">These are the apps stealing your time — and, therefore, your money. They\'re the ones you\'ll want to go after.</string>
+    <string name="onb_summary_total">Total</string>
+    <string name="onb_summary_need_usage_title">Usage Access needed</string>
+    <string name="onb_summary_need_usage_body">Allow DollarBlock to read your screen time so we can show your top apps here.</string>
+    <string name="onb_summary_grant">Grant Usage Access</string>
     <string name="onb_permissions_title">The paperwork</string>
     <string name="onb_permissions_body">DollarBlock needs these permissions to measure usage and block apps. We only request what is strictly necessary — each one opens the corresponding system screen.</string>
     <string name="onb_perm_usage_why">Measures how much time you spend in each app — the foundation of everything.</string>
@@ -241,6 +274,6 @@
     <string name="onb_perm_grant">Grant</string>
     <string name="onb_continue">Continue</string>
     <string name="onb_skip">Skip to permissions</string>
-    <string name="onb_finish">Sign</string>
+    <string name="onb_finish">Challenge accepted</string>
     <string name="onb_finish_blocked_hint">Grant Usage Access to get started — without it we can\'t measure anything.</string>
 </resources>

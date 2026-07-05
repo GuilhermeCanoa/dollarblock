@@ -38,9 +38,12 @@ data class BestWorstDay(val best: DaySpend?, val worst: DaySpend?)
 
 object HomeMetrics {
 
-    private const val MONTHLY_SALARY = 2000.0
+    const val DEFAULT_MONTHLY_SALARY = 2000.0
     private const val MINUTES_PER_MONTH = 43200.0
-    const val REAIS_PER_MINUTE = MONTHLY_SALARY / MINUTES_PER_MONTH
+    const val REAIS_PER_MINUTE = DEFAULT_MONTHLY_SALARY / MINUTES_PER_MONTH
+
+    /** Preço do minuto de scroll dado o salário líquido mensal configurado. */
+    fun perMinuteRate(monthlySalary: Double): Double = monthlySalary / MINUTES_PER_MONTH
 
     /** Preços de referência das equivalências (BRL). */
     const val COFFEE_PRICE = 6.0
@@ -82,13 +85,16 @@ object HomeMetrics {
         return after > before
     }
 
-    fun compute(monitoredUsage: List<MonitoredAppUsage>): DailyMetrics {
+    fun compute(
+        monitoredUsage: List<MonitoredAppUsage>,
+        monthlySalary: Double = DEFAULT_MONTHLY_SALARY,
+    ): DailyMetrics {
         val monitored = monitoredUsage.filter { it.isMonitored }
 
         val moneyLostToday = if (monitored.isEmpty()) {
             null
         } else {
-            monitored.sumOf { it.usedMinutesToday } * REAIS_PER_MINUTE
+            monitored.sumOf { it.usedMinutesToday } * perMinuteRate(monthlySalary)
         }
 
         val withLimit = monitored.filter { it.dailyLimitMinutes != null }

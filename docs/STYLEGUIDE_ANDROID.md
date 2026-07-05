@@ -70,6 +70,10 @@ Seguindo as diretrizes do ecossistema Android moderno, os componentes devem tran
 * **Animações e Transições (Micro-interactions):**
 * O ato de ativar o bloqueio de um app deve parecer pesado e seguro: uma transição suave onde o escudo se expande na tela com um feedback tátil (vibração curta e firme).
 
+* **Diálogos e Pop-ups (regra da casa):**
+* **Proibido** o `AlertDialog`/pop-up genérico do Android em qualquer tela. Todo aviso, confirmação ou formulário em janela usa o componente `DollarBlockDialog` (`core/designsystem/components/DollarBlockDialog.kt`): superfície de vidro com stroke Mint Glow, overline mono estilo recibo ("DOLLARBLOCK · …") e divisor tracejado — a mesma linguagem da fatura da tela de bloqueio.
+* Ação primária = `PrimaryActionButton`; ação destrutiva = `PenaltyButton` (via `confirmDestructive`); ação secundária = texto discreto.
+
 
 
 ---

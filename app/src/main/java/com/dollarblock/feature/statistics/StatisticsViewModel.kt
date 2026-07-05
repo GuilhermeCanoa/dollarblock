@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.dollarblock.data.apps.InstalledAppsProvider
 import com.dollarblock.data.local.db.DailyUsageDao
 import com.dollarblock.data.local.db.MonitoredAppDao
+import com.dollarblock.data.local.prefs.MoneyPreferences
+import com.dollarblock.domain.model.MoneySettings
 import com.dollarblock.feature.home.HomeMetrics
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,6 +48,8 @@ data class StatisticsUiState(
     /** Melhor/pior dia do período — null quando DAILY (não há o que comparar). */
     val bestDay: DayHighlight? = null,
     val worstDay: DayHighlight? = null,
+    /** Salário/moeda vigentes — a moeda decide como formatar os valores na tela. */
+    val moneySettings: MoneySettings = MoneySettings(),
 )
 
 @HiltViewModel
@@ -53,11 +57,8 @@ class StatisticsViewModel @Inject constructor(
     private val dailyUsageDao: DailyUsageDao,
     private val monitoredAppDao: MonitoredAppDao,
     private val installedAppsProvider: InstalledAppsProvider,
+    private val moneyPreferences: MoneyPreferences,
 ) : ViewModel() {
-
-    private companion object {
-        val REAIS_PER_MINUTE = HomeMetrics.REAIS_PER_MINUTE
-    }
 
     val period = MutableStateFlow(StatPeriod.WEEKLY)
     private val _uiState = MutableStateFlow(StatisticsUiState())
@@ -97,7 +98,9 @@ class StatisticsViewModel @Inject constructor(
             dailyUsageDao.observeRange(startDay, endDay),
             monitoredAppDao.observeMonitored(),
             iconCache,
-        ) { usageRows, monitoredApps, icons ->
+            moneyPreferences.settings,
+        ) { usageRows, monitoredApps, icons, moneySettings ->
+            val perMinuteRate = HomeMetrics.perMinuteRate(moneySettings.monthlySalary)
 
             val appNames = monitoredApps.associate { it.packageName to it.appName }
 
@@ -114,7 +117,7 @@ class StatisticsViewModel @Inject constructor(
 
             // ── Money lost (weekly/monthly only — daily is shown on Home) ───
             val moneyLost = if (p == StatPeriod.DAILY) null
-            else (totalMillis / 60_000.0) * REAIS_PER_MINUTE
+            else (totalMillis / 60_000.0) * perMinuteRate
 
             // ── Melhor/pior dia (extrato) — weekly/monthly only ──────────────
             var bestDay: DayHighlight? = null
@@ -123,7 +126,7 @@ class StatisticsViewModel @Inject constructor(
                 val spendByDay = usageRows
                     .groupBy { it.epochDay }
                     .mapValues { (_, rows) ->
-                        rows.sumOf { it.usedMillis } / 60_000.0 * REAIS_PER_MINUTE
+                        rows.sumOf { it.usedMillis } / 60_000.0 * perMinuteRate
                     }
                 val daySpends = (startDay..endDay).map { day ->
                     com.dollarblock.feature.home.DaySpend(day, spendByDay[day] ?: 0.0)
@@ -183,6 +186,7 @@ class StatisticsViewModel @Inject constructor(
                 moneyLost = moneyLost,
                 bestDay = bestDay,
                 worstDay = worstDay,
+                moneySettings = moneySettings,
             )
         }.onEach { _uiState.value = it }.launchIn(viewModelScope)
     }

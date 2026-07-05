@@ -22,11 +22,13 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -39,7 +41,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.Modifier
@@ -56,6 +60,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dollarblock.BuildConfig
@@ -65,6 +70,7 @@ import com.dollarblock.core.designsystem.BlockingRed
 import com.dollarblock.core.designsystem.DollarBlockTheme
 import com.dollarblock.core.designsystem.DollarGreenDark
 import com.dollarblock.core.designsystem.NeutralWhite
+import com.dollarblock.core.designsystem.components.DollarBlockDialog
 import kotlinx.coroutines.delay
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -165,7 +171,9 @@ class BlockActivity : AppCompatActivity() {
                     price = price,
                     googlePayReady = ready,
                     paymentInProgress = processing,
-                    showDebugSimulate = BuildConfig.DEBUG,
+                    // Feature flag de dev: o botão de pagamento simulado só existe quando
+                    // BlockingDevFlags.SIMULATED_PAYMENTS está ligado (e nunca em release).
+                    showDebugSimulate = BuildConfig.DEBUG && BlockingDevFlags.SIMULATED_PAYMENTS,
                     onPayWithGooglePay = ::startPayment,
                     onSimulatePayment = { onPaymentSuccess(PaymentMethod.SIMULATED) },
                     onGoHome = ::goHome,
@@ -425,6 +433,31 @@ private fun BlockScreen(
                 }
             }
         }
+
+        // Rodapé de transparência: o bloqueio é o contrato, não um sequestro. O link
+        // abre a explicação de que pagar é opcional e a monitoria pode ser desativada.
+        var showEthicsDialog by remember { mutableStateOf(false) }
+        TextButton(
+            onClick = { showEthicsDialog = true },
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 18.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.block_understand_link),
+                style = MaterialTheme.typography.labelMedium,
+                color = NeutralWhite.copy(alpha = 0.6f),
+            )
+        }
+        if (showEthicsDialog) {
+            DollarBlockDialog(
+                onDismissRequest = { showEthicsDialog = false },
+                title = stringResource(R.string.block_understand_title),
+                body = stringResource(R.string.block_understand_body),
+                confirmText = stringResource(R.string.home_card_info_ok),
+                onConfirm = { showEthicsDialog = false },
+            )
+        }
     }
 }
 
@@ -473,9 +506,11 @@ private fun InvoiceReceipt(
                 color = ink.copy(alpha = 0.55f),
             )
             Spacer(Modifier.height(10.dp))
-            Box(
+            // Nome do app sempre legível; o carimbo é pequeno e fica ao lado direito.
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center,
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
             ) {
                 Text(
                     text = appLabel,
@@ -484,7 +519,11 @@ private fun InvoiceReceipt(
                     fontSize = 22.sp,
                     color = ink,
                     textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
                 )
+                Spacer(Modifier.width(10.dp))
                 StampText(stampScale = stampScale, stampAlpha = stampAlpha)
             }
             Spacer(Modifier.height(14.dp))
@@ -528,18 +567,19 @@ private fun StampText(
         text = stringResource(R.string.block_stamp),
         fontFamily = FontFamily.Monospace,
         fontWeight = FontWeight.Black,
-        fontSize = 30.sp,
-        letterSpacing = 3.sp,
+        fontSize = 12.sp,
+        letterSpacing = 1.5.sp,
         color = BlockingRed,
+        maxLines = 1,
         modifier = Modifier
             .graphicsLayer {
-                rotationZ = -14f
+                rotationZ = -10f
                 scaleX = stampScale.value
                 scaleY = stampScale.value
                 alpha = stampAlpha.value
             }
-            .border(3.dp, BlockingRed, RoundedCornerShape(6.dp))
-            .padding(horizontal = 14.dp, vertical = 6.dp),
+            .border(2.dp, BlockingRed, RoundedCornerShape(4.dp))
+            .padding(horizontal = 6.dp, vertical = 3.dp),
     )
 }
 

@@ -26,13 +26,12 @@ import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Paid
 import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -61,12 +60,19 @@ import com.dollarblock.core.designsystem.BlockingRed
 import com.dollarblock.core.designsystem.DollarBlockTheme
 import com.dollarblock.core.designsystem.NeutralWhite
 import com.dollarblock.core.designsystem.TabularNumerals
+import com.dollarblock.core.designsystem.components.DollarBlockDialog
 import com.dollarblock.core.designsystem.components.MetricCard
 import com.dollarblock.core.designsystem.components.glow
 import com.dollarblock.core.designsystem.components.ScreenHeader
 import com.dollarblock.core.designsystem.components.SectionHeader
+import com.dollarblock.domain.model.AppCurrency
+import com.dollarblock.domain.model.MoneyFormat
+import com.dollarblock.domain.model.MoneySettings
 import com.dollarblock.domain.model.PaymentMethod
 import com.dollarblock.domain.model.RecentEvent
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.input.KeyboardType
 import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.ZoneId
@@ -80,6 +86,7 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var infoCard by remember { mutableStateOf<HomeCardInfo?>(null) }
+    var showSalaryDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -95,7 +102,13 @@ fun HomeScreen(
 
         MoneyLostHero(
             moneyLost = uiState.moneyLostToday,
+            currency = uiState.moneySettings.currency,
             onClick = { infoCard = HomeCardInfo.DAMAGE },
+        )
+
+        SalaryCard(
+            settings = uiState.moneySettings,
+            onClick = { showSalaryDialog = true },
         )
 
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -152,6 +165,128 @@ fun HomeScreen(
             } else null,
         )
     }
+
+    if (showSalaryDialog) {
+        SalaryDialog(
+            settings = uiState.moneySettings,
+            onDismiss = { showSalaryDialog = false },
+            onConfirm = { salary ->
+                viewModel.setMonthlySalary(salary)
+                showSalaryDialog = false
+            },
+        )
+    }
+}
+
+/**
+ * Card "adicione seu salário": calibra o taxímetro com o valor real do usuário no lugar
+ * da referência de R$ 2.000/mês. Depois de configurado, vira um resumo tocável.
+ */
+@Composable
+private fun SalaryCard(
+    settings: MoneySettings,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+        ),
+        border = BorderStroke(1.dp, DollarBlockTheme.colors.glow.copy(alpha = 0.15f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Paid,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+            )
+            Spacer(Modifier.size(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(
+                        if (settings.salaryConfigured) R.string.home_salary_card_title_set
+                        else R.string.home_salary_card_title,
+                    ),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = if (settings.salaryConfigured) {
+                        stringResource(
+                            R.string.home_salary_card_subtitle_set,
+                            MoneyFormat.format(settings.monthlySalary, settings.currency),
+                        )
+                    } else {
+                        stringResource(
+                            R.string.home_salary_card_subtitle,
+                            MoneyFormat.format(MoneySettings.DEFAULT_MONTHLY_SALARY, settings.currency),
+                        )
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+/** Modal de salário — copy no tom da casa: simulação melhor + provocação de vida adulta. */
+@Composable
+private fun SalaryDialog(
+    settings: MoneySettings,
+    onDismiss: () -> Unit,
+    onConfirm: (Double?) -> Unit,
+) {
+    var text by remember {
+        mutableStateOf(
+            if (settings.salaryConfigured) {
+                if (settings.monthlySalary % 1.0 == 0.0) settings.monthlySalary.toLong().toString()
+                else settings.monthlySalary.toString()
+            } else "",
+        )
+    }
+    val parsed = text.trim().replace(',', '.').toDoubleOrNull()
+    val isInvalid = text.isNotBlank() && (parsed == null || parsed <= 0.0)
+
+    DollarBlockDialog(
+        onDismissRequest = onDismiss,
+        title = stringResource(R.string.home_salary_dialog_title),
+        body = stringResource(R.string.home_salary_dialog_body),
+        confirmText = stringResource(R.string.home_salary_dialog_save),
+        confirmEnabled = !isInvalid && parsed != null,
+        onConfirm = { onConfirm(parsed) },
+        dismissText = if (settings.salaryConfigured) {
+            stringResource(R.string.home_salary_dialog_remove)
+        } else {
+            stringResource(R.string.apps_limit_dialog_cancel)
+        },
+        onDismiss = if (settings.salaryConfigured) {
+            { onConfirm(null) }
+        } else onDismiss,
+    ) {
+        Text(
+            text = stringResource(R.string.home_salary_dialog_provoke),
+            style = MaterialTheme.typography.bodySmall.copy(fontStyle = FontStyle.Italic),
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+        )
+        Spacer(Modifier.size(12.dp))
+        OutlinedTextField(
+            value = text,
+            onValueChange = { input -> text = input.filter { it.isDigit() || it == '.' || it == ',' } },
+            label = { Text(stringResource(R.string.home_salary_dialog_label)) },
+            singleLine = true,
+            isError = isInvalid,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
 }
 
 /** Cards da Home que têm um balão informativo (o que significa + como a conta é feita). */
@@ -170,34 +305,21 @@ private fun HomeCardInfoDialog(
         HomeCardInfo.BLOCKED_NOW -> R.string.home_info_blocked_title to R.string.home_info_blocked_body
         HomeCardInfo.ADDICTION -> R.string.home_info_addiction_title to R.string.home_info_addiction_body
     }
-    AlertDialog(
+    DollarBlockDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(titleRes)) },
-        text = {
-            Text(
-                text = stringResource(bodyRes),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.home_card_info_ok))
-            }
-        },
-        dismissButton = onOpenApps?.let { open ->
-            {
-                TextButton(onClick = open) {
-                    Text(stringResource(R.string.home_card_info_open_apps))
-                }
-            }
-        },
+        title = stringResource(titleRes),
+        body = stringResource(bodyRes),
+        confirmText = stringResource(R.string.home_card_info_ok),
+        onConfirm = onDismiss,
+        dismissText = onOpenApps?.let { stringResource(R.string.home_card_info_open_apps) },
+        onDismiss = onOpenApps,
     )
 }
 
 @Composable
 private fun MoneyLostHero(
     moneyLost: Double?,
+    currency: AppCurrency,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
 ) {
@@ -257,7 +379,7 @@ private fun MoneyLostHero(
                 color = NeutralWhite.copy(alpha = 0.85f),
             )
             Text(
-                text = if (moneyLost != null) formatReais(animatedValue.value.toDouble()) else "—",
+                text = if (moneyLost != null) MoneyFormat.format(animatedValue.value.toDouble(), currency) else "—",
                 style = TabularNumerals,
                 fontSize = 56.sp,
                 fontWeight = FontWeight.ExtraBold,
