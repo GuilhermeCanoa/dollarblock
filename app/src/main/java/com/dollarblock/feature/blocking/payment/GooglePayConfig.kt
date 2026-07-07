@@ -24,7 +24,7 @@ object GooglePayConfig {
      * sempre resolvido no backend a partir de `product`+`currency` — o cliente nunca
      * define o valor cobrado, apenas o exibe.
      */
-    const val DEFAULT_PRICE = "1.00"
+    const val DEFAULT_PRICE = "5.00"
     const val CURRENCY_CODE = "BRL"
 
     private const val ENVIRONMENT = WalletConstants.ENVIRONMENT_TEST

@@ -34,7 +34,6 @@ import androidx.compose.material.icons.filled.Shield
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
-import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -63,7 +62,6 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dollarblock.R
 import com.dollarblock.core.designsystem.DollarBlockTheme
-import com.dollarblock.core.designsystem.components.BrandShield
 import com.dollarblock.core.designsystem.components.DollarBlockDialog
 import com.dollarblock.core.designsystem.components.ScreenHeader
 import com.dollarblock.core.designsystem.components.SectionHeader
@@ -144,7 +142,6 @@ private fun ProfileScreenContent(
     var showResetDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
-    var showCurrencyDialog by remember { mutableStateOf(false) }
     var showAboutDialog by remember { mutableStateOf(false) }
 
     if (showThemeDialog) {
@@ -160,14 +157,6 @@ private fun ProfileScreenContent(
             current = language,
             onSelect = { onLanguageChange(it); showLanguageDialog = false },
             onDismiss = { showLanguageDialog = false },
-        )
-    }
-
-    if (showCurrencyDialog) {
-        CurrencyPickerDialog(
-            current = currencyPreference,
-            onSelect = { onCurrencyChange(it); showCurrencyDialog = false },
-            onDismiss = { showCurrencyDialog = false },
         )
     }
 
@@ -196,8 +185,6 @@ private fun ProfileScreenContent(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         ScreenHeader(title = stringResource(R.string.profile_title))
-
-        UserHeaderCard()
 
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             StatTile(
@@ -292,12 +279,6 @@ private fun ProfileScreenContent(
                     onClick = { showLanguageDialog = true },
                 )
                 SettingRow(
-                    icon = Icons.Filled.AttachMoney,
-                    title = stringResource(R.string.pref_currency),
-                    value = stringResource(currencyLabelRes(currencyPreference)),
-                    onClick = { showCurrencyDialog = true },
-                )
-                SettingRow(
                     icon = Icons.Filled.History,
                     title = stringResource(R.string.pref_history),
                     value = stringResource(R.string.pref_history_value),
@@ -346,39 +327,6 @@ private fun ProfileScreenContent(
                         )
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun UserHeaderCard(modifier: Modifier = Modifier) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
-        ),
-        border = BorderStroke(1.dp, DollarBlockTheme.colors.glow.copy(alpha = 0.15f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            BrandShield(size = 56.dp, cornerRadius = 16.dp)
-            Spacer(Modifier.size(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.profile_user_name),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Text(
-                    text = stringResource(R.string.profile_user_tagline),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                )
             }
         }
     }
@@ -593,32 +541,6 @@ private fun ThemePickerDialog(
     }
 }
 
-@Composable
-private fun CurrencyPickerDialog(
-    current: CurrencyPreference,
-    onSelect: (CurrencyPreference) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    DollarBlockDialog(
-        onDismissRequest = onDismiss,
-        title = stringResource(R.string.pref_currency),
-        body = stringResource(R.string.pref_currency_body),
-        dismissText = stringResource(R.string.apps_limit_dialog_cancel),
-    ) {
-        listOf(
-            CurrencyPreference.SYSTEM,
-            CurrencyPreference.BRL,
-            CurrencyPreference.USD,
-        ).forEach { option ->
-            PickerOptionRow(
-                label = stringResource(currencyLabelRes(option)),
-                selected = current == option,
-                onSelect = { onSelect(option) },
-            )
-        }
-    }
-}
-
 /**
  * Sobre o DollarBlock — o contrato explicado sem letra miúda: o app não sequestra o
  * celular, não é vírus e pode ser desativado quando o usuário quiser.
@@ -664,12 +586,6 @@ private fun LanguagePickerDialog(
             )
         }
     }
-}
-
-private fun currencyLabelRes(preference: CurrencyPreference): Int = when (preference) {
-    CurrencyPreference.SYSTEM -> R.string.pref_currency_system
-    CurrencyPreference.BRL -> R.string.pref_currency_brl
-    CurrencyPreference.USD -> R.string.pref_currency_usd
 }
 
 @Preview(showBackground = true)

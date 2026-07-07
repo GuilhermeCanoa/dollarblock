@@ -20,20 +20,12 @@ class MoneySettingsTest {
     }
 
     @Test
-    fun `moeda automatica resolve BRL para Brasil e pt`() {
+    fun `lancamento BRL-only - moeda efetiva e sempre Real`() {
+        // CURRENCY_SELECTION_ENABLED = false: qualquer preferência/locale resolve BRL.
         assertEquals(AppCurrency.BRL, resolveCurrency(CurrencyPreference.SYSTEM, Locale("pt", "BR")))
-        assertEquals(AppCurrency.BRL, resolveCurrency(CurrencyPreference.SYSTEM, Locale("pt", "PT")))
-    }
-
-    @Test
-    fun `moeda automatica resolve USD para outros paises`() {
-        assertEquals(AppCurrency.USD, resolveCurrency(CurrencyPreference.SYSTEM, Locale.US))
-        assertEquals(AppCurrency.USD, resolveCurrency(CurrencyPreference.SYSTEM, Locale.GERMANY))
-    }
-
-    @Test
-    fun `preferencia explicita vence o locale`() {
-        assertEquals(AppCurrency.USD, resolveCurrency(CurrencyPreference.USD, Locale("pt", "BR")))
+        assertEquals(AppCurrency.BRL, resolveCurrency(CurrencyPreference.SYSTEM, Locale.US))
+        assertEquals(AppCurrency.BRL, resolveCurrency(CurrencyPreference.SYSTEM, Locale.GERMANY))
+        assertEquals(AppCurrency.BRL, resolveCurrency(CurrencyPreference.USD, Locale("pt", "BR")))
         assertEquals(AppCurrency.BRL, resolveCurrency(CurrencyPreference.BRL, Locale.US))
     }
 

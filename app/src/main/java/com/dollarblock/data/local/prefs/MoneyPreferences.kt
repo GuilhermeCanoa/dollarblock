@@ -27,11 +27,17 @@ import javax.inject.Singleton
  */
 enum class CurrencyPreference { SYSTEM, BRL, USD }
 
+/**
+ * Lançamento inicial é BRL-only: a troca de moeda fica desabilitada (UI removida do Perfil)
+ * e a moeda efetiva é sempre Real. Reative quando houver suporte a outras moedas.
+ */
+const val CURRENCY_SELECTION_ENABLED = false
+
 /** Resolve a preferência em moeda efetiva; SYSTEM decide pelo locale (BR/pt → Real). */
 fun resolveCurrency(
     preference: CurrencyPreference,
     locale: Locale = Locale.getDefault(),
-): AppCurrency = when (preference) {
+): AppCurrency = if (!CURRENCY_SELECTION_ENABLED) AppCurrency.BRL else when (preference) {
     CurrencyPreference.BRL -> AppCurrency.BRL
     CurrencyPreference.USD -> AppCurrency.USD
     CurrencyPreference.SYSTEM ->

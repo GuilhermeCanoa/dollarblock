@@ -4,15 +4,28 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -21,8 +34,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
+import com.dollarblock.core.FeatureFlags
 import com.dollarblock.core.designsystem.DollarBlockTheme
+import com.dollarblock.core.designsystem.components.BrandShield
 import com.dollarblock.core.designsystem.components.DollarBlockDialog
+import kotlinx.coroutines.delay
 import com.dollarblock.core.navigation.DollarBlockBottomBar
 import com.dollarblock.core.navigation.DollarBlockNavHost
 import com.dollarblock.data.local.prefs.AppTheme
@@ -69,6 +85,41 @@ class MainActivity : AppCompatActivity() {
                     )
                     true -> MainTabs(mainViewModel)
                 }
+
+                SplashOverlay()
+            }
+        }
+    }
+}
+
+/**
+ * Splash rápida (logo + nome) sobreposta ao conteúdo na abertura, com fade-out.
+ * Desativável por [FeatureFlags.SPLASH_ENABLED]. `rememberSaveable` evita que ela
+ * reapareça em rotação/recriação da Activity.
+ */
+@Composable
+private fun SplashOverlay() {
+    if (!FeatureFlags.SPLASH_ENABLED) return
+    var visible by rememberSaveable { mutableStateOf(true) }
+    LaunchedEffect(Unit) {
+        delay(FeatureFlags.SPLASH_DURATION_MS)
+        visible = false
+    }
+    AnimatedVisibility(visible = visible, exit = fadeOut(animationSpec = tween(350))) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                BrandShield(size = 104.dp, cornerRadius = 28.dp)
+                Spacer(Modifier.height(20.dp))
+                Text(
+                    text = stringResource(R.string.app_name),
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
             }
         }
     }

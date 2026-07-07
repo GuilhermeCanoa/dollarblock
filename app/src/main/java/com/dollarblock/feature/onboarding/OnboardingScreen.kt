@@ -34,7 +34,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Accessibility
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Layers
+import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.QueryStats
 import androidx.compose.material.icons.filled.Savings
@@ -100,7 +102,9 @@ private data class ConceptPage(
 private val conceptPages = listOf(
     // A primeira página é a apresentação da marca — usa o emblema do escudo.
     ConceptPage(Icons.Filled.Savings, R.string.onb_welcome_title, R.string.onb_welcome_body, isBrand = true),
-    // A segunda página é literalmente um contrato — recebe estética de recibo/papel.
+    // O confronto: você já tentou controlar o tempo e não deu — por isso a carteira.
+    ConceptPage(Icons.Filled.History, R.string.onb_reality_title, R.string.onb_reality_body),
+    // A página do contrato — recebe estética de recibo/papel.
     ConceptPage(Icons.Filled.Bolt, R.string.onb_penalty_title, R.string.onb_penalty_body, isContract = true),
 )
 
@@ -124,12 +128,13 @@ fun OnboardingScreen(
         viewModel.reloadQuickSummary()
     }
 
-    // conceito + quick summary + permissões
-    val pageCount = conceptPages.size + 2
+    // conceito + quick summary + permissões + "você no controle"
+    val pageCount = conceptPages.size + 3
     val pagerState = rememberPagerState(pageCount = { pageCount })
     val scope = rememberCoroutineScope()
     val quickSummaryPageIndex = conceptPages.size
-    val permissionsPageIndex = pageCount - 1
+    val permissionsPageIndex = pageCount - 2
+    val controlPageIndex = pageCount - 1
 
     Column(
         modifier = modifier
@@ -150,11 +155,12 @@ fun OnboardingScreen(
                         viewModel.intentFor(AppPermission.USAGE_ACCESS)?.let { context.startActivity(it) }
                     },
                 )
-                else -> PermissionsPageContent(
+                page == permissionsPageIndex -> PermissionsPageContent(
                     state = permissionsState,
                     onRequest = viewModel::intentFor,
                     onRecheck = viewModel::recheckPermissions,
                 )
+                else -> ControlPageContent()
             }
         }
 
@@ -166,19 +172,21 @@ fun OnboardingScreen(
                 .padding(vertical = 16.dp),
         )
 
-        if (pagerState.currentPage < permissionsPageIndex) {
+        if (pagerState.currentPage < controlPageIndex) {
             PrimaryActionButton(
                 text = stringResource(R.string.onb_continue),
                 onClick = { scope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) } },
                 modifier = Modifier.fillMaxWidth(),
             )
-            TextButton(
-                onClick = { scope.launch { pagerState.animateScrollToPage(permissionsPageIndex) } },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 4.dp),
-            ) {
-                Text(stringResource(R.string.onb_skip))
+            if (pagerState.currentPage < permissionsPageIndex) {
+                TextButton(
+                    onClick = { scope.launch { pagerState.animateScrollToPage(permissionsPageIndex) } },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp),
+                ) {
+                    Text(stringResource(R.string.onb_skip))
+                }
             }
         } else {
             SignButton(
@@ -401,6 +409,51 @@ private fun QuickSummaryPageContent(
 
             Spacer(Modifier.height(16.dp))
         }
+    }
+}
+
+/**
+ * Última página, depois da burocracia: "Você no controle" — deixa explícito que o
+ * app não faz o usuário de refém; sair é grátis, mas custa tempo de vida.
+ */
+@Composable
+private fun ControlPageContent(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(top = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primaryContainer,
+            modifier = Modifier.size(96.dp),
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = Icons.Filled.LockOpen,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(44.dp),
+                )
+            }
+        }
+        Text(
+            text = stringResource(R.string.onb_control_title),
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = 32.dp),
+        )
+        Text(
+            text = stringResource(R.string.onb_control_body),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = 16.dp),
+        )
     }
 }
 

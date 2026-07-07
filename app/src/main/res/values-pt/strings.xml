@@ -130,6 +130,23 @@
     <string name="stat_best_day_caption">menor fatura</string>
     <string name="stat_worst_day_caption">maior fatura</string>
     <string name="stat_no_data">Ainda não há dados de uso.\nAbra apps monitorados e o taxímetro começa a escrever.</string>
+    <string name="stat_period_total">Total</string>
+    <string name="stat_time_spent_total">Tempo gasto total</string>
+    <string name="stat_money_lost_total">Prejuízo total</string>
+    <string name="stat_info_ok">Entendi</string>
+    <string name="stat_info_top_apps_title">Top Apps</string>
+    <string name="stat_info_top_apps_body">Para onde o seu tempo foi no período. Cada fatia é a participação de um app no total medido pelo Android desde a meia-noite de cada dia. O centro mostra o total consolidado.</string>
+    <string name="stat_info_overview_title">Visão geral de uso</string>
+    <string name="stat_info_overview_body">Tempo de uso de cada app monitorado ao longo do período: dia a dia na semana, semana a semana no mês e no total. Tempo bruto medido pelo celular — sem arredondar a seu favor. Se a linha desce, o taxímetro está funcionando.</string>
+    <string name="stat_info_statement_title">Extrato</string>
+    <string name="stat_info_statement_body">A fatura de cada dia: tempo nos apps monitorados convertido em dinheiro pela sua taxa salarial (salário mensal ÷ 43.200 minutos). Melhor dia é a menor fatura; pior dia, a maior.</string>
+    <string name="stat_info_money_lost_title">Prejuízo</string>
+    <string name="stat_info_money_lost_body">A soma da fatura de cada dia do período. Minutos nos apps monitorados × sua taxa por minuto (salário mensal ÷ 43.200 minutos no mês).</string>
+    <string name="stat_info_time_spent_title">Tempo gasto</string>
+    <string name="stat_info_time_spent_body">Tempo total nos apps monitorados no período, exatamente como o Android mediu. O taxímetro não arredonda a seu favor.</string>
+    <string name="stat_info_most_used_title">Mais usado</string>
+    <string name="stat_info_most_used_body">O app com mais tempo acumulado no período. Alguém precisa liderar a fatura.</string>
+    <string name="stat_day_no_usage">sem movimentação</string>
 
     <!-- Profile -->
     <string name="profile_title">Perfil</string>
@@ -218,7 +235,7 @@
 
     <!-- Accessibility service declaration -->
     <string name="accessibility_service_label">DollarBlock — Bloqueio de apps</string>
-    <string name="accessibility_service_description">Permite que o DollarBlock detecte qual app está aberto e bloqueie o acesso aos apps que você escolher.</string>
+    <string name="accessibility_service_description">Detecta qual app está em primeiro plano para aplicar o bloqueio quando o limite é atingido. Não lê o conteúdo das suas telas nem o que você digita.</string>
 
     <!-- Block screen -->
     <string name="block_screen_title">Sua fatura chegou</string>
@@ -252,7 +269,7 @@
     <string name="onb_welcome_title">Tempo é dinheiro. O seu está vazando.</string>
     <string name="onb_welcome_body">Instagram, TikTok e YouTube têm equipes inteiras de engenheiros pagos pra te manter rolando a tela. O DollarBlock coloca um taxímetro neles: escolha os apps que comem o seu dia, defina um limite diário e, passado o limite, eles bloqueiam.</string>
     <string name="onb_penalty_title">O contrato</string>
-    <string name="onb_penalty_body">Cláusula 1: você escolhe os apps. Cláusula 2: você define os limites. Cláusula 3: passou do limite, o app tranca — e se precisar mesmo dele, paga R$ 1 por um passe do dia, válido até a meia-noite. O dinheiro sai de verdade. Esse é exatamente o ponto. Sem choro: a ideia foi sua.</string>
+    <string name="onb_penalty_body">Cláusula 1: você escolhe os apps. Cláusula 2: você define os limites. Cláusula 3: passou do limite, o app tranca — e se precisar mesmo dele, paga R$ 5 por um passe do dia, válido até a meia-noite. O dinheiro sai de verdade. Esse é exatamente o ponto. Sem choro: a ideia foi sua.</string>
     <string name="onb_contract_header">DOLLARBLOCK · ACORDO</string>
     <string name="onb_contract_footer">Ao topar o desafio, você concorda em ser cobrado pelas suas próprias desculpas.</string>
     <string name="onb_summary_title">Resumo rápido</string>
@@ -276,4 +293,8 @@
     <string name="onb_skip">Pular para as permissões</string>
     <string name="onb_finish">Topo o desafio</string>
     <string name="onb_finish_blocked_hint">Conceda o Acesso de uso para começar — sem ele não conseguimos medir nada.</string>
+    <string name="onb_reality_title">Você já tentou antes</string>
+    <string name="onb_reality_body">Você já tentou controlar seu tempo nos aplicativos. Não deu certo. Você desativa o aviso pra poder continuar e esquece que ele existiu. Aqui a proposta é diferente: você vai se lembrar. Porque vai pesar na carteira.</string>
+    <string name="onb_control_title">Você no controle</string>
+    <string name="onb_control_body">Sem desespero: você não é refém. Dá pra desativar, pausar ou desinstalar quando quiser, sem pagar nada. Só saiba que aí você paga com tempo de vida — bem mais caro do que qualquer passe do dia. E o que você pagar por aqui fica registrado no extrato, pra lembrar quanto custou a brincadeira.</string>
 </resources>

@@ -132,6 +132,23 @@
     <string name="stat_best_day_caption">lowest bill</string>
     <string name="stat_worst_day_caption">highest bill</string>
     <string name="stat_no_data">No usage data yet.\nOpen monitored apps and the meter starts writing.</string>
+    <string name="stat_period_total">Total</string>
+    <string name="stat_time_spent_total">Total Time Spent</string>
+    <string name="stat_money_lost_total">Total Damage</string>
+    <string name="stat_info_ok">Got it</string>
+    <string name="stat_info_top_apps_title">Top Apps</string>
+    <string name="stat_info_top_apps_body">Where your time went in this period. Each slice is one app\'s share of the total measured by Android since midnight of each day. The center shows the combined total.</string>
+    <string name="stat_info_overview_title">Usage overview</string>
+    <string name="stat_info_overview_body">Each monitored app\'s screen time across the period: day by day for the week, week by week for the month and the total. Raw time as measured by your phone — no rounding in your favor. If the line goes down, the meter is working.</string>
+    <string name="stat_info_statement_title">Statement</string>
+    <string name="stat_info_statement_body">Each day\'s bill: time on monitored apps converted to money at your salary rate (monthly salary ÷ 43,200 minutes). Best day is the lowest bill, worst day the highest.</string>
+    <string name="stat_info_money_lost_title">Damage</string>
+    <string name="stat_info_money_lost_body">The sum of every day\'s bill in this period. Minutes on monitored apps × your per-minute rate (monthly salary ÷ 43,200 minutes in a month).</string>
+    <string name="stat_info_time_spent_title">Time spent</string>
+    <string name="stat_info_time_spent_body">Total time on monitored apps in this period, exactly as Android measured it. The meter doesn\'t round in your favor.</string>
+    <string name="stat_info_most_used_title">Most used</string>
+    <string name="stat_info_most_used_body">The app with the most accumulated time in this period. Someone has to lead the invoice.</string>
+    <string name="stat_day_no_usage">no movement</string>
 
     <!-- Profile -->
     <string name="profile_user_name">You</string>
@@ -218,7 +235,7 @@
 
     <!-- Accessibility service declaration -->
     <string name="accessibility_service_label">DollarBlock — App blocking</string>
-    <string name="accessibility_service_description">Allows DollarBlock to detect which app is open and block access to the apps you choose.</string>
+    <string name="accessibility_service_description">Detects which app is in the foreground to apply the block when the limit is reached. It does not read your screen content or what you type.</string>
 
     <!-- Block screen -->
     <string name="block_screen_title">Your bill has arrived</string>
@@ -252,7 +269,7 @@
     <string name="onb_welcome_title">Time is money. Yours is leaking.</string>
     <string name="onb_welcome_body">Instagram, TikTok and YouTube have entire teams of engineers paid to keep you scrolling. DollarBlock puts a meter on them: pick the apps that eat your day, set a daily limit, and past that limit they lock.</string>
     <string name="onb_penalty_title">The deal</string>
-    <string name="onb_penalty_body">Clause 1: you pick the apps. Clause 2: you set the limits. Clause 3: past the limit, the app locks — and if you really need it back, you pay R$ 1 for a day pass, valid until midnight. The money is real. That\'s the whole point. No sob stories: the idea was yours.</string>
+    <string name="onb_penalty_body">Clause 1: you pick the apps. Clause 2: you set the limits. Clause 3: past the limit, the app locks — and if you really need it back, you pay R$ 5 for a day pass, valid until midnight. The money is real. That\'s the whole point. No sob stories: the idea was yours.</string>
     <string name="onb_contract_header">DOLLARBLOCK · AGREEMENT</string>
     <string name="onb_contract_footer">By taking the challenge, you agree to be billed for your own excuses.</string>
     <string name="onb_summary_title">Quick summary</string>
@@ -276,4 +293,8 @@
     <string name="onb_skip">Skip to permissions</string>
     <string name="onb_finish">Challenge accepted</string>
     <string name="onb_finish_blocked_hint">Grant Usage Access to get started — without it we can\'t measure anything.</string>
+    <string name="onb_reality_title">You\'ve tried this before</string>
+    <string name="onb_reality_body">You\'ve tried to control your time on these apps. It didn\'t work. You dismiss the reminder so you can keep going, and forget it ever existed. Here the deal is different: you will remember. Because it hits your wallet.</string>
+    <string name="onb_control_title">You\'re in control</string>
+    <string name="onb_control_body">No need to panic: you are not a hostage. You can disable, pause or uninstall whenever you want, without paying anything. Just know that then you pay with lifetime — far more expensive than any day pass. And whatever you do pay here stays on record, to remind you what the joke cost.</string>
 </resources>

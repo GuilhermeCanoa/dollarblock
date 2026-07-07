@@ -72,12 +72,16 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.dollarblock.R
 import com.dollarblock.core.designsystem.DollarBlockTheme
 import com.dollarblock.core.designsystem.TabularNumerals
+import com.dollarblock.core.designsystem.components.DollarBlockDialog
 import com.dollarblock.core.designsystem.components.MetricCard
 import com.dollarblock.domain.model.AppCurrency
 import com.dollarblock.domain.model.MoneyFormat
 import com.dollarblock.core.designsystem.components.ScreenHeader
 import com.dollarblock.core.designsystem.components.SectionHeader
 import kotlin.math.roundToInt
+
+/** Qual popup informativo está aberto na tela de Extrato. */
+private enum class StatInfoDialog { TOP_APPS, OVERVIEW, STATEMENT, MONEY_LOST, TIME_SPENT, MOST_USED }
 
 @Composable
 fun StatisticsScreen(
@@ -86,6 +90,15 @@ fun StatisticsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val period by viewModel.period.collectAsState()
+    var infoDialog by remember { mutableStateOf<StatInfoDialog?>(null) }
+
+    infoDialog?.let { dialog ->
+        StatInfoDialogContent(
+            dialog = dialog,
+            uiState = uiState,
+            onDismiss = { infoDialog = null },
+        )
+    }
 
     Column(
         modifier = modifier
@@ -115,6 +128,7 @@ fun StatisticsScreen(
             DonutChartCard(
                 topApps = uiState.topApps,
                 totalTime = uiState.totalPeriodTime,
+                onInfoClick = { infoDialog = StatInfoDialog.TOP_APPS },
             )
         }
 
@@ -122,6 +136,7 @@ fun StatisticsScreen(
             LineChartCard(
                 lines = uiState.chartLines,
                 xLabels = uiState.chartXLabels,
+                onInfoClick = { infoDialog = StatInfoDialog.OVERVIEW },
             )
         }
 
@@ -130,6 +145,7 @@ fun StatisticsScreen(
                 bestDay = uiState.bestDay,
                 worstDay = uiState.worstDay,
                 currency = uiState.moneySettings.currency,
+                onInfoClick = { infoDialog = StatInfoDialog.STATEMENT },
             )
         }
 
@@ -139,6 +155,7 @@ fun StatisticsScreen(
                 value = MoneyFormat.format(lost, uiState.moneySettings.currency),
                 icon = Icons.Filled.AttachMoney,
                 modifier = Modifier.fillMaxWidth(),
+                onClick = { infoDialog = StatInfoDialog.MONEY_LOST },
             )
         }
         MetricCard(
@@ -146,13 +163,81 @@ fun StatisticsScreen(
             value = uiState.timeSpent,
             icon = Icons.Filled.Schedule,
             modifier = Modifier.fillMaxWidth(),
+            onClick = { infoDialog = StatInfoDialog.TIME_SPENT },
         )
         MetricCard(
             title = stringResource(R.string.stat_most_used),
             value = uiState.mostUsed,
             icon = Icons.Filled.EmojiEvents,
             modifier = Modifier.fillMaxWidth(),
+            onClick = { infoDialog = StatInfoDialog.MOST_USED },
         )
+    }
+}
+
+/**
+ * Popups informativos dos cards do Extrato. Extrato e Prejuízo detalham a fatura
+ * dia a dia — cada linha explica de onde saiu o número consolidado.
+ */
+@Composable
+private fun StatInfoDialogContent(
+    dialog: StatInfoDialog,
+    uiState: StatisticsUiState,
+    onDismiss: () -> Unit,
+) {
+    val currency = uiState.moneySettings.currency
+    val showBreakdown = dialog == StatInfoDialog.STATEMENT || dialog == StatInfoDialog.MONEY_LOST
+    val (titleRes, bodyRes) = when (dialog) {
+        StatInfoDialog.TOP_APPS -> R.string.stat_info_top_apps_title to R.string.stat_info_top_apps_body
+        StatInfoDialog.OVERVIEW -> R.string.stat_info_overview_title to R.string.stat_info_overview_body
+        StatInfoDialog.STATEMENT -> R.string.stat_info_statement_title to R.string.stat_info_statement_body
+        StatInfoDialog.MONEY_LOST -> R.string.stat_info_money_lost_title to R.string.stat_info_money_lost_body
+        StatInfoDialog.TIME_SPENT -> R.string.stat_info_time_spent_title to R.string.stat_info_time_spent_body
+        StatInfoDialog.MOST_USED -> R.string.stat_info_most_used_title to R.string.stat_info_most_used_body
+    }
+    DollarBlockDialog(
+        onDismissRequest = onDismiss,
+        title = stringResource(titleRes),
+        body = stringResource(bodyRes),
+        confirmText = stringResource(R.string.stat_info_ok),
+        onConfirm = onDismiss,
+    ) {
+        if (showBreakdown && uiState.dayBreakdown.isNotEmpty()) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                uiState.dayBreakdown.forEach { entry ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = entry.label,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Text(
+                            text = if (entry.usedMillis > 0) {
+                                formatMsShort(entry.usedMillis.toFloat())
+                            } else {
+                                stringResource(R.string.stat_day_no_usage)
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        Text(
+                            text = MoneyFormat.format(entry.amount, currency),
+                            style = TabularNumerals.copy(fontSize = 14.sp),
+                            color = if (entry.amount > 0) {
+                                MaterialTheme.colorScheme.error
+                            } else {
+                                DollarBlockTheme.colors.success
+                            },
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -160,6 +245,7 @@ fun StatisticsScreen(
 private fun DonutChartCard(
     topApps: List<TopAppEntry>,
     totalTime: String,
+    onInfoClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val trackColor = MaterialTheme.colorScheme.surfaceVariant
@@ -167,6 +253,7 @@ private fun DonutChartCard(
     val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
 
     Card(
+        onClick = onInfoClick,
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
@@ -319,9 +406,11 @@ private fun StatementCard(
     bestDay: DayHighlight?,
     worstDay: DayHighlight?,
     currency: AppCurrency,
+    onInfoClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Card(
+        onClick = onInfoClick,
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
@@ -415,6 +504,7 @@ private val chartPalette = listOf(
 private fun LineChartCard(
     lines: List<AppChartLine>,
     xLabels: List<String>,
+    onInfoClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(true) }
@@ -424,6 +514,7 @@ private fun LineChartCard(
     val bgColor = MaterialTheme.colorScheme.surface
 
     Card(
+        onClick = onInfoClick,
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = bgColor.copy(alpha = 0.92f)),
@@ -593,6 +684,7 @@ private val StatPeriod.labelRes: Int
         StatPeriod.DAILY -> R.string.stat_period_daily
         StatPeriod.WEEKLY -> R.string.stat_period_weekly
         StatPeriod.MONTHLY -> R.string.stat_period_monthly
+        StatPeriod.TOTAL -> R.string.stat_period_total
     }
 
 private val StatPeriod.timeSpentRes: Int
@@ -600,6 +692,7 @@ private val StatPeriod.timeSpentRes: Int
         StatPeriod.DAILY -> R.string.stat_time_spent_daily
         StatPeriod.WEEKLY -> R.string.stat_time_spent_weekly
         StatPeriod.MONTHLY -> R.string.stat_time_spent_monthly
+        StatPeriod.TOTAL -> R.string.stat_time_spent_total
     }
 
 private val StatPeriod.moneyLostRes: Int?
@@ -607,6 +700,7 @@ private val StatPeriod.moneyLostRes: Int?
         StatPeriod.DAILY -> null
         StatPeriod.WEEKLY -> R.string.stat_money_lost_week
         StatPeriod.MONTHLY -> R.string.stat_money_lost_month
+        StatPeriod.TOTAL -> R.string.stat_money_lost_total
     }
 
 @Preview(showBackground = true)

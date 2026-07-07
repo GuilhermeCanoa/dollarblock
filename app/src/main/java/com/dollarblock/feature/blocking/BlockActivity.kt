@@ -24,11 +24,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -344,7 +348,10 @@ private fun BlockScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(backdrop),
+            .background(backdrop)
+            // Edge-to-edge: o gradiente cobre a tela toda, mas o conteúdo (inclusive o
+            // link do rodapé) fica fora das barras de status/navegação do sistema.
+            .windowInsetsPadding(WindowInsets.safeDrawing),
         contentAlignment = Alignment.Center,
     ) {
         // Frase motivacional no topo
@@ -506,7 +513,8 @@ private fun InvoiceReceipt(
                 color = ink.copy(alpha = 0.55f),
             )
             Spacer(Modifier.height(10.dp))
-            // Nome do app sempre legível; o carimbo é pequeno e fica ao lado direito.
+            // Nome do app sempre legível; o carimbo invade de leve o nome à
+            // esquerda — como um carimbo de verdade, que não respeita margem.
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -523,8 +531,11 @@ private fun InvoiceReceipt(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f, fill = false),
                 )
-                Spacer(Modifier.width(10.dp))
-                StampText(stampScale = stampScale, stampAlpha = stampAlpha)
+                StampText(
+                    stampScale = stampScale,
+                    stampAlpha = stampAlpha,
+                    modifier = Modifier.offset(x = (-14).dp),
+                )
             }
             Spacer(Modifier.height(14.dp))
             DashedDivider(ink.copy(alpha = 0.35f))
@@ -562,6 +573,7 @@ private fun InvoiceReceipt(
 private fun StampText(
     stampScale: Animatable<Float, AnimationVector1D>,
     stampAlpha: Animatable<Float, AnimationVector1D>,
+    modifier: Modifier = Modifier,
 ) {
     Text(
         text = stringResource(R.string.block_stamp),
@@ -571,7 +583,7 @@ private fun StampText(
         letterSpacing = 1.5.sp,
         color = BlockingRed,
         maxLines = 1,
-        modifier = Modifier
+        modifier = modifier
             .graphicsLayer {
                 rotationZ = -10f
                 scaleX = stampScale.value

@@ -12,6 +12,50 @@ Descrição funcional.
 
 ---
 
+## [2026-07-07] — E15: polimento pré-MVP (ícone, splash, extrato detalhado, onboarding, R$ 5)
+**Tipo:** feature + bugfix + config
+**Épico:** E15 (adhoc)
+
+- **Ícone vetorial:** `db_shield.webp` (cara de IA) substituído por um `VectorDrawable`
+  limpo (`ic_launcher_foreground.xml` — escudo + cifrão vazado na paleta de marca), agora
+  também `monochrome` para o tema. `db_shield.webp` segue no uso in-app (`BrandShield`).
+- **Extrato · aba Total:** gráfico de tendência semana a semana desde o primeiro registro
+  (`buildTotalChartPerApp`, até 12 semanas), pensado para o usuário ver o uso cair após
+  adotar o app. Copy do popup "Visão geral de uso" reescrito para cobrir os três períodos e
+  o objetivo ("se a linha desce, o taxímetro está funcionando").
+- **Acessibilidade (Play Store):** `accessibility_service_description` reescrita deixando
+  explícito que o serviço não lê conteúdo de tela nem o que é digitado (ajuda na revisão).
+- **Doc de submissão:** `docs/PLAYSTORE_PRIVACY_SUBMISSION.md` — política de privacidade
+  pronta para publicar + respostas dos formulários Data Safety, declaração de
+  Acessibilidade e ficha da loja, montados para maximizar a aprovação.
+
+- **Ícone do launcher:** o `db_shield.webp` full-bleed era cortado pela máscara do adaptive
+  icon; agora passa por um `<inset>` de 13% (`ic_launcher_foreground_shield.xml`) e o escudo
+  aparece inteiro.
+- **Perfil:** removido o card "Sob nova direção: você" (sem utilidade). Removido também o
+  seletor de moeda — lançamento é BRL-only (`CURRENCY_SELECTION_ENABLED = false` em
+  `MoneyPreferences`; `resolveCurrency` sempre devolve Real).
+- **Extrato (Statistics):** todos os cards ganharam popup informativo ao toque; os popups de
+  "Extrato" e "Prejuízo" detalham a fatura dia a dia (data, tempo, valor). Nova aba **Total**
+  consolidando todos os dados desde o primeiro dia com registro. Labels de melhor/pior dia em
+  períodos > 1 semana agora incluem a data (dd/MM) — antes só o dia da semana, ambíguo.
+- **Splash:** tela rápida (logo + nome, 1,2 s, fade-out) na abertura, atrás de
+  `FeatureFlags.SPLASH_ENABLED`.
+- **Tela de bloqueio:** conteúdo agora respeita `WindowInsets.safeDrawing` — o link do rodapé
+  não conflita mais com a barra de navegação do Android. Carimbo BLOQUEADO deslocado 14dp à
+  esquerda, invadindo de leve o nome do app (efeito carimbo real).
+- **Onboarding:** nova página de confronto ("Você já tentou antes… vai pesar na carteira")
+  entre a marca e o contrato; nova página final "Você no controle" depois das permissões
+  (você não é refém: desativar/desinstalar é grátis — mas custa tempo de vida), onde agora
+  vive o botão "Topo o desafio".
+- **Passe do dia R$ 5:** causa do R$ 1 desde 03/07 identificada — a cobrança usa a env var
+  `PRICE_DAY_PASS_BRL_CENTS` da Lambda (default 100), não o produto do Stripe. Template SAM
+  atualizado (default 500) e stack `dollarblock-payment-test` atualizada via CloudFormation
+  (`GET /pricing` agora responde 5.00). Fallback do app (`GooglePayConfig.DEFAULT_PRICE`) e
+  copy do contrato atualizados para R$ 5.
+
+---
+
 ## [2026-07-04] — E14: salário configurável, moeda de exibição, diálogos temáticos e polimento de UX
 **Tipo:** feature + bugfix
 **Épico:** E14 (adhoc) — spec: `docs/specs/E14-salario-moeda-dialogos-tematicos.md`
