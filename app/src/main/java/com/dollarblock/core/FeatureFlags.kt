@@ -6,8 +6,8 @@ package com.dollarblock.core
  */
 object FeatureFlags {
 
-    /** Splash rápida (logo + nome) ao abrir o app. */
-    const val SPLASH_ENABLED = true
+    /** Splash rápida (logo + nome) ao abrir o app. Desativada por pedido do produto (E17). */
+    const val SPLASH_ENABLED = false
 
     /** Duração da splash antes do fade-out. */
     const val SPLASH_DURATION_MS = 1200L

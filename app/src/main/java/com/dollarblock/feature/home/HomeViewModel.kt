@@ -26,6 +26,7 @@ data class HomeUiState(
     val moneySpentTotal: Double? = null,
     val moneySavedTotal: Double? = null,
     val moneySettings: MoneySettings = MoneySettings(),
+    val showSalaryTip: Boolean = false,
 )
 
 @HiltViewModel
@@ -54,12 +55,14 @@ class HomeViewModel @Inject constructor(
     val uiState: StateFlow<HomeUiState> = combine(
         baseState,
         moneyPreferences.settings,
-    ) { (base, monitoredUsage), settings ->
+        moneyPreferences.salaryTipShown,
+    ) { (base, monitoredUsage), settings, salaryTipShown ->
         val metrics = HomeMetrics.compute(monitoredUsage, settings.monthlySalary)
         base.copy(
             moneyLostToday = metrics.moneyLostToday,
             currentlyBlockedCount = metrics.currentlyBlockedCount,
             moneySettings = settings,
+            showSalaryTip = !settings.salaryConfigured && !salaryTipShown,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -70,6 +73,11 @@ class HomeViewModel @Inject constructor(
     /** Salva o salário líquido mensal; null volta para a referência padrão. */
     fun setMonthlySalary(value: Double?) {
         viewModelScope.launch { moneyPreferences.setMonthlySalary(value) }
+    }
+
+    /** Fecha o balão-tutorial do card de salário; não volta a aparecer depois disso. */
+    fun dismissSalaryTip() {
+        viewModelScope.launch { moneyPreferences.setSalaryTipShown() }
     }
 
     init {

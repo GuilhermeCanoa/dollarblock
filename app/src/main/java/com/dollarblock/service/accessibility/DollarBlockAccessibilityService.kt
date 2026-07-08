@@ -139,7 +139,8 @@ class DollarBlockAccessibilityService : AccessibilityService() {
 
                 val previousUsedMillis = lastUsedMillisByPackage[packageName] ?: 0L
                 if (LimitWarningPolicy.shouldWarn(previousUsedMillis, usedMillis, limitMillis)) {
-                    limitWarningNotifier.notifyLimitApproaching(resolveLabel(packageName))
+                    val minutesRemaining = LimitWarningPolicy.minutesRemaining(usedMillis, limitMillis)
+                    limitWarningNotifier.notifyLimitApproaching(resolveLabel(packageName), minutesRemaining)
                 }
                 lastUsedMillisByPackage[packageName] = usedMillis
 

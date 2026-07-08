@@ -601,13 +601,9 @@ private fun InvoiceReceipt(
                 color = ink.copy(alpha = 0.55f),
             )
             Spacer(Modifier.height(10.dp))
-            // Nome do app sempre legível; o carimbo invade de leve o nome à
-            // esquerda — como um carimbo de verdade, que não respeita margem.
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-            ) {
+            // Nome do app centralizado no recibo; o carimbo fica sobreposto no
+            // canto superior direito, como um carimbo de verdade sobre o papel.
+            Box(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = appLabel,
                     fontFamily = FontFamily.Monospace,
@@ -617,12 +613,16 @@ private fun InvoiceReceipt(
                     textAlign = TextAlign.Center,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f, fill = false),
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .fillMaxWidth(),
                 )
                 StampText(
                     stampScale = stampScale,
                     stampAlpha = stampAlpha,
-                    modifier = Modifier.offset(x = (-14).dp),
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(x = 6.dp, y = (-6).dp),
                 )
             }
             Spacer(Modifier.height(14.dp))
@@ -667,8 +667,8 @@ private fun StampText(
         text = stringResource(R.string.block_stamp),
         fontFamily = FontFamily.Monospace,
         fontWeight = FontWeight.Black,
-        fontSize = 12.sp,
-        letterSpacing = 1.5.sp,
+        fontSize = 10.sp,
+        letterSpacing = 1.sp,
         color = BlockingRed,
         maxLines = 1,
         modifier = modifier
@@ -678,8 +678,8 @@ private fun StampText(
                 scaleY = stampScale.value
                 alpha = stampAlpha.value
             }
-            .border(2.dp, BlockingRed, RoundedCornerShape(4.dp))
-            .padding(horizontal = 6.dp, vertical = 3.dp),
+            .border(1.5.dp, BlockingRed, RoundedCornerShape(4.dp))
+            .padding(horizontal = 5.dp, vertical = 2.dp),
     )
 }
 

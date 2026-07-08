@@ -108,8 +108,12 @@ fun HomeScreen(
 
         SalaryCard(
             settings = uiState.moneySettings,
+            highlighted = uiState.showSalaryTip,
             onClick = { showSalaryDialog = true },
         )
+        if (uiState.showSalaryTip) {
+            SalaryTipBalloon(onDismiss = viewModel::dismissSalaryTip)
+        }
 
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             MetricCard(
@@ -187,6 +191,7 @@ private fun SalaryCard(
     settings: MoneySettings,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    highlighted: Boolean = false,
 ) {
     Card(
         onClick = onClick,
@@ -195,7 +200,14 @@ private fun SalaryCard(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
         ),
-        border = BorderStroke(1.dp, DollarBlockTheme.colors.glow.copy(alpha = 0.15f)),
+        border = BorderStroke(
+            width = if (highlighted) 1.5.dp else 1.dp,
+            color = if (highlighted) {
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+            } else {
+                DollarBlockTheme.colors.glow.copy(alpha = 0.15f)
+            },
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Row(
@@ -233,6 +245,49 @@ private fun SalaryCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+        }
+    }
+}
+
+/**
+ * Balão-tutorial exibido uma única vez, no primeiro acesso após o onboarding, enquanto
+ * o salário não foi configurado — aponta pro card acima e convida a calibrar o taxímetro.
+ */
+@Composable
+private fun SalaryTipBalloon(onDismiss: () -> Unit, modifier: Modifier = Modifier) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        // Bico do balão apontando para o card de salário logo acima.
+        Box(
+            modifier = Modifier
+                .padding(start = 28.dp)
+                .size(width = 16.dp, height = 8.dp)
+                .background(
+                    MaterialTheme.colorScheme.primary,
+                    RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp),
+                ),
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(MaterialTheme.colorScheme.primary)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(R.string.home_salary_tip_body),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.weight(1f),
+            )
+            Spacer(Modifier.size(8.dp))
+            Text(
+                text = stringResource(R.string.home_card_info_ok),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.clickable(onClick = onDismiss),
+            )
         }
     }
 }

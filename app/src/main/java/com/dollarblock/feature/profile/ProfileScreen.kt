@@ -38,6 +38,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -89,6 +90,7 @@ fun ProfileScreen(
     val theme by viewModel.theme.collectAsStateWithLifecycle()
     val language by viewModel.language.collectAsStateWithLifecycle()
     val currencyPreference by viewModel.currencyPreference.collectAsStateWithLifecycle()
+    val notificationsEnabled by viewModel.notificationsEnabled.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     // Re-checa as permissões sempre que a tela volta ao foreground (igual ao onboarding).
@@ -114,11 +116,13 @@ fun ProfileScreen(
         theme = theme,
         language = language,
         currencyPreference = currencyPreference,
+        notificationsEnabled = notificationsEnabled,
         onRequestPermission = ::requestPermission,
         onOpenHistory = onOpenHistory,
         onThemeChange = viewModel::setTheme,
         onLanguageChange = viewModel::setLanguage,
         onCurrencyChange = viewModel::setCurrencyPreference,
+        onNotificationsEnabledChange = viewModel::setNotificationsEnabled,
         onResetAllData = viewModel::resetAllData,
         modifier = modifier,
     )
@@ -131,11 +135,13 @@ private fun ProfileScreenContent(
     theme: AppTheme,
     language: AppLanguage,
     currencyPreference: CurrencyPreference,
+    notificationsEnabled: Boolean,
     onRequestPermission: (AppPermission) -> Unit,
     onOpenHistory: () -> Unit,
     onThemeChange: (AppTheme) -> Unit,
     onLanguageChange: (AppLanguage) -> Unit,
     onCurrencyChange: (CurrencyPreference) -> Unit,
+    onNotificationsEnabledChange: (Boolean) -> Unit,
     onResetAllData: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -277,6 +283,13 @@ private fun ProfileScreenContent(
                     title = stringResource(R.string.pref_language),
                     value = stringResource(languageLabelRes(language)),
                     onClick = { showLanguageDialog = true },
+                )
+                SettingSwitchRow(
+                    icon = Icons.Filled.Notifications,
+                    title = stringResource(R.string.pref_notifications),
+                    description = stringResource(R.string.pref_notifications_desc),
+                    checked = notificationsEnabled,
+                    onCheckedChange = onNotificationsEnabledChange,
                 )
                 SettingRow(
                     icon = Icons.Filled.History,
@@ -489,6 +502,45 @@ private fun SettingRow(
     }
 }
 
+@Composable
+private fun SettingSwitchRow(
+    icon: ImageVector,
+    title: String,
+    description: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(24.dp),
+        )
+        Spacer(Modifier.size(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Spacer(Modifier.size(12.dp))
+        Switch(checked = checked, onCheckedChange = onCheckedChange)
+    }
+}
+
 /** Linha de opção com rádio, compartilhada pelos pickers de tema/idioma/moeda. */
 @Composable
 private fun PickerOptionRow(
@@ -603,11 +655,13 @@ private fun ProfileScreenPreview() {
             theme = AppTheme.DARK,
             language = AppLanguage.SYSTEM,
             currencyPreference = CurrencyPreference.SYSTEM,
+            notificationsEnabled = true,
             onRequestPermission = {},
             onOpenHistory = {},
             onThemeChange = {},
             onLanguageChange = {},
             onCurrencyChange = {},
+            onNotificationsEnabledChange = {},
             onResetAllData = {},
         )
     }

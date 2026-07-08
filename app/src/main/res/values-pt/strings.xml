@@ -177,6 +177,8 @@
     <string name="pref_language_system">Padrão do sistema</string>
     <string name="pref_language_en">English</string>
     <string name="pref_language_pt">Português</string>
+    <string name="pref_notifications">Avisos de limite</string>
+    <string name="pref_notifications_desc">Ser avisado quando um app estiver perto do limite</string>
     <string name="pref_history">Recibos</string>
     <string name="pref_history_value">Cada bloqueio e cada resgate</string>
     <string name="pref_about">Sobre o DollarBlock</string>
@@ -198,6 +200,7 @@
     <string name="home_salary_dialog_label">Salário líquido mensal</string>
     <string name="home_salary_dialog_save">Calibrar o taxímetro</string>
     <string name="home_salary_dialog_remove">Voltar ao padrão</string>
+    <string name="home_salary_tip_body">Adicione seu salário e descubra exatamente quanto dinheiro você perde enquanto rola a tela.</string>
 
     <!-- Aviso diário de permissões -->
     <string name="perm_nag_title">O taxímetro está rodando às cegas</string>
@@ -288,7 +291,11 @@
     <string name="onb_perm_overlay_why">Exibe a tela de bloqueio por cima do app.</string>
     <string name="onb_perm_notifications_why">Avisa você sobre limites atingidos e o serviço de monitoramento.</string>
     <string name="notif_channel_name">Avisos de limite</string>
-    <string name="notif_limit_warning_title">Faltam 5 min de %1$s</string>
+    <plurals name="notif_limit_warning_title">
+        <item quantity="one">Falta 1 minuto de %2$s</item>
+        <item quantity="many">Faltam %1$d minutos de %2$s</item>
+        <item quantity="other">Faltam %1$d minutos de %2$s</item>
+    </plurals>
     <string name="notif_limit_warning_body">Prepare o cartão, ou a sua dignidade.</string>
     <string name="onb_perm_required">obrigatória</string>
     <string name="onb_perm_grant">Conceder</string>

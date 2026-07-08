@@ -1,6 +1,7 @@
 package com.dollarblock.data.local.prefs
 
 import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -62,6 +63,7 @@ class MoneyPreferences @Inject constructor(
     private val dataStore = context.moneyDataStore
     private val salaryKey = doublePreferencesKey("monthly_salary")
     private val currencyKey = stringPreferencesKey("display_currency")
+    private val salaryTipShownKey = booleanPreferencesKey("salary_tip_shown")
 
     /** Salário líquido mensal informado, ou null quando o usuário nunca configurou. */
     val monthlySalary: Flow<Double?> = dataStore.data.map { it[salaryKey] }
@@ -92,6 +94,13 @@ class MoneyPreferences @Inject constructor(
 
     suspend fun setCurrencyPreference(preference: CurrencyPreference) {
         dataStore.edit { it[currencyKey] = preference.name }
+    }
+
+    /** true depois que o balão-tutorial do card de salário já foi mostrado uma vez. */
+    val salaryTipShown: Flow<Boolean> = dataStore.data.map { it[salaryTipShownKey] ?: false }
+
+    suspend fun setSalaryTipShown() {
+        dataStore.edit { it[salaryTipShownKey] = true }
     }
 
     suspend fun reset() {

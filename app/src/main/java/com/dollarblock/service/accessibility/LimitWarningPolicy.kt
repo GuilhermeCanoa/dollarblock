@@ -1,7 +1,9 @@
 package com.dollarblock.service.accessibility
 
+import kotlin.math.ceil
+
 /**
- * Decide quando disparar o aviso passivo-agressivo de "faltam 5 min de limite"
+ * Decide quando disparar o aviso passivo-agressivo de "faltam N min de limite"
  * (função pura, testável isoladamente do serviço de acessibilidade).
  */
 object LimitWarningPolicy {
@@ -21,5 +23,14 @@ object LimitWarningPolicy {
         val warnAt = limitMillis - WARNING_THRESHOLD_MS
         if (warnAt <= 0) return previousUsedMillis <= 0 && currentUsedMillis in 1 until limitMillis
         return previousUsedMillis < warnAt && currentUsedMillis >= warnAt && currentUsedMillis < limitMillis
+    }
+
+    /**
+     * Minutos restantes reais no instante do aviso (arredondado para cima, mínimo 1),
+     * para a notificação nunca dizer "5 min" quando na verdade faltam menos.
+     */
+    fun minutesRemaining(currentUsedMillis: Long, limitMillis: Long): Int {
+        val remainingMs = (limitMillis - currentUsedMillis).coerceAtLeast(0L)
+        return ceil(remainingMs / 60_000.0).toInt().coerceAtLeast(1)
     }
 }

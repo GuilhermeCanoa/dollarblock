@@ -12,6 +12,36 @@ Descrição funcional.
 
 ---
 
+## [2026-07-07] — E17: correções pós-MVP (notificação, carimbo, delay, permissões) + ajustes de UX
+**Tipo:** bugfix + feature + config
+**Épico:** E17 (adhoc)
+
+- **Notificação de limite dinâmica:** `LimitWarningNotifier`/`LimitWarningPolicy` diziam
+  sempre "faltam 5 min", mesmo quando o disparo acontecia com menos tempo restante (limite
+  curto o suficiente pra a janela de aviso não caber inteira). `LimitWarningPolicy.minutesRemaining`
+  calcula o valor real no instante do aviso; strings viraram `<plurals>`.
+- **Toggle de notificações:** novo `NotificationPreferences` (DataStore) + linha com
+  `Switch` no Perfil (Preferências); `LimitWarningNotifier.notifyLimitApproaching` agora
+  checa a preferência antes de disparar.
+- **Carimbo "BLOQUEADO" reposicionado:** no recibo de bloqueio, o nome do app agora fica
+  centralizado sozinho na linha; o carimbo passou a ficar sobreposto no canto superior
+  direito do recibo (antes disputava espaço na mesma `Row`), reduzido (~15% menor).
+- **Delay ao abrir a aba Apps:** `InstalledAppsProvider` já cacheava a leitura via
+  `PackageManager` em memória, mas só começava a carregar quando o usuário abria a aba.
+  `MainViewModel` agora aquece esse cache no `init`, assim que o app abre.
+- **Aviso de Acessibilidade desativada não aparecia:** `PermissionNagPreferences` limitava
+  o aviso a uma exibição por dia; se a Acessibilidade era revogada no meio do dia (já
+  tendo avisado ou não naquele dia), o usuário ficava sem sinal até o dia seguinte.
+  Agora o conjunto de permissões faltando é comparado a cada checagem — uma permissão que
+  ficou faltando de novo (ex.: Acessibilidade desligada) fura o limite diário.
+- **Balão-tutorial do salário:** no primeiro acesso à Home após o onboarding, enquanto o
+  salário não é configurado, um balão abaixo do card convida a calibrar o taxímetro
+  ("Adicione seu salário e descubra exatamente quanto dinheiro você perde..."); some ao
+  tocar "Entendi" e não volta (`MoneyPreferences.salaryTipShown`). O card ganha uma borda
+  levemente destacada enquanto o balão está visível.
+- **Splash desativada** via `FeatureFlags.SPLASH_ENABLED = false` (código mantido, só
+  desligado — reative trocando o valor).
+
 ## [2026-07-07] — E16: pagamento migrado para Google Play Billing (compliance Play Store)
 **Tipo:** refactor + regra
 **Épico:** E16 (adhoc)
