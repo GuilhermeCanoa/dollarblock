@@ -53,6 +53,7 @@
         <item>They have engineers paid to keep you scrolling. You have R$ 1 and self-respect. Now it\'s a fair fight.</item>
     </string-array>
     <string name="pay_method_google">Google Pay</string>
+    <string name="pay_method_play">Google Play</string>
     <string name="pay_method_simulated">Simulated payment</string>
 
     <!-- Tone of voice -->
@@ -253,6 +254,8 @@
 
     <!-- Payment / unlock -->
     <string name="pay_with_google">Pay with Google Pay</string>
+    <string name="pay_day_pass">Pay for the day pass</string>
+    <string name="pay_billing_unavailable">Google Play store didn\'t answer. The day pass is unavailable right now.</string>
     <string name="pay_simulate">Simulate payment (test)</string>
     <string name="pay_processing">Processing…</string>
     <string name="pay_unavailable">Google Pay is not available on this device.</string>

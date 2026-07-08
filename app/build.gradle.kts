@@ -107,8 +107,11 @@ dependencies {
     // DataStore — preferências (apps bloqueados)
     implementation(libs.androidx.datastore.preferences)
 
-    // Google Pay — pagamento para desbloqueio
+    // Google Pay — caminho Stripe (desabilitado via PaymentConfig, mantido para reuso — E16)
     implementation(libs.play.services.wallet)
+
+    // Google Play Billing — cobrança do passe do dia (provider ativo — E16)
+    implementation(libs.billing.ktx)
 
     // Tooling / debug
     debugImplementation(libs.androidx.ui.tooling)

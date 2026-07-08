@@ -21,6 +21,7 @@ sealed interface RecentEvent {
 
 /** Métodos de pagamento registrados em um desbloqueio. */
 object PaymentMethod {
+    const val PLAY_BILLING = "play_billing"
     const val GOOGLE_PAY = "google_pay"
     const val SIMULATED = "simulado"
 }

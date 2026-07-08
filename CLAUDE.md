@@ -89,9 +89,18 @@ Single Gradle module (`:app`) with Clean Architecture packages. Dependency rule:
 
 `UsageStatsManager` measures daily usage; `DollarBlockAccessibilityService` detects the foreground app in real time and calls `startActivity(BlockActivity)` when a limit is reached. To survive the target app's cold-start re-raise (~40 ms), the service re-asserts the block on every `TYPE_WINDOW_STATE_CHANGED` event with an additional delayed re-assertion (~500 ms). Debounce only the *registration* of the event, not the launch.
 
-### Payment (E9 — real Stripe charge, test mode)
+### Payment (E16 — Google Play Billing; E9 Stripe path kept but disabled)
 
-`feature/blocking/payment/` wires a **real Stripe charge through an AWS backend**, in Stripe *test* mode:
+Since E16 the day pass is charged through the **Google Play Billing Library** (consumable
+product `day_pass`, billing-ktx 7.1.1) — required by the Play Payments Policy for in-app
+feature unlocks (see `docs/specs/E16-compliance-play-store-pagamentos.md`).
+`PaymentConfig.PROVIDER` selects the provider: `PLAY_BILLING` (active) or
+`STRIPE_GOOGLE_PAY` (the whole E9 flow below, kept compilable for reuse but never executed).
+`PlayBillingManager` handles connection, product/price loading, purchase launch and
+consumption; unlock is granted only on `PURCHASED`. The Play Console product must exist
+with ID `day_pass` and its price kept in sync with `GooglePayConfig.DEFAULT_PRICE`.
+
+The disabled E9 flow: `feature/blocking/payment/` wires a **real Stripe charge through an AWS backend**, in Stripe *test* mode:
 - `GooglePayConfig.kt` — `ENVIRONMENT_TEST`, gateway `"stripe"` with a `pk_test_` publishable key. `PRICE = "1.00"` BRL (**day pass** — E11); the amount actually charged is fixed in the `unlock-charge` Lambda and must be kept in sync.
 - `BlockActivity.handlePaymentData` extracts the Google Pay token, isolates the Stripe token `id` via `StripeToken.extractId`, and calls `PaymentApiClient.charge()` → `POST /unlock-charge` (live API Gateway + Lambda + Stripe). Unlock is granted **only** on `status == "succeeded"`; idempotency via a per-request UUID.
 - On success, `BlockPreferences.grantUnlockForToday(pkg)` frees the app until **local midnight** (wall-clock `unlockUntilMs`; at most one payment per app per day by construction); the unlock is logged through `EventsRepository.recordUnlock`.

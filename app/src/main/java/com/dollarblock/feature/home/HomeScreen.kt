@@ -475,10 +475,10 @@ private fun RecentEventRow(event: RecentEvent) {
                 color = MaterialTheme.colorScheme.onSurface,
             )
             if (event is RecentEvent.Unlocked) {
-                val method = if (event.method == PaymentMethod.GOOGLE_PAY) {
-                    stringResource(R.string.pay_method_google)
-                } else {
-                    stringResource(R.string.pay_method_simulated)
+                val method = when (event.method) {
+                    PaymentMethod.PLAY_BILLING -> stringResource(R.string.pay_method_play)
+                    PaymentMethod.GOOGLE_PAY -> stringResource(R.string.pay_method_google)
+                    else -> stringResource(R.string.pay_method_simulated)
                 }
                 Text(
                     text = stringResource(R.string.home_event_unlock_detail, event.amount, method),

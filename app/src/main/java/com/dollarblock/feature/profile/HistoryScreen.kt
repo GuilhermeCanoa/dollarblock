@@ -173,10 +173,10 @@ private fun HistoryEventRow(event: RecentEvent) {
             )
             Text(
                 text = if (unlocked) {
-                    val method = if ((event as RecentEvent.Unlocked).method == PaymentMethod.GOOGLE_PAY) {
-                        stringResource(R.string.pay_method_google)
-                    } else {
-                        stringResource(R.string.pay_method_simulated)
+                    val method = when ((event as RecentEvent.Unlocked).method) {
+                        PaymentMethod.PLAY_BILLING -> stringResource(R.string.pay_method_play)
+                        PaymentMethod.GOOGLE_PAY -> stringResource(R.string.pay_method_google)
+                        else -> stringResource(R.string.pay_method_simulated)
                     }
                     "${stringResource(R.string.history_entry_paid)} · $method"
                 } else {

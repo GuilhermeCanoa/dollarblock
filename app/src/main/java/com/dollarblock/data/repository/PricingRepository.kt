@@ -3,6 +3,8 @@ package com.dollarblock.data.repository
 import com.dollarblock.data.local.prefs.PricingPreferences
 import com.dollarblock.feature.blocking.payment.GooglePayConfig
 import com.dollarblock.feature.blocking.payment.PaymentApiClient
+import com.dollarblock.feature.blocking.payment.PaymentConfig
+import com.dollarblock.feature.blocking.payment.PaymentProvider
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -21,6 +23,12 @@ class PricingRepository @Inject constructor(
      * [GooglePayConfig.DEFAULT_PRICE].
      */
     suspend fun getDayPassPrice(currency: String = GooglePayConfig.CURRENCY_CODE): String {
+        // Com o Play Billing ativo (E16) a fonte de verdade do preço é o produto no Play
+        // Console; não consultamos o backend Stripe (desabilitado). DEFAULT_PRICE deve ser
+        // mantido em sincronia manual com o preço do produto `day_pass` no Play Console.
+        if (PaymentConfig.PROVIDER == PaymentProvider.PLAY_BILLING) {
+            return GooglePayConfig.DEFAULT_PRICE
+        }
         val cacheKey = cacheKeyFor(currency)
         val fetched = PaymentApiClient.getPricing().getOrNull()
             ?.get(PaymentApiClient.PRODUCT_DAY_PASS)

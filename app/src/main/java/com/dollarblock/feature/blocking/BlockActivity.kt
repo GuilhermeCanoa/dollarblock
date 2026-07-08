@@ -84,6 +84,9 @@ import com.dollarblock.domain.model.PaymentMethod
 import com.dollarblock.domain.repository.EventsRepository
 import com.dollarblock.feature.blocking.payment.GooglePayConfig
 import com.dollarblock.feature.blocking.payment.PaymentApiClient
+import com.dollarblock.feature.blocking.payment.PaymentConfig
+import com.dollarblock.feature.blocking.payment.PaymentProvider
+import com.dollarblock.feature.blocking.payment.PlayBillingManager
 import com.dollarblock.feature.blocking.payment.StripeToken
 import kotlinx.coroutines.launch
 import com.google.android.gms.common.api.ApiException
@@ -111,7 +114,13 @@ class BlockActivity : AppCompatActivity() {
     @Inject
     lateinit var pricingRepository: PricingRepository
 
+    // Caminho Stripe/Google Pay (E9) — só inicializado quando PaymentConfig.PROVIDER
+    // é STRIPE_GOOGLE_PAY; mantido para reuso futuro (E16).
     private lateinit var paymentsClient: PaymentsClient
+
+    // Caminho Google Play Billing (E16) — provider ativo.
+    private var billingManager: PlayBillingManager? = null
+
     private var targetPackage: String = ""
     private var appLabel: String = ""
 
@@ -119,6 +128,9 @@ class BlockActivity : AppCompatActivity() {
     private val paymentInProgress = MutableStateFlow(false)
     private val unlocksPaidToday = MutableStateFlow(0)
     private val dayPassPrice = MutableStateFlow(GooglePayConfig.DEFAULT_PRICE)
+
+    /** Preço localizado vindo do Play Billing (ex.: "R$ 5,00"); null usa o fallback. */
+    private val billingPrice = MutableStateFlow<String?>(null)
 
     private val paymentLauncher =
         registerForActivityResult(StartIntentSenderForResult()) { result ->
@@ -151,10 +163,23 @@ class BlockActivity : AppCompatActivity() {
 
         targetPackage = intent.getStringExtra(EXTRA_PACKAGE).orEmpty()
         appLabel = intent.getStringExtra(EXTRA_LABEL) ?: getString(R.string.app_name)
-        paymentsClient = GooglePayConfig.paymentsClient(this)
-        checkReadyToPay()
+        when (PaymentConfig.PROVIDER) {
+            PaymentProvider.PLAY_BILLING -> {
+                val manager = PlayBillingManager(this, billingListener)
+                billingManager = manager
+                manager.connect()
+                lifecycleScope.launch { manager.ready.collect { readyToPay.value = it } }
+                lifecycleScope.launch { manager.formattedPrice.collect { billingPrice.value = it } }
+            }
+            PaymentProvider.STRIPE_GOOGLE_PAY -> {
+                paymentsClient = GooglePayConfig.paymentsClient(this)
+                checkReadyToPay()
+                // Preço exibido/registrado vem do backend de pricing só no caminho Stripe;
+                // no Play Billing o preço é o do produto no Play Console.
+                lifecycleScope.launch { dayPassPrice.value = pricingRepository.getDayPassPrice() }
+            }
+        }
         lifecycleScope.launch { unlocksPaidToday.value = eventsRepository.unlocksPaidToday() }
-        lifecycleScope.launch { dayPassPrice.value = pricingRepository.getDayPassPrice() }
 
         onBackPressedDispatcher.addCallback(
             this,
@@ -169,19 +194,46 @@ class BlockActivity : AppCompatActivity() {
                 val processing by paymentInProgress.collectAsState()
                 val paidToday by unlocksPaidToday.collectAsState()
                 val price by dayPassPrice.collectAsState()
+                val playPrice by billingPrice.collectAsState()
                 BlockScreen(
                     appLabel = appLabel,
                     unlocksPaidToday = paidToday,
-                    price = price,
-                    googlePayReady = ready,
+                    // Preço final exibido no recibo: o localizado do Play quando disponível,
+                    // senão o fallback/pricing formatado em BRL.
+                    priceText = playPrice ?: ("R$ " + price.replace('.', ',')),
+                    provider = PaymentConfig.PROVIDER,
+                    paymentReady = ready,
                     paymentInProgress = processing,
                     // Feature flag de dev: o botão de pagamento simulado só existe quando
                     // BlockingDevFlags.SIMULATED_PAYMENTS está ligado (e nunca em release).
                     showDebugSimulate = BuildConfig.DEBUG && BlockingDevFlags.SIMULATED_PAYMENTS,
-                    onPayWithGooglePay = ::startPayment,
+                    onPay = ::startPayment,
                     onSimulatePayment = { onPaymentSuccess(PaymentMethod.SIMULATED) },
                     onGoHome = ::goHome,
                 )
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        billingManager?.disconnect()
+        billingManager = null
+        super.onDestroy()
+    }
+
+    private val billingListener = object : PlayBillingManager.PurchaseListener {
+        // Os callbacks do Billing podem chegar fora da main thread — sempre repostar.
+        override fun onPurchaseCompleted() {
+            runOnUiThread {
+                paymentInProgress.value = false
+                onPaymentSuccess(PaymentMethod.PLAY_BILLING)
+            }
+        }
+
+        override fun onPurchaseFailed(cancelled: Boolean) {
+            runOnUiThread {
+                paymentInProgress.value = false
+                toast(if (cancelled) R.string.pay_cancelled else R.string.pay_error)
             }
         }
     }
@@ -194,6 +246,24 @@ class BlockActivity : AppCompatActivity() {
     }
 
     private fun startPayment() {
+        when (PaymentConfig.PROVIDER) {
+            PaymentProvider.PLAY_BILLING -> startPlayBillingPayment()
+            PaymentProvider.STRIPE_GOOGLE_PAY -> startGooglePayPayment()
+        }
+    }
+
+    private fun startPlayBillingPayment() {
+        paymentInProgress.value = true
+        val launched = billingManager?.launchPurchase(this) ?: false
+        if (!launched) {
+            paymentInProgress.value = false
+            toast(R.string.pay_error)
+        }
+    }
+
+    // ——— Caminho Stripe/Google Pay (E9) — desabilitado via PaymentConfig, mantido para reuso ———
+
+    private fun startGooglePayPayment() {
         paymentInProgress.value = true
         val request =
             PaymentDataRequest.fromJson(GooglePayConfig.paymentDataRequest(dayPassPrice.value).toString())
@@ -267,12 +337,16 @@ class BlockActivity : AppCompatActivity() {
     private fun onPaymentSuccess(method: String) {
         if (targetPackage.isNotEmpty()) {
             blockPreferences.grantUnlockForToday(targetPackage)
+            // No Play Billing o valor/moeda reais são os do produto no Play Console;
+            // nos demais caminhos, o preço resolvido via pricing/fallback em BRL.
+            val amount = billingManager?.priceAmount ?: dayPassPrice.value
+            val currency = billingManager?.priceCurrency ?: GooglePayConfig.CURRENCY_CODE
             lifecycleScope.launch {
                 eventsRepository.recordUnlock(
                     packageName = targetPackage,
                     appLabel = appLabel,
-                    amount = dayPassPrice.value,
-                    currency = GooglePayConfig.CURRENCY_CODE,
+                    amount = amount,
+                    currency = currency,
                     method = method,
                 )
             }
@@ -327,11 +401,12 @@ class BlockActivity : AppCompatActivity() {
 private fun BlockScreen(
     appLabel: String,
     unlocksPaidToday: Int,
-    price: String,
-    googlePayReady: Boolean,
+    priceText: String,
+    provider: PaymentProvider,
+    paymentReady: Boolean,
     paymentInProgress: Boolean,
     showDebugSimulate: Boolean,
-    onPayWithGooglePay: () -> Unit,
+    onPay: () -> Unit,
     onSimulatePayment: () -> Unit,
     onGoHome: () -> Unit,
 ) {
@@ -384,7 +459,7 @@ private fun BlockScreen(
             Spacer(Modifier.height(20.dp))
             InvoiceReceipt(
                 appLabel = appLabel,
-                price = price,
+                priceText = priceText,
                 message = stringResource(
                     when {
                         unlocksPaidToday >= 2 -> R.string.block_screen_message_many
@@ -404,11 +479,24 @@ private fun BlockScreen(
                     color = NeutralWhite,
                 )
             } else {
-                if (googlePayReady) {
-                    GooglePayButton(onClick = onPayWithGooglePay)
+                if (paymentReady) {
+                    PayButton(
+                        label = stringResource(
+                            when (provider) {
+                                PaymentProvider.PLAY_BILLING -> R.string.pay_day_pass
+                                PaymentProvider.STRIPE_GOOGLE_PAY -> R.string.pay_with_google
+                            },
+                        ),
+                        onClick = onPay,
+                    )
                 } else {
                     Text(
-                        text = stringResource(R.string.pay_unavailable),
+                        text = stringResource(
+                            when (provider) {
+                                PaymentProvider.PLAY_BILLING -> R.string.pay_billing_unavailable
+                                PaymentProvider.STRIPE_GOOGLE_PAY -> R.string.pay_unavailable
+                            },
+                        ),
                         style = MaterialTheme.typography.bodyMedium,
                         color = NeutralWhite.copy(alpha = 0.85f),
                         textAlign = TextAlign.Center,
@@ -475,7 +563,7 @@ private fun BlockScreen(
 @Composable
 private fun InvoiceReceipt(
     appLabel: String,
-    price: String,
+    priceText: String,
     message: String,
     modifier: Modifier = Modifier,
 ) {
@@ -552,7 +640,7 @@ private fun InvoiceReceipt(
             DashedDivider(ink.copy(alpha = 0.35f))
             Spacer(Modifier.height(14.dp))
             Text(
-                text = "R$ " + price.replace('.', ','),
+                text = priceText,
                 fontFamily = FontFamily.Monospace,
                 fontWeight = FontWeight.Bold,
                 fontSize = 36.sp,
@@ -613,7 +701,7 @@ private fun DashedDivider(color: Color, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun GooglePayButton(onClick: () -> Unit) {
+private fun PayButton(label: String, onClick: () -> Unit) {
     Button(
         onClick = onClick,
         modifier = Modifier
@@ -625,7 +713,7 @@ private fun GooglePayButton(onClick: () -> Unit) {
         ),
     ) {
         Text(
-            text = stringResource(R.string.pay_with_google),
+            text = label,
             style = MaterialTheme.typography.labelLarge,
         )
     }

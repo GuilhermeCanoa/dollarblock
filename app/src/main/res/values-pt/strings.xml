@@ -55,6 +55,7 @@
         <item>Eles têm engenheiros pagos pra te prender na tela. Você tem R$ 1 e amor-próprio. Agora a briga é justa.</item>
     </string-array>
     <string name="pay_method_google">Google Pay</string>
+    <string name="pay_method_play">Google Play</string>
     <string name="pay_method_simulated">Pagamento simulado</string>
 
     <!-- Tone of voice -->
@@ -253,6 +254,8 @@
 
     <!-- Payment / unlock -->
     <string name="pay_with_google">Pagar com Google Pay</string>
+    <string name="pay_day_pass">Pagar o passe do dia</string>
+    <string name="pay_billing_unavailable">A loja do Google Play não respondeu. O passe do dia está indisponível agora.</string>
     <string name="pay_simulate">Simular pagamento (teste)</string>
     <string name="pay_processing">Processando…</string>
     <string name="pay_unavailable">O Google Pay não está disponível neste dispositivo.</string>

@@ -12,6 +12,29 @@ Descrição funcional.
 
 ---
 
+## [2026-07-07] — E16: pagamento migrado para Google Play Billing (compliance Play Store)
+**Tipo:** refactor + regra
+**Épico:** E16 (adhoc)
+
+- **Por quê:** a Payments Policy do Google exige Google Play Billing para desbloqueio de
+  funcionalidade dentro do app; o fluxo Google Pay + Stripe (E9) não é aceito sem
+  enrollment em programa de billing alternativo. Análise e decisão (Alternativa 1) em
+  `docs/specs/E16-compliance-play-store-pagamentos.md`.
+- **Passe do dia agora é um produto consumível do Play Billing** (`day_pass`, billing-ktx
+  7.1.1): `PlayBillingManager` conecta, carrega preço localizado, lança a compra e consome
+  cada compra confirmada; desbloqueio concedido só em `PURCHASED` (pendências não liberam).
+  Compras órfãs (app morto antes do consumo) são consumidas e honradas na próxima abertura.
+- **Stripe/Google Pay não foi apagado — só desabilitado**: novo switch
+  `PaymentConfig.PROVIDER` (`PLAY_BILLING` ativo; `STRIPE_GOOGLE_PAY` reativa o caminho E9
+  inteiro, incluindo o backend `dollarblock-payment`, que segue intocado).
+- **UI/extrato:** recibo mostra o preço localizado do Play (`formattedPrice`); botão
+  genérico "Pagar o passe do dia"; novo método `play_billing` exibido como "Google Play"
+  na Home e no Histórico. `PricingRepository` não consulta mais o backend com o Play
+  Billing ativo (fallback = `DEFAULT_PRICE`, manter em sincronia com o Play Console).
+- **Docs:** `PLAYSTORE_PRIVACY_SUBMISSION.md` atualizado (política de privacidade §4 sem
+  Stripe, Data Safety sem coleta, pendências §6 com criação do produto `day_pass` e teste
+  com license testers no lugar das chaves Stripe de produção).
+
 ## [2026-07-07] — E15: polimento pré-MVP (ícone, splash, extrato detalhado, onboarding, R$ 5)
 **Tipo:** feature + bugfix + config
 **Épico:** E15 (adhoc)

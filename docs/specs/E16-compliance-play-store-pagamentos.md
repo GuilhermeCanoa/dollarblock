@@ -1,6 +1,6 @@
 # Spec: Compliance Google Play — política de pagamentos (Stripe/Google Pay)
 
-**Status:** draft
+**Status:** done (código) — pendências operacionais no Play Console listadas em "Implementação"
 **Épico:** E16 — adhoc (pré-requisito para submissão à Play Store)
 **Data de criação:** 2026-07-07
 **Última atualização:** 2026-07-07
@@ -91,10 +91,64 @@ dentro do app").
 - **Impacto:** alto e incerto — depende de desenhar um modelo de produto genuinamente
   diferente, não é uma correção de compliance simples.
 
+## Decisão
+
+**Alternativa 1 escolhida** (2026-07-07): migrar a cobrança do passe do dia para a Google
+Play Billing Library, **mantendo o código Stripe/Google Pay compilável porém desabilitado**
+para eventual reuso (distribuição fora da Play Store ou enrollment futuro em User Choice
+Billing).
+
+## Implementação (2026-07-07)
+
+### O que mudou no app
+
+- **`feature/blocking/payment/PaymentConfig.kt`** (novo) — switch de provider:
+  `PaymentConfig.PROVIDER = PaymentProvider.PLAY_BILLING`. Trocar para
+  `STRIPE_GOOGLE_PAY` reativa o caminho antigo inteiro (nada foi apagado).
+- **`feature/blocking/payment/PlayBillingManager.kt`** (novo) — wrapper do
+  `BillingClient` (billing-ktx 7.1.1): conecta, carrega o produto consumível
+  `day_pass` (INAPP), expõe `ready`/`formattedPrice`, lança o fluxo de compra e
+  **consome** cada compra confirmada (um passe por compra, recomprável). Na conexão,
+  consome compras PURCHASED órfãs (app morto entre compra e consumo) concedendo o
+  desbloqueio ao app-alvo atual.
+- **`BlockActivity`** — faz branch por `PaymentConfig.PROVIDER`; o caminho
+  Stripe/Google Pay (`checkReadyToPay`, `startGooglePayPayment`, `handlePaymentData`,
+  `PaymentApiClient`, `StripeToken`, `GooglePayConfig`) continua no código, apenas não
+  é executado. Preço do recibo usa o `formattedPrice` localizado do Play quando
+  disponível; extrato registra valor/moeda reais do produto (`priceAmountMicros`).
+- **`PaymentMethod.PLAY_BILLING`** novo; Home/Histórico exibem "Google Play".
+- **`PricingRepository`** — com Play Billing ativo retorna direto
+  `GooglePayConfig.DEFAULT_PRICE` (sem bater no backend Stripe desabilitado).
+  ⚠️ `DEFAULT_PRICE` deve ser mantido em sincronia manual com o preço do produto
+  `day_pass` no Play Console (usado no cálculo de "total economizado" e como fallback
+  de exibição offline).
+- Sem verificação server-side de compra por enquanto (aceita `PURCHASED` +
+  `consumeAsync` client-side).
+
+### Backend (`dollarblock-payment`)
+
+- **Nenhuma mudança necessária agora.** A stack AWS (unlock-charge/pricing) fica
+  associada ao caminho Stripe desabilitado.
+- Follow-up opcional (anti-fraude): verificação server-side do `purchaseToken` via
+  Google Play Developer API (`purchases.products.get`) implementada como novo endpoint
+  neste mesmo repo/stack, se um dia justificar-se.
+
+### Pendências operacionais (Play Console, fora do código)
+
+- [ ] Criar o produto no app no Play Console: **ID `day_pass`**, consumível gerenciado,
+      preço **R$ 5,00** (igual a `GooglePayConfig.DEFAULT_PRICE`).
+- [ ] Subir um build assinado a uma track (internal testing) — produtos in-app só podem
+      ser testados com o app distribuído pelo Play e com **license testers** configurados.
+- [ ] Conta de developer com perfil de pagamentos (merchant) ativo para vender produtos.
+
+Ver `docs/PLAYSTORE_PRIVACY_SUBMISSION.md` §6 (atualizado com estes passos).
+
 ## Notas / Decisões
 
-- 2026-07-07: análise de compliance realizada; nenhuma alternativa escolhida ainda.
+- 2026-07-07: análise de compliance realizada.
   Confirmado via busca nas páginas oficiais (Play Console Help / Android Developers) que:
   Google Play Billing é obrigatório para "app functionality or content not available in
   the free version"; a suspensão da obrigatoriedade de Play Billing em 2026 aplica-se
   apenas dentro dos programas com enrollment formal.
+- 2026-07-07: Alternativa 1 implementada (ver "Implementação" acima). Billing Library
+  7.1.1 atende à exigência "Billing Library 7+" para apps novos desde ago/2025.

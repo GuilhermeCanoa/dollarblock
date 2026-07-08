@@ -14,6 +14,7 @@ room = "2.6.1"
 datastore = "1.1.1"
 coroutines = "1.9.0"
 playServicesWallet = "19.4.0"
+billing = "7.1.1"
 workManager = "2.10.0"
 hiltWork = "1.2.0"
 junit = "4.13.2"
@@ -60,8 +61,11 @@ androidx-datastore-preferences = { group = "androidx.datastore", name = "datasto
 # Coroutines
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 
-# Google Pay (PaymentsClient)
+# Google Pay (PaymentsClient) — caminho Stripe, desabilitado (E16)
 play-services-wallet = { group = "com.google.android.gms", name = "play-services-wallet", version.ref = "playServicesWallet" }
+
+# Google Play Billing (passe do dia — provider ativo desde o E16)
+billing-ktx = { group = "com.android.billingclient", name = "billing-ktx", version.ref = "billing" }
 
 # Test
 junit = { group = "junit", name = "junit", version.ref = "junit" }

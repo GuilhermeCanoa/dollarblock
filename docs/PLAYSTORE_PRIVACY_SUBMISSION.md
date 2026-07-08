@@ -48,8 +48,8 @@ que fica no seu aparelho, o que é enviado para fora e por quê.
   em cada app, os limites que você define e o seu histórico de bloqueios **nunca são
   enviados para nossos servidores nem para terceiros.**
 - **Não temos conta, login, cadastro nem coleta de e-mail, nome ou telefone.**
-- A única informação que sai do aparelho acontece **se, e somente se,** você optar por pagar
-  um "passe do dia" para desbloquear um app — e mesmo aí não enviamos dados pessoais seus.
+- Não enviamos nenhum dado seu para servidores nossos. O pagamento opcional do "passe do
+  dia" é processado pelo próprio **Google Play** (compra no app), sem passar por nós.
 
 #### 2. Dados que o aplicativo acessa **e mantém apenas no seu aparelho**
 
@@ -77,20 +77,17 @@ identifica qual aplicativo está em primeiro plano.
 
 #### 4. Pagamentos (opcional)
 
-Se você optar por pagar R$ 5,00 por um "passe do dia" para liberar um app bloqueado, o
-pagamento é processado por meio do **Google Pay** e da **Stripe, Inc.** (processadora de
-pagamentos). Nesse fluxo:
+Se você optar por pagar R$ 5,00 por um "passe do dia" para liberar um app bloqueado, a
+compra é processada inteiramente pelo **Google Play** (faturamento do Google Play / Google
+Play Billing), como qualquer compra dentro de aplicativo na Play Store. Nesse fluxo:
 
-- O DollarBlock **não vê nem armazena** os dados do seu cartão. Eles são tratados
-  diretamente pelo Google Pay e pela Stripe.
-- Nosso servidor registra apenas dados **não identificáveis** da transação para confirmar o
-  desbloqueio e evitar cobrança duplicada: um identificador aleatório da transação, o
-  identificador técnico do app desbloqueado (ex.: `com.instagram.android`), o valor, a
-  moeda e o status do pagamento. **Nenhum dado pessoal seu é enviado ou guardado por nós.**
-- Esses registros de transação são retidos por até 90 dias e depois excluídos
-  automaticamente.
-- O tratamento de dados pela Stripe segue a política da própria Stripe:
-  https://stripe.com/br/privacy
+- O DollarBlock **não vê nem armazena** os dados do seu cartão ou da sua forma de
+  pagamento. Eles são tratados diretamente pelo Google Play.
+- **Não temos servidor envolvido na compra**: o aplicativo apenas recebe do Google Play a
+  confirmação de que a compra foi concluída e registra o desbloqueio **localmente, no seu
+  aparelho** (o extrato que você vê no app).
+- O tratamento de dados pelo Google Play segue a política de privacidade do Google:
+  https://policies.google.com/privacy
 
 #### 5. Permissões e por que são solicitadas
 
@@ -133,14 +130,13 @@ respostas refletem que o app não envia dados pessoais para servidores).
 
 ### 2.1 Coleta e compartilhamento
 - **O app coleta ou compartilha algum dos tipos de dados obrigatórios?**
-  → **Sim** (por causa do fluxo de pagamento; ser transparente aqui evita reprovação por
-  inconsistência). Detalhe abaixo somente o que se aplica.
-- **Todos os dados estão criptografados em trânsito?** → **Sim** (a API de pagamento usa
-  HTTPS/TLS; o Google Play HTTP API força TLS).
-- **Você fornece uma forma de o usuário solicitar exclusão de dados?** → Como não há dados
-  pessoais em servidor, selecione a opção aplicável e explique no texto: os dados vivem no
-  aparelho; desinstalar/limpar apaga tudo. Para os registros de transação (não pessoais),
-  há TTL de 90 dias.
+  → **Não.** Todos os dados de uso, limites e histórico são processados e armazenados
+  apenas no aparelho. O pagamento do "passe do dia" é uma compra no app processada pelo
+  **Google Play Billing** — o formulário Data Safety **não exige declarar** dados tratados
+  pelo próprio sistema de faturamento do Google Play (o app não coleta nem compartilha
+  dados de pagamento; quem processa é a própria plataforma).
+- Caso o console force alguma resposta adicional por haver compras no app, mantenha a
+  coerência: nenhum dado sai do dispositivo pelo DollarBlock.
 
 ### 2.2 Tipos de dados — o que declarar
 
@@ -148,22 +144,20 @@ respostas refletem que o app não envia dados pessoais para servidores).
 - Uso de apps / histórico de atividade no dispositivo → é processado **apenas no aparelho**.
   No formulário, o Google distingue "coletado" (enviado para fora) de processado localmente:
   como **não sai do dispositivo**, **não** marque como coletado.
+- Informações de pagamento → tratadas pelo **Google Play Billing** (plataforma), não pelo
+  app; não há servidor próprio envolvido na compra.
 
-**DECLARE** (fluxo de pagamento):
-- Categoria **"Informações financeiras" → "Informações de pagamento"**:
-  - Coletado: **Sim** · Compartilhado: **Sim** (com a Stripe, processadora).
-  - Finalidade: **Processamento de pagamentos**.
-  - Os dados do cartão são tratados por Google Pay/Stripe; o app não os armazena.
-- **App activity / "Outras ações no app"** referentes à transação (id do app desbloqueado):
-  - Se o console exigir, declare como **compartilhado** com finalidade "Processamento de
-    pagamentos / prevenção de fraude", **sem** vínculo com identidade do usuário.
+> Nota: se o caminho Stripe/Google Pay (hoje desabilitado no código — ver
+> `docs/specs/E16-compliance-play-store-pagamentos.md`) for reativado algum dia, esta seção
+> precisa voltar a declarar "Informações financeiras → Informações de pagamento"
+> compartilhadas com a Stripe, e o app precisará estar inscrito num programa de billing
+> alternativo do Google.
 
 ### 2.3 Frases-modelo para os campos de texto livre
 > "Os dados de uso de aplicativos, limites e histórico são processados e armazenados
-> exclusivamente no dispositivo do usuário e não são transmitidos para nossos servidores. O
-> único envio externo ocorre no pagamento opcional do 'passe do dia', processado por Google
-> Pay e Stripe; nesse caso registramos apenas dados não identificáveis da transação
-> (identificador aleatório, app desbloqueado, valor, moeda, status), retidos por 90 dias."
+> exclusivamente no dispositivo do usuário e não são transmitidos para nossos servidores.
+> O pagamento opcional do 'passe do dia' é uma compra no aplicativo processada pelo
+> faturamento do Google Play; o aplicativo não coleta nem compartilha dados de pagamento."
 
 ---
 
@@ -266,8 +260,23 @@ exigência do Google.
 
 ## 6. Pendências técnicas antes de publicar (não são deste doc, mas bloqueiam o lançamento)
 
-1. **Chaves de produção**: trocar `pk_test_`/`sk_test_` e `ENVIRONMENT_TEST` por produção;
-   fazer deploy da stack `dollarblock-payment-production`. Ver `docs/PAYMENTS_SETUP.md`.
+> O pagamento migrou de Google Pay + Stripe para **Google Play Billing** (E16 — ver
+> `docs/specs/E16-compliance-play-store-pagamentos.md`). As chaves Stripe de produção e a
+> stack `dollarblock-payment-production` **deixaram de ser pré-requisito** de lançamento; o
+> código Stripe permanece no app apenas desabilitado (`PaymentConfig.PROVIDER`).
+
+1. **Produto in-app no Play Console**: criar o produto gerenciado **consumível** com ID
+   exatamente `day_pass` (o mesmo de `PaymentConfig.PLAY_PRODUCT_DAY_PASS`), preço
+   **R$ 5,00** — igual a `GooglePayConfig.DEFAULT_PRICE`, que alimenta o fallback de
+   exibição e o cálculo de "total economizado"; se mudar o preço lá, mude a constante.
+   Requer **perfil de pagamentos (merchant)** ativo na conta de developer.
 2. **`versionCode`/`versionName`** de release e build assinado (keystore de upload).
-3. **Testar o bloqueio** em fabricantes com gestão agressiva de bateria (Xiaomi, etc.), onde
+3. **Testar a compra na track de teste interno**: produtos in-app só funcionam com o app
+   distribuído pelo Play; adicionar **license testers** (Play Console › Configurações ›
+   Teste de licença) para comprar sem cobrança real. O botão "passe do dia" mostra
+   "indisponível" se o produto não existir/estiver inativo ou o app não vier do Play.
+4. **Testar o bloqueio** em fabricantes com gestão agressiva de bateria (Xiaomi, etc.), onde
    o serviço pode ser encerrado.
+5. **Classificação de conteúdo / ficha**: declarar que o app tem **compras no aplicativo**
+   (in-app purchases) — a Play Store exibe o selo automaticamente para produtos Play
+   Billing.
