@@ -203,7 +203,14 @@ class UsageStatsProvider @Inject constructor(
                 UsageEvents.Event.ACTIVITY_STOPPED -> UsageAggregator.Type.PAUSED
                 else -> continue
             }
-            out.add(UsageAggregator.SessionEvent(event.packageName, type, event.timeStamp))
+            out.add(
+                UsageAggregator.SessionEvent(
+                    packageName = event.packageName,
+                    type = type,
+                    timeStamp = event.timeStamp,
+                    className = event.className,
+                ),
+            )
         }
         return out
     }

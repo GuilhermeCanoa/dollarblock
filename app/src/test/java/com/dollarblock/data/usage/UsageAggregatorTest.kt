@@ -16,8 +16,8 @@ class UsageAggregatorTest {
     private val other = "com.example.other"
 
     private fun min(n: Long) = n * 60_000L
-    private fun resumed(pkg: String, t: Long) = SessionEvent(pkg, Type.RESUMED, t)
-    private fun paused(pkg: String, t: Long) = SessionEvent(pkg, Type.PAUSED, t)
+    private fun resumed(pkg: String, t: Long, cls: String? = null) = SessionEvent(pkg, Type.RESUMED, t, cls)
+    private fun paused(pkg: String, t: Long, cls: String? = null) = SessionEvent(pkg, Type.PAUSED, t, cls)
 
     // --- Sessões fechadas -------------------------------------------------
 
@@ -138,16 +138,84 @@ class UsageAggregatorTest {
     }
 
     @Test
-    fun `resumed duplicado usa o ultimo antes do paused`() {
-        // Dois RESUMED seguidos sem PAUSED: o segundo sobrescreve o início.
+    fun `resumed duplicado (mesma sessao) conta do primeiro resume ate o paused`() {
+        // Dois RESUMED sem className seguidos sem PAUSED caem na mesma sessão (sentinel
+        // por pacote): o pacote esteve em foreground de 5 a 12 → 7 min. (Semântica de
+        // união de intervalos, corrige a subcontagem do padrão trampolim.)
         val events = listOf(resumed(app, min(5)), resumed(app, min(8)), paused(app, min(12)))
-        assertEquals(min(4), UsageAggregator.totalForPackage(app, events))
+        assertEquals(min(7), UsageAggregator.totalForPackage(app, events))
     }
 
     @Test
     fun `paused sem resumed e ignorado`() {
         val events = listOf(paused(app, min(5)), resumed(app, min(10)), paused(app, min(13)))
         assertEquals(min(3), UsageAggregator.totalForPackage(app, events))
+    }
+
+    // --- Padrão trampolim (Chrome) ---------------------------------------
+
+    @Test
+    fun `padrao trampolim do chrome nao subconta a sessao`() {
+        // Sequência real de apps com activity-trampolim (ver spec BUG-uso-subcontado):
+        // RESUMED TabbedActivity  → abre a sessão
+        // STOPPED LauncherActivity → activity que nunca foi resumida; NÃO pode fechar a sessão
+        // PAUSED  TabbedActivity  → fecha a sessão real
+        // Antes do fix (pareamento por pacote), o STOPPED roubava o slot e a sessão sumia (0m).
+        val events = listOf(
+            resumed(app, min(0), "TabbedActivity"),
+            paused(app, min(1), "LauncherActivity"), // STOPPED de outra activity
+            paused(app, min(8), "TabbedActivity"),
+        )
+        assertEquals(min(8), UsageAggregator.totalForPackage(app, events))
+    }
+
+    @Test
+    fun `trampolim na abertura conta desde o primeiro resume`() {
+        // RESUMED Launcher → RESUMED Tabbed (transição interna) → PAUSED Tabbed.
+        // A união dos intervalos mantém o pacote em foreground de 0 a 10 (10 min),
+        // sem contar dobrado a sobreposição.
+        val events = listOf(
+            resumed(app, min(0), "LauncherActivity"),
+            resumed(app, min(1), "TabbedActivity"),
+            paused(app, min(1), "LauncherActivity"),
+            paused(app, min(10), "TabbedActivity"),
+        )
+        assertEquals(min(10), UsageAggregator.totalForPackage(app, events))
+    }
+
+    @Test
+    fun `activities sobrepostas do mesmo app nao contam tempo dobrado`() {
+        // A resumida 0..10, B resumida 3..7 (dentro de A). Tempo de tela = 10 min, não 14.
+        val events = listOf(
+            resumed(app, min(0), "A"),
+            resumed(app, min(3), "B"),
+            paused(app, min(7), "B"),
+            paused(app, min(10), "A"),
+        )
+        assertEquals(min(10), UsageAggregator.totalForPackage(app, events))
+    }
+
+    @Test
+    fun `duas sessoes reais separadas somam`() {
+        val events = listOf(
+            resumed(app, min(0), "Main"), paused(app, min(5), "Main"),   // 5
+            resumed(app, min(20), "Main"), paused(app, min(23), "Main"), // 3
+        )
+        assertEquals(min(8), UsageAggregator.totalForPackage(app, events))
+    }
+
+    @Test
+    fun `sessao trampolim em andamento conta ate now`() {
+        // Chrome aberto e nunca fechado (só RESUMED da Tabbed); STOPPED do Launcher no meio.
+        val events = listOf(
+            resumed(app, min(0), "LauncherActivity"),
+            resumed(app, min(1), "TabbedActivity"),
+            paused(app, min(1), "LauncherActivity"),
+        )
+        val total = UsageAggregator.totalForPackage(
+            app, events, OngoingPolicy.CloseAt(now = min(15), lowerBound = min(0)),
+        )
+        assertEquals(min(15), total)
     }
 
     // --- Multi-app --------------------------------------------------------

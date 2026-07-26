@@ -1,7 +1,8 @@
 # BUG — Uso subcontado quando o app usa activities-trampolim (Chrome)
 
-**Status:** pending
+**Status:** done
 **Descoberto em:** 09/07/2026, durante a geração das capturas de tablet (Play Store) no emulador.
+**Corrigido em:** 26/07/2026 — pareamento de sessão passou a ser por `className` com união de intervalos.
 
 ## Sintoma
 
@@ -48,7 +49,29 @@ loop de pareamento para uma função testável.
 
 ## Tarefas
 
-- [ ] Extrair o pareamento RESUMED/PAUSED para função pura testável
-- [ ] Corrigir pareamento por classe/instância nas 3 funções baseadas em eventos
-- [ ] Testes JVM: padrão trampolim (Chrome), padrão simples, sessão em andamento
-- [ ] Validar no emulador: Chrome deve contar ~o mesmo que `dumpsys usagestats`
+- [x] Extrair o pareamento RESUMED/PAUSED para função pura testável (`UsageAggregator`, 25/07)
+- [x] Corrigir pareamento por classe/instância nas 3 funções baseadas em eventos
+- [x] Testes JVM: padrão trampolim (Chrome), padrão simples, sessão em andamento
+- [ ] Validar no emulador: Chrome deve contar ~o mesmo que `dumpsys usagestats` (pendente — validação manual/smoke)
+
+## Solução implementada (26/07/2026)
+
+O `UsageAggregator` passou a rastrear a sessão por **`className`** em vez de por pacote,
+medindo a **união dos intervalos de foreground**: mantém, por pacote, o conjunto de
+activities atualmente resumidas; o pacote está em foreground enquanto o conjunto é
+não-vazio. Um `RESUMED` de classe abre; um `PAUSED`/`STOPPED` só fecha a sessão quando o
+conjunto fica vazio.
+
+Isso corrige o trampolim naturalmente: o `STOPPED LauncherActivity` tenta remover uma
+classe que não está no conjunto (no-op) e **não** fecha a sessão aberta pela
+`TabbedActivity`. Como medimos união (e não soma), activities sobrepostas do mesmo app
+não contam tempo dobrado. `SessionEvent` ganhou `className` (nullable; quando ausente,
+um sentinel por pacote reproduz o comportamento "uma sessão por pacote").
+
+Testes: `UsageAggregatorTest` cobre padrão trampolim, trampolim na abertura, activities
+sobrepostas, duas sessões separadas e sessão trampolim em andamento.
+
+**Mudança de comportamento consciente:** dois `RESUMED` sem `className` seguidos (sem
+`PAUSED` entre eles) agora contam da **primeira** entrada até a saída (união), não da
+última — o teste correspondente foi atualizado. Sem impacto no fluxo real, onde os
+eventos trazem `className`.

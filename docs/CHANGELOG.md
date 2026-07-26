@@ -12,6 +12,26 @@ Descrição funcional.
 
 ---
 
+## [2026-07-26] — Fix: uso subcontado em apps com activity-trampolim (Chrome)
+**Tipo:** bugfix
+**Épico:** E4 (Monitoramento) / E12 (Uso 100% real)
+
+- **Sintoma:** Chrome (e apps com activity-trampolim, ex.: `ChromeLauncherActivity`)
+  apareciam com uso muito menor que o real — às vezes **0m** — na tela Apps, na Home
+  (prejuízo) e no Extrato. YouTube contava certo. (Ver `docs/specs/BUG-uso-subcontado-activities-trampolim.md`.)
+- **Causa raiz:** o `UsageAggregator` pareava sessão **por pacote**. O `STOPPED` da
+  activity-trampolim (que chega depois do `RESUMED` da activity real) "roubava" o slot do
+  pacote, e o `PAUSED` que fecharia a sessão real não encontrava par → sessão descartada.
+- **Fix:** pareamento passou a ser **por `className`**, medindo a **união dos intervalos**
+  de foreground (pacote na tela enquanto houver ≥1 activity resumida). `SessionEvent` ganhou
+  `className`; `UsageStatsProvider.readSessionEvents` agora o repassa. Activities sobrepostas
+  do mesmo app não contam tempo dobrado.
+- **Testes:** `UsageAggregatorTest` +5 (padrão trampolim, trampolim na abertura, sobreposição,
+  duas sessões separadas, sessão trampolim em andamento). Suíte: **90 testes, 0 falhas**.
+- **Nota:** o bloqueio nunca foi afetado (usa `queryAndAggregateUsageStats`, que é correto);
+  o bug era só na exibição/prejuízo. Validação final no emulador (Chrome ≈ `dumpsys usagestats`)
+  ainda pendente — pode ser feita com `scripts/smoke-test.ps1`.
+
 ## [2026-07-26] — Fix: aviso/bloqueio-fantasma de app em segundo plano
 **Tipo:** bugfix
 **Épico:** E5 (Bloqueio) / E10 (Qualidade)
