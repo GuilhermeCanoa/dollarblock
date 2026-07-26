@@ -40,6 +40,8 @@ import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.QueryStats
 import androidx.compose.material.icons.filled.Savings
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -151,6 +153,7 @@ fun OnboardingScreen(
                 page < conceptPages.size -> ConceptPageContent(conceptPages[page])
                 page == quickSummaryPageIndex -> QuickSummaryPageContent(
                     state = quickSummaryState,
+                    hasUsageAccess = permissionsState.usageAccess,
                     onGrantUsageAccess = {
                         viewModel.intentFor(AppPermission.USAGE_ACCESS)?.let { context.startActivity(it) }
                     },
@@ -224,6 +227,7 @@ private val quickSummaryPalette = listOf(
 @Composable
 private fun QuickSummaryPageContent(
     state: QuickSummaryState,
+    hasUsageAccess: Boolean,
     onGrantUsageAccess: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -254,7 +258,7 @@ private fun QuickSummaryPageContent(
 
         if (state.isLoading) {
             CircularProgressIndicator(modifier = Modifier.padding(32.dp))
-        } else if (state.topApps.isEmpty()) {
+        } else if (!hasUsageAccess) {
             Spacer(Modifier.height(32.dp))
             Surface(
                 shape = CircleShape,
@@ -288,6 +292,36 @@ private fun QuickSummaryPageContent(
                 text = stringResource(R.string.onb_summary_grant),
                 onClick = onGrantUsageAccess,
                 modifier = Modifier.fillMaxWidth(),
+            )
+        } else if (state.topApps.isEmpty()) {
+            Spacer(Modifier.height(32.dp))
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.size(80.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Filled.CheckCircle,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(36.dp),
+                    )
+                }
+            }
+            Spacer(Modifier.height(24.dp))
+            Text(
+                text = stringResource(R.string.onb_summary_no_usage_title),
+                style = MaterialTheme.typography.titleMedium,
+                color = onSurface,
+                textAlign = TextAlign.Center,
+            )
+            Text(
+                text = stringResource(R.string.onb_summary_no_usage_body),
+                style = MaterialTheme.typography.bodyMedium,
+                color = onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 8.dp, bottom = 24.dp),
             )
         } else {
             // Donut chart
@@ -663,15 +697,39 @@ private fun PermissionsPageContent(
     val notificationsLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { onRecheck() }
+    var showAccessibilityDisclosure by remember { mutableStateOf(false) }
 
     fun handle(permission: AppPermission) {
         if (permission == AppPermission.NOTIFICATIONS &&
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
         ) {
             notificationsLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else if (permission == AppPermission.ACCESSIBILITY) {
+            showAccessibilityDisclosure = true
         } else {
             onRequest(permission)?.let { context.startActivity(it) }
         }
+    }
+
+    if (showAccessibilityDisclosure) {
+        AlertDialog(
+            onDismissRequest = { /* consentimento exige ação afirmativa — ignora toque fora/back */ },
+            title = { Text(stringResource(R.string.onb_a11y_disclosure_title)) },
+            text = { Text(stringResource(R.string.onb_a11y_disclosure_body)) },
+            confirmButton = {
+                Button(onClick = {
+                    showAccessibilityDisclosure = false
+                    onRequest(AppPermission.ACCESSIBILITY)?.let { context.startActivity(it) }
+                }) {
+                    Text(stringResource(R.string.onb_a11y_disclosure_allow))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAccessibilityDisclosure = false }) {
+                    Text(stringResource(R.string.onb_a11y_disclosure_deny))
+                }
+            },
+        )
     }
 
     Column(

@@ -284,10 +284,16 @@
     <string name="onb_summary_need_usage_title">Falta o Acesso de uso</string>
     <string name="onb_summary_need_usage_body">Libere o Acesso de uso para o DollarBlock ler o seu tempo de tela e mostrar os suspeitos aqui.</string>
     <string name="onb_summary_grant">Conceder Acesso de uso</string>
+    <string name="onb_summary_no_usage_title">Permissão concedida</string>
+    <string name="onb_summary_no_usage_body">Nenhum uso registrado ainda nesta semana. Seus apps mais usados vão aparecer aqui conforme você usa o celular.</string>
     <string name="onb_permissions_title">A burocracia</string>
     <string name="onb_permissions_body">O DollarBlock precisa destas permissões para medir o uso e bloquear apps. Pedimos apenas o estritamente necessário — cada uma abre a tela do sistema correspondente.</string>
     <string name="onb_perm_usage_why">Mede quanto tempo você passa em cada app — a base de tudo.</string>
     <string name="onb_perm_accessibility_why">Detecta o app em primeiro plano para aplicar o bloqueio.</string>
+    <string name="onb_a11y_disclosure_title">Como o DollarBlock usa a Acessibilidade</string>
+    <string name="onb_a11y_disclosure_body">O DollarBlock pede a permissão de Acessibilidade para uma única finalidade: detectar qual aplicativo você tem aberto em primeiro plano, para exibir a tela de bloqueio por cima dele quando você atingir o limite diário que você mesmo definiu.\n\nCom essa permissão, o app NÃO lê o conteúdo da sua tela, NÃO captura texto que você digita, NÃO coleta senhas e NÃO envia nenhum dado para fora do aparelho. Ele apenas verifica qual app está em primeiro plano no momento.\n\nVocê pode revogar essa permissão a qualquer momento nas Configurações do Android.</string>
+    <string name="onb_a11y_disclosure_allow">Permitir</string>
+    <string name="onb_a11y_disclosure_deny">Agora não</string>
     <string name="onb_perm_overlay_why">Exibe a tela de bloqueio por cima do app.</string>
     <string name="onb_perm_notifications_why">Avisa você sobre limites atingidos e o serviço de monitoramento.</string>
     <string name="notif_channel_name">Avisos de limite</string>

@@ -34,12 +34,15 @@ import androidx.compose.material.icons.filled.Shield
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -149,6 +152,28 @@ private fun ProfileScreenContent(
     var showThemeDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showAboutDialog by remember { mutableStateOf(false) }
+    var showAccessibilityDisclosure by remember { mutableStateOf(false) }
+
+    if (showAccessibilityDisclosure) {
+        AlertDialog(
+            onDismissRequest = { /* consentimento exige ação afirmativa — ignora toque fora/back */ },
+            title = { Text(stringResource(R.string.onb_a11y_disclosure_title)) },
+            text = { Text(stringResource(R.string.onb_a11y_disclosure_body)) },
+            confirmButton = {
+                Button(onClick = {
+                    showAccessibilityDisclosure = false
+                    onRequestPermission(AppPermission.ACCESSIBILITY)
+                }) {
+                    Text(stringResource(R.string.onb_a11y_disclosure_allow))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAccessibilityDisclosure = false }) {
+                    Text(stringResource(R.string.onb_a11y_disclosure_deny))
+                }
+            },
+        )
+    }
 
     if (showThemeDialog) {
         ThemePickerDialog(
@@ -236,7 +261,13 @@ private fun ProfileScreenContent(
                     title = stringResource(R.string.perm_accessibility),
                     description = stringResource(R.string.perm_accessibility_desc),
                     granted = permissions.accessibility,
-                    onClick = { onRequestPermission(AppPermission.ACCESSIBILITY) },
+                    onClick = {
+                        if (permissions.accessibility) {
+                            onRequestPermission(AppPermission.ACCESSIBILITY)
+                        } else {
+                            showAccessibilityDisclosure = true
+                        }
+                    },
                 )
                 PermissionRow(
                     icon = Icons.Filled.Layers,

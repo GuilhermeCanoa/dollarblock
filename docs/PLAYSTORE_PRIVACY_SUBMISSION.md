@@ -205,15 +205,15 @@ e deixe o link pronto para colar no formulário.
 `DollarBlock` (30 caracteres máx.)
 
 ### 4.2 Descrição curta (80 caracteres)
-> "Bota um taxímetro nos apps que roubam seu tempo. Passou do limite, você paga."
+> "Você sempre extrapola o limite de tela. E se você tivesse que pagar por isso?"
 
 ### 4.3 Descrição completa (sugestão, no tom da marca — revise antes de publicar)
-> **Seu tempo tem preço. O DollarBlock mostra qual.**
+> **Seu tempo custa caro. O DollarBlock te mostra quanto.**
 >
 > Instagram, TikTok e YouTube têm times inteiros pagos para te manter rolando a tela. O
 > DollarBlock coloca um taxímetro neles.
 >
-> Você escolhe os apps que comem o seu dia e define um limite diário. Passou do limite, o app
+> Você escolhe os apps que consomem o seu dia e define um limite diário. Passou do limite, o app
 > trava. Precisa mesmo dele? Existe um "passe do dia" — mas ele custa dinheiro de verdade. É
 > esse o ponto: o incômodo de pagar é o que te faz lembrar.
 >
@@ -226,6 +226,12 @@ e deixe o link pronto para colar no formulário.
 > **Você no controle, sempre.** O DollarBlock não sequestra o seu celular. Você pode
 > desativar, pausar ou desinstalar quando quiser, sem pagar nada. Seus dados de uso ficam no
 > seu aparelho — não enviamos nada para lugar nenhum.
+>
+> **Sobre a permissão de Acessibilidade:** para travar o app certo no momento certo, o
+> DollarBlock usa o serviço de Acessibilidade do Android (AccessibilityService) com uma
+> única finalidade — detectar qual aplicativo está em primeiro plano e exibir a tela de
+> bloqueio quando o limite diário definido por você é atingido. Ele não lê o conteúdo da
+> sua tela, não captura o que você digita e não envia nada para fora do aparelho.
 >
 > Sem cadastro. Sem login. Sem anúncios.
 
