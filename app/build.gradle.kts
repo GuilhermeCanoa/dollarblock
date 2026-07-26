@@ -21,8 +21,8 @@ android {
         applicationId = "com.dollarblock"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 4
+        versionName = "0.1.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
@@ -71,6 +71,13 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+
+    testOptions {
+        unitTests {
+            // Necessário para o Robolectric resolver recursos/manifesto nos testes de DAO Room.
+            isIncludeAndroidResources = true
+        }
     }
 }
 
@@ -135,6 +142,11 @@ dependencies {
     testImplementation(libs.junit)
     // org.json is stubbed in JVM unit tests; bring the real impl for StripeToken tests.
     testImplementation("org.json:json:20231013")
+    // Testes de DAO Room rodando na JVM (sem emulador) via Robolectric.
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.androidx.room.testing)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

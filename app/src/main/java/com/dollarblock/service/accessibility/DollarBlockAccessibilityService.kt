@@ -95,6 +95,12 @@ class DollarBlockAccessibilityService : AccessibilityService() {
 
         if (!packageChanged) return
 
+        // Trocamos de app: o loop que acompanhava o app anterior não deve continuar
+        // vivo, senão ele segue contando "sessão em andamento" com o instante congelado
+        // e dispara avisos/bloqueios-fantasma para um app que o usuário já deixou.
+        // Se o novo app for monitorado, scheduleTracking() recomeça um loop limpo.
+        stopTracking()
+
         val enteredForegroundAt = System.currentTimeMillis()
 
         scope.launch {
@@ -138,11 +144,28 @@ class DollarBlockAccessibilityService : AccessibilityService() {
                 monitoredAppRepository.syncTodayUsage(packageName, foregroundSinceMillis)
 
                 val previousUsedMillis = lastUsedMillisByPackage[packageName] ?: 0L
-                if (LimitWarningPolicy.shouldWarn(previousUsedMillis, usedMillis, limitMillis)) {
+                lastUsedMillisByPackage[packageName] = usedMillis
+
+                // Decisão pura (testável): só avisa/bloqueia se o app rastreado AINDA é o
+                // foreground atual — a correção do aviso/bloqueio-fantasma.
+                val decision = TrackingDecision.decide(
+                    TrackingDecision.Frame(
+                        trackedPackage = packageName,
+                        foregroundPackage = lastForegroundPackage,
+                        previousUsedMillis = previousUsedMillis,
+                        currentUsedMillis = usedMillis,
+                        limitMillis = limitMillis,
+                        unlockActive = isUnlockActive(packageName),
+                    ),
+                )
+
+                if (decision.warn) {
                     val minutesRemaining = LimitWarningPolicy.minutesRemaining(usedMillis, limitMillis)
                     limitWarningNotifier.notifyLimitApproaching(resolveLabel(packageName), minutesRemaining)
                 }
-                lastUsedMillisByPackage[packageName] = usedMillis
+
+                // Se o usuário já saiu do app rastreado, encerra o loop (nada a fazer aqui).
+                if (lastForegroundPackage != packageName) break
 
                 if (usedMillis >= limitMillis) {
                     val grant = blockPreferences.getUnlockGrant(packageName)
@@ -151,9 +174,11 @@ class DollarBlockAccessibilityService : AccessibilityService() {
                         // Sem passe do dia ativo → bloqueia se o app estiver em foreground.
                         // Não damos break: se o usuário fechar a BlockActivity e continuar no
                         // app monitorado, o loop precisa continuar reafirmando o bloqueio.
-                        handler.post {
-                            if (lastForegroundPackage == packageName) {
-                                assertBlock(packageName) { !isUnlockActiveSync(packageName) }
+                        if (decision.block) {
+                            handler.post {
+                                if (lastForegroundPackage == packageName) {
+                                    assertBlock(packageName) { !isUnlockActiveSync(packageName) }
+                                }
                             }
                         }
                         delay(REASSERT_POLL_INTERVAL_MS)

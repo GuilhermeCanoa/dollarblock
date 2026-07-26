@@ -151,4 +151,20 @@ class HomeMetricsTest {
     fun `crossedCoffeeMultiple detecta multiplos cafes de uma vez`() {
         assertEquals(true, HomeMetrics.crossedCoffeeMultiple(previousLost = 0.0, newLost = 18.0))
     }
+
+    @Test
+    fun `perMinuteRate escala com o salario configurado`() {
+        // Dobrar o salário dobra o preço do minuto de scroll.
+        val base = HomeMetrics.perMinuteRate(HomeMetrics.DEFAULT_MONTHLY_SALARY)
+        assertEquals(base * 2, HomeMetrics.perMinuteRate(HomeMetrics.DEFAULT_MONTHLY_SALARY * 2), 1e-9)
+    }
+
+    @Test
+    fun `moneyLost usa o salario custom em vez do padrao`() {
+        val metrics = HomeMetrics.compute(
+            listOf(app("a", monitored = true, used = 60)),
+            monthlySalary = 4000.0,
+        )
+        assertEquals(60 * HomeMetrics.perMinuteRate(4000.0), metrics.moneyLostToday!!, 1e-9)
+    }
 }

@@ -12,6 +12,84 @@ Descrição funcional.
 
 ---
 
+## [2026-07-26] — Fix: aviso/bloqueio-fantasma de app em segundo plano
+**Tipo:** bugfix
+**Épico:** E5 (Bloqueio) / E10 (Qualidade)
+
+- **Sintoma relatado pelo usuário:** receber notificação de "app X prestes a ser
+  bloqueado" (ex.: Chrome) sem estar usando o app — acontecia para vários apps.
+- **Causa raiz:** ao trocar de um app monitorado para um app **não-monitorado**, o loop
+  de tracking do app anterior **não parava** (`onAccessibilityEvent` retornava cedo sem
+  `stopTracking()`) e seguia contando "sessão em andamento" com o instante de foreground
+  congelado. Além disso, a notificação de aviso (5 min) **não checava** se o app rastreado
+  ainda estava em foreground — só o bloqueio checava. Resultado: o app fechado "acumulava"
+  tempo no loop, cruzava o limiar e disparava a notificação-fantasma.
+- **Fix (1):** `onAccessibilityEvent` agora chama `stopTracking()` a cada troca de app;
+  se o novo app for monitorado, um loop limpo recomeça.
+- **Fix (2):** decisão de avisar/bloquear extraída para função pura `TrackingDecision`,
+  que só age se o app rastreado **ainda é o foreground atual**. O loop passou a usá-la
+  (aviso e bloqueio agora compartilham a mesma guarda) e encerra se o usuário saiu do app.
+- **Teste de regressão:** `TrackingDecisionTest` (8 casos), incluindo o cenário exato do
+  bug (app rastreado ≠ foreground → nenhum aviso). Este era um caminho antes não coberto
+  por nenhum teste, por estar preso dentro do `AccessibilityService`.
+
+## [2026-07-25] — Cobertura de testes do core + scripts reutilizáveis
+**Tipo:** refactor + feature (qualidade)
+**Épico:** E10 (Qualidade)
+
+- **Refactor sem mudança de comportamento observável:** extraída a lógica de somar
+  sessões de `UsageEvents` de `UsageStatsProvider` para um objeto puro `UsageAggregator`
+  (sem imports Android). O provider agora só lê os eventos (`readSessionEvents`) e delega.
+  Isso destrava teste JVM da parte mais crítica do app — a medição de tempo de uso.
+  Correção segura embutida: durações de eventos fora de ordem (delta negativo) passam a
+  ser descartadas em vez de somadas.
+- **Novos testes JVM (rápidos, sem emulador):** `UsageAggregatorTest` (18 casos: sessão
+  fechada/em andamento, virada da meia-noite, eventos fora de ordem, app nunca fechado,
+  multi-app); +5 em `LimitWarningPolicyTest` (fronteiras: exatamente no ponto de aviso/no
+  limite, uso já acima, aviso único em polls sucessivos, arredondamento); +2 em
+  `HomeMetricsTest` (salário custom). Suíte: **77 testes, 0 falhas**.
+- **Novo teste de banco na JVM via Robolectric:** `DailyUsageDaoTest` (6 casos) valida o
+  índice único `(packageName, epochDay)` e o `upsertUsage` sem precisar de emulador.
+  Dependências novas em `testImplementation`: robolectric, room-testing, coroutines-test;
+  `testOptions.unitTests.isIncludeAndroidResources = true`.
+- **`DebugSetupReceiver`** (só em `src/debug/`, ausente no release): broadcast
+  `com.dollarblock.DEBUG_SET_LIMIT` para montar cenário de teste (app monitorado + limite)
+  via adb.
+- **Scripts reutilizáveis** em `scripts/`: `run-unit-tests.ps1` (suíte barata),
+  `smoke-test.ps1` (instala no emulador, concede permissões, força o limite e verifica o
+  bloqueio), e `README.md` em linguagem para não-dev. Estratégia completa em
+  `docs/specs/TESTING-strategy.md`.
+
+## [2026-07-24] — Correção da rejeição da Play Store (Acessibilidade)
+**Tipo:** bugfix + config
+**Épico:** adhoc (compliance Play Store)
+
+- App rejeitado pelo Google com dois motivos, ambos ligados à política do
+  AccessibilityService: (1) descrição da loja não mencionava o uso da API de Acessibilidade;
+  (2) a declaração em destaque (prominent disclosure) não atendia aos requisitos — usava um
+  único botão "Conceder" em vez de dois botões de consentimento explícito (permitir/negar).
+- **Fix da declaração em destaque:** `OnboardingScreen.kt` agora mostra um `AlertDialog`
+  dedicado antes de abrir a tela de sistema de Acessibilidade, com o texto completo do
+  propósito da permissão e dois botões claros — "Permitir" (abre as configurações) e "Agora
+  não" (fecha sem conceder). `onDismissRequest` é no-op: tocar fora ou apertar Voltar não
+  conta como consentimento, e o diálogo não expira sozinho. Strings novas:
+  `onb_a11y_disclosure_*` (`strings.xml` + `values-pt`).
+- **Fix da descrição da loja:** `docs/PLAYSTORE_PRIVACY_SUBMISSION.md` §4.3 (descrição
+  completa) ganhou um parágrafo explícito citando o AccessibilityService e sua finalidade
+  única — precisa ser recolado na ficha da loja no Play Console antes de reenviar para
+  revisão.
+
+## [2026-07-09] — Capturas de tablet para a Play Store + bug de uso descoberto
+**Tipo:** config (assets) + bug documentado
+**Épico:** adhoc (listagem Play Store)
+
+- Geradas as 12 capturas de tablet exigidas pela loja — 6 em `docs/play-store/screenshots/tablet-10/`
+  (1440x2560) e 6 em `tablet-7/` (1080x1920), 9:16 exato, via emulador com `wm size`/`wm density`,
+  build **release** em pt-BR. Processo e desvios documentados em `docs/play-store/README.md`.
+- Descoberto bug de subcontagem de uso para apps com activities-trampolim (Chrome):
+  spec em `docs/specs/BUG-uso-subcontado-activities-trampolim.md`. Nenhum código do app
+  foi alterado nesta entrega (o override de billing usado na captura foi revertido).
+
 ## [2026-07-07] — E17: correções pós-MVP (notificação, carimbo, delay, permissões) + ajustes de UX
 **Tipo:** bugfix + feature + config
 **Épico:** E17 (adhoc)

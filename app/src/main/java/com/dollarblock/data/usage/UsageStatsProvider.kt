@@ -110,33 +110,15 @@ class UsageStatsProvider @Inject constructor(
         val startOfDay = LocalDate.now(zone).atStartOfDay(zone).toInstant().toEpochMilli()
         val now = System.currentTimeMillis()
 
-        val events = usageStatsManager.queryEvents(startOfDay, now)
-        var totalMillis = 0L
-        var resumeTime = -1L
-        val event = UsageEvents.Event()
-
-        while (events.hasNextEvent()) {
-            events.getNextEvent(event)
-            if (event.packageName != packageName) continue
-            when (event.eventType) {
-                UsageEvents.Event.ACTIVITY_RESUMED -> resumeTime = event.timeStamp
-                UsageEvents.Event.ACTIVITY_PAUSED,
-                UsageEvents.Event.ACTIVITY_STOPPED -> {
-                    if (resumeTime >= 0L) {
-                        totalMillis += event.timeStamp - resumeTime
-                        resumeTime = -1L
-                    }
-                }
-            }
-        }
-
-        // Sessão em andamento (fornecida pelo serviço de acessibilidade)
-        val sessionStart = ongoingSessionSince ?: if (resumeTime >= 0L) resumeTime else -1L
-        if (sessionStart in startOfDay..now) {
-            totalMillis += now - sessionStart
-        }
-
-        totalMillis
+        UsageAggregator.totalForPackage(
+            target = packageName,
+            events = readSessionEvents(startOfDay, now),
+            ongoing = UsageAggregator.OngoingPolicy.CloseAt(
+                now = now,
+                lowerBound = startOfDay,
+                overrideStart = ongoingSessionSince,
+            ),
+        )
     }
 
     /**
@@ -155,35 +137,23 @@ class UsageStatsProvider @Inject constructor(
         val startOfDay = LocalDate.now(zone).atStartOfDay(zone).toInstant().toEpochMilli()
         val now = System.currentTimeMillis()
 
-        val totals = mutableMapOf<String, Long>()
-        val resumes = mutableMapOf<String, Long>()
-        val events = usageStatsManager.queryEvents(startOfDay, now)
-        val event = UsageEvents.Event()
-
-        while (events.hasNextEvent()) {
-            events.getNextEvent(event)
-            val pkg = event.packageName
-            if (pkg !in packages) continue
-            when (event.eventType) {
-                UsageEvents.Event.ACTIVITY_RESUMED -> resumes[pkg] = event.timeStamp
-                UsageEvents.Event.ACTIVITY_PAUSED,
-                UsageEvents.Event.ACTIVITY_STOPPED -> {
-                    val start = resumes.remove(pkg) ?: continue
-                    totals[pkg] = (totals[pkg] ?: 0L) + (event.timeStamp - start)
-                }
-            }
+        val ongoing = if (ongoingPackage != null && ongoingSessionSince != null && ongoingPackage in packages) {
+            mapOf(
+                ongoingPackage to UsageAggregator.OngoingPolicy.CloseAt(
+                    now = now,
+                    lowerBound = startOfDay,
+                    overrideStart = ongoingSessionSince,
+                ),
+            )
+        } else {
+            emptyMap()
         }
 
-        // Sessão em andamento do app em foreground
-        if (ongoingPackage != null && ongoingSessionSince != null && ongoingPackage in packages) {
-            val sessionStart = if (ongoingSessionSince in startOfDay..now) ongoingSessionSince
-                              else resumes[ongoingPackage] ?: -1L
-            if (sessionStart >= startOfDay) {
-                totals[ongoingPackage] = (totals[ongoingPackage] ?: 0L) + (now - sessionStart)
-            }
-        }
-
-        totals
+        UsageAggregator.totalForPackages(
+            targets = packages,
+            events = readSessionEvents(startOfDay, now),
+            ongoingByPackage = ongoing,
+        )
     }
 
     /**
@@ -196,27 +166,13 @@ class UsageStatsProvider @Inject constructor(
         val now = System.currentTimeMillis()
         val from = sinceMs.coerceAtLeast(0L)
 
-        val events = usageStatsManager.queryEvents(from, now)
-        var total = 0L
-        var resumeTime = -1L
-        val ev = UsageEvents.Event()
-
-        while (events.hasNextEvent()) {
-            events.getNextEvent(ev)
-            if (ev.packageName != packageName) continue
-            when (ev.eventType) {
-                UsageEvents.Event.ACTIVITY_RESUMED -> resumeTime = ev.timeStamp
-                UsageEvents.Event.ACTIVITY_PAUSED,
-                UsageEvents.Event.ACTIVITY_STOPPED -> {
-                    if (resumeTime >= 0L) {
-                        total += ev.timeStamp - resumeTime
-                        resumeTime = -1L
-                    }
-                }
-            }
-        }
-        if (resumeTime >= 0L) total += now - resumeTime
-        total
+        UsageAggregator.totalForPackage(
+            target = packageName,
+            events = readSessionEvents(from, now),
+            // Fecha a sessão em andamento em `now` sem lower bound: a janela já
+            // começa em `from`, e um RESUMED em aberto sempre conta até agora.
+            ongoing = UsageAggregator.OngoingPolicy.CloseAt(now = now),
+        )
     }
 
     /** Uso total de cada app nos últimos 7 dias (millis de foreground). */
@@ -227,6 +183,29 @@ class UsageStatsProvider @Inject constructor(
         usageStatsManager.queryAndAggregateUsageStats(sevenDaysAgo, now)
             .mapValues { (_, stats) -> stats.totalTimeInForeground }
             .filterValues { it > 0L }
+    }
+
+    /**
+     * Lê os eventos brutos do `UsageStatsManager` na janela `[from, to]` e os traduz
+     * para a sequência de [UsageAggregator.SessionEvent] usada pela agregação pura.
+     * Eventos que não são transições de foreground (RESUMED/PAUSED/STOPPED) são
+     * descartados aqui — o agregador nunca vê constantes de Android.
+     */
+    private fun readSessionEvents(from: Long, to: Long): List<UsageAggregator.SessionEvent> {
+        val events = usageStatsManager.queryEvents(from, to)
+        val out = ArrayList<UsageAggregator.SessionEvent>()
+        val event = UsageEvents.Event()
+        while (events.hasNextEvent()) {
+            events.getNextEvent(event)
+            val type = when (event.eventType) {
+                UsageEvents.Event.ACTIVITY_RESUMED -> UsageAggregator.Type.RESUMED
+                UsageEvents.Event.ACTIVITY_PAUSED,
+                UsageEvents.Event.ACTIVITY_STOPPED -> UsageAggregator.Type.PAUSED
+                else -> continue
+            }
+            out.add(UsageAggregator.SessionEvent(event.packageName, type, event.timeStamp))
+        }
+        return out
     }
 
     /** epochDay local consistente com o usado nas entidades Room. */

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <!-- Receiver de teste (apenas debug): usado por scripts/smoke-test.ps1 para
+             montar cenarios de bloqueio via adb. Nao existe no build de release. -->
+        <receiver
+            android:name="com.dollarblock.debug.DebugSetupReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.dollarblock.DEBUG_SET_LIMIT" />
+            </intent-filter>
+        </receiver>
+    </application>
+
+</manifest>
