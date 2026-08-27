@@ -12,6 +12,29 @@ Descrição funcional.
 
 ---
 
+## [2026-08-27] — Conformidade Play: targetSdk 36 + Billing 8
+**Tipo:** config
+**Épico:** adhoc (compliance Play Store)
+
+- **Motivo:** duas exigências do Play com prazo em **31/08/2026**, ambas bloqueando novas
+  atualizações do app:
+  1. `targetSdk` precisa ser **36** (Android 16) — apps em API 35 não podem mais publicar.
+  2. A **Biblioteca Google Play Faturamento 7.x** foi descontinuada; uploads que a usam
+     passam a ser **recusados**.
+- **Mudanças:**
+  - `compileSdk`/`targetSdk` **35 → 36**; `versionCode` 4 → 5, `versionName` 0.1.3 → 0.1.4.
+  - **AGP 8.7.3 → 8.10.1** (obrigatório: AGP 8.7 não aceita `compileSdk = 36`).
+  - **billing-ktx 7.1.1 → 8.0.0**. Breaking change tratado no `PlayBillingManager`: o
+    callback de `queryProductDetailsAsync` agora recebe `QueryProductDetailsResult`
+    (`result.productDetailsList`) em vez de `List<ProductDetails>`.
+  - **Robolectric 4.14.1 → 4.16**: a 4.14.1 só tem shadows até a API 35 e falhava com
+    `Package targetSdkVersion=36 > maxSdkVersion=35` nos testes de DAO.
+- **Edge-to-edge:** o Play sugere tratar recuos (obrigatório a partir da API 35/36). O app
+  **já estava conforme** — `MainActivity` e `BlockActivity` chamam `enableEdgeToEdge()` e
+  aplicam `WindowInsets.safeDrawing`. Nenhuma mudança necessária.
+- **Validação:** `:app:assembleDebug` e `:app:bundleRelease` OK; suíte **90 testes, 0 falhas**.
+  Manifesto do AAB conferido: `targetSdkVersion=36`, `compileSdkVersion=36`, `minSdkVersion=26`.
+
 ## [2026-07-26] — Fix: uso subcontado em apps com activity-trampolim (Chrome)
 **Tipo:** bugfix
 **Épico:** E4 (Monitoramento) / E12 (Uso 100% real)

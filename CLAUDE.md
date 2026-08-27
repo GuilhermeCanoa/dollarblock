@@ -92,7 +92,7 @@ Single Gradle module (`:app`) with Clean Architecture packages. Dependency rule:
 ### Payment (E16 — Google Play Billing; E9 Stripe path kept but disabled)
 
 Since E16 the day pass is charged through the **Google Play Billing Library** (consumable
-product `day_pass`, billing-ktx 7.1.1) — required by the Play Payments Policy for in-app
+product `day_pass`, billing-ktx 8.0.0) — required by the Play Payments Policy for in-app
 feature unlocks (see `docs/specs/E16-compliance-play-store-pagamentos.md`).
 `PaymentConfig.PROVIDER` selects the provider: `PLAY_BILLING` (active) or
 `STRIPE_GOOGLE_PAY` (the whole E9 flow below, kept compilable for reuse but never executed).

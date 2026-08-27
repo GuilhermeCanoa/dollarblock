@@ -101,8 +101,9 @@ class PlayBillingManager(
                 ),
             )
             .build()
-        billingClient.queryProductDetailsAsync(params) { billingResult, detailsList ->
-            val details = detailsList.firstOrNull()
+        // Billing 8: o callback recebe QueryProductDetailsResult (antes era List<ProductDetails>).
+        billingClient.queryProductDetailsAsync(params) { billingResult, result ->
+            val details = result.productDetailsList.firstOrNull()
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && details != null) {
                 productDetails = details
                 _formattedPrice.value = details.oneTimePurchaseOfferDetails?.formattedPrice
