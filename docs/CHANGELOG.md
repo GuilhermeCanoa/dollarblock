@@ -12,6 +12,27 @@ Descrição funcional.
 
 ---
 
+## [2026-09-06] — Saída de cortesia quando o pagamento falha
+**Tipo:** feature
+**Épico:** adhoc (correção de UX crítica no bloqueio)
+
+- **Problema:** qualquer falha do provedor de pagamento na tela de bloqueio (Play Billing
+  sem conexão, `day_pass` não carregado, erro no fluxo de compra, Google Pay indisponível,
+  falha na cobrança) mostrava só um toast de erro e deixava o usuário **sem acesso ao
+  app-alvo até a meia-noite** — pagando por um erro que não era dele.
+- **Mudança:** todo erro de cobrança (nunca a desistência do usuário) leva a tela de
+  bloqueio a um estado de falha que oferece o **passe do dia por cortesia**: o app é
+  liberado até a meia-noite sem cobrar nada, no tom da marca ("a maquininha deu pau…
+  você deu sorte"). Quando a loja está disponível, também há "Tentar pagar de novo".
+- Também entram no estado de falha: o Play não ficar `ready` em 8 s e o `isReadyToPay`
+  negativo do caminho Stripe/Google Pay.
+- A cortesia usa o mesmo grant até a meia-noite e é registrada no extrato com
+  `amount = "0.00"` e `method = PaymentMethod.COURTESY`, exibida como
+  "Cortesia (falha no pagamento)" na Home e no histórico.
+- Spec: `docs/specs/E17-fallback-falha-pagamento.md`.
+
+---
+
 ## [2026-08-27] — Conformidade Play: targetSdk 36 + Billing 8
 **Tipo:** config
 **Épico:** adhoc (compliance Play Store)
