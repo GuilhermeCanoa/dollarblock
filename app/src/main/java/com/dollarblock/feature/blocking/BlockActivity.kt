@@ -125,16 +125,16 @@ class BlockActivity : AppCompatActivity() {
     private var targetPackage: String = ""
     private var appLabel: String = ""
 
-    private val readyToPay = MutableStateFlow(false)
-    private val paymentInProgress = MutableStateFlow(false)
-
     /**
-     * Liga quando a cobrança falha por erro (loja indisponível, erro do Billing, falha na
-     * cobrança) — nunca por desistência do usuário. Enquanto ligado, a tela oferece a
-     * saída de cortesia: abrir o app sem pagar. Sem isso, um erro do Google Pay/Play
-     * deixaria o app-alvo inacessível até a meia-noite sem nenhuma saída.
+     * Estado da cobrança (pronto / em andamento / cortesia disponível). As transições são
+     * a função pura [reduce] — ver [PaymentUiState] para a regra da saída de cortesia.
      */
-    private val paymentFailed = MutableStateFlow(false)
+    private val paymentState = MutableStateFlow(PaymentUiState())
+
+    /** Aplica um evento de cobrança ao estado, na main thread. */
+    private fun onPaymentEvent(event: PaymentEvent) {
+        paymentState.value = paymentState.value.reduce(event)
+    }
     private val unlocksPaidToday = MutableStateFlow(0)
     private val dayPassPrice = MutableStateFlow(GooglePayConfig.DEFAULT_PRICE)
 
@@ -153,7 +153,7 @@ class BlockActivity : AppCompatActivity() {
                     }
                 }
                 Activity.RESULT_CANCELED -> {
-                    paymentInProgress.value = false
+                    onPaymentEvent(PaymentEvent.Cancelled)
                     toast(R.string.pay_cancelled)
                 }
                 AutoResolveHelper.RESULT_ERROR -> {
@@ -175,15 +175,17 @@ class BlockActivity : AppCompatActivity() {
                 val manager = PlayBillingManager(this, billingListener)
                 billingManager = manager
                 manager.connect()
-                lifecycleScope.launch { manager.ready.collect { readyToPay.value = it } }
+                lifecycleScope.launch {
+                    manager.ready.collect { onPaymentEvent(PaymentEvent.ReadinessChanged(it)) }
+                }
                 // Se a loja não responder dentro do timeout, o passe não tem como ser
                 // cobrado — cai no mesmo estado de falha, com a saída de cortesia.
                 lifecycleScope.launch {
-                    delay(BILLING_READY_TIMEOUT_MS)
-                    if (!readyToPay.value && !paymentInProgress.value) {
-                        Log.e(TAG, "Billing not ready after ${BILLING_READY_TIMEOUT_MS}ms")
-                        paymentFailed.value = true
+                    delay(PaymentUiState.BILLING_READY_TIMEOUT_MS)
+                    if (!paymentState.value.ready && !paymentState.value.inProgress) {
+                        Log.e(TAG, "Billing not ready after ${PaymentUiState.BILLING_READY_TIMEOUT_MS}ms")
                     }
+                    onPaymentEvent(PaymentEvent.ReadyTimeout)
                 }
                 lifecycleScope.launch { manager.formattedPrice.collect { billingPrice.value = it } }
             }
@@ -206,12 +208,10 @@ class BlockActivity : AppCompatActivity() {
 
         setContent {
             DollarBlockTheme {
-                val ready by readyToPay.collectAsState()
-                val processing by paymentInProgress.collectAsState()
+                val payment by paymentState.collectAsState()
                 val paidToday by unlocksPaidToday.collectAsState()
                 val price by dayPassPrice.collectAsState()
                 val playPrice by billingPrice.collectAsState()
-                val failed by paymentFailed.collectAsState()
                 BlockScreen(
                     appLabel = appLabel,
                     unlocksPaidToday = paidToday,
@@ -219,9 +219,9 @@ class BlockActivity : AppCompatActivity() {
                     // senão o fallback/pricing formatado em BRL.
                     priceText = playPrice ?: ("R$ " + price.replace('.', ',')),
                     provider = PaymentConfig.PROVIDER,
-                    paymentReady = ready,
-                    paymentInProgress = processing,
-                    paymentFailed = failed,
+                    paymentReady = payment.ready,
+                    paymentInProgress = payment.inProgress,
+                    paymentFailed = payment.courtesyAvailable,
                     // Feature flag de dev: o botão de pagamento simulado só existe quando
                     // BlockingDevFlags.SIMULATED_PAYMENTS está ligado (e nunca em release).
                     showDebugSimulate = BuildConfig.DEBUG && BlockingDevFlags.SIMULATED_PAYMENTS,
@@ -244,7 +244,6 @@ class BlockActivity : AppCompatActivity() {
         // Os callbacks do Billing podem chegar fora da main thread — sempre repostar.
         override fun onPurchaseCompleted() {
             runOnUiThread {
-                paymentInProgress.value = false
                 onPaymentSuccess(PaymentMethod.PLAY_BILLING)
             }
         }
@@ -253,7 +252,7 @@ class BlockActivity : AppCompatActivity() {
             runOnUiThread {
                 if (cancelled) {
                     // Desistência não é erro: continua sendo bloqueio normal.
-                    paymentInProgress.value = false
+                    onPaymentEvent(PaymentEvent.Cancelled)
                     toast(R.string.pay_cancelled)
                 } else {
                     onPaymentError()
@@ -266,15 +265,15 @@ class BlockActivity : AppCompatActivity() {
         val request = IsReadyToPayRequest.fromJson(GooglePayConfig.isReadyToPayRequest().toString())
         paymentsClient.isReadyToPay(request).addOnCompleteListener { task ->
             val ready = runCatching { task.getResult(ApiException::class.java) }.getOrDefault(false)
-            readyToPay.value = ready
+            onPaymentEvent(PaymentEvent.ReadinessChanged(ready))
             // Sem Google Pay não há como cobrar o passe: mesma saída de cortesia.
-            if (!ready) paymentFailed.value = true
+            if (!ready) onPaymentEvent(PaymentEvent.ReadyTimeout)
         }
     }
 
     private fun startPayment() {
         // Nova tentativa limpa o estado de falha; se falhar de novo, onPaymentError o religa.
-        paymentFailed.value = false
+        onPaymentEvent(PaymentEvent.PayClicked)
         when (PaymentConfig.PROVIDER) {
             PaymentProvider.PLAY_BILLING -> startPlayBillingPayment()
             PaymentProvider.STRIPE_GOOGLE_PAY -> startGooglePayPayment()
@@ -282,7 +281,6 @@ class BlockActivity : AppCompatActivity() {
     }
 
     private fun startPlayBillingPayment() {
-        paymentInProgress.value = true
         val launched = billingManager?.launchPurchase(this) ?: false
         if (!launched) {
             Log.e(TAG, "launchBillingFlow did not start")
@@ -293,7 +291,6 @@ class BlockActivity : AppCompatActivity() {
     // ——— Caminho Stripe/Google Pay (E9) — desabilitado via PaymentConfig, mantido para reuso ———
 
     private fun startGooglePayPayment() {
-        paymentInProgress.value = true
         val request =
             PaymentDataRequest.fromJson(GooglePayConfig.paymentDataRequest(dayPassPrice.value).toString())
         paymentsClient.loadPaymentData(request).addOnCompleteListener { task ->
@@ -342,7 +339,6 @@ class BlockActivity : AppCompatActivity() {
         val idempotencyKey = UUID.randomUUID().toString()
         lifecycleScope.launch {
             val result = PaymentApiClient.charge(targetPackage, token, idempotencyKey)
-            paymentInProgress.value = false
             result.fold(
                 onSuccess = { charge ->
                     Log.d(TAG, "Charge result status=${charge.status} pi=${charge.paymentIntentId}")
@@ -365,8 +361,7 @@ class BlockActivity : AppCompatActivity() {
      * o usuário não pode ficar sem o app porque a nossa maquininha falhou.
      */
     private fun onPaymentError() {
-        paymentInProgress.value = false
-        paymentFailed.value = true
+        onPaymentEvent(PaymentEvent.Error)
         toast(R.string.pay_error)
     }
 
@@ -376,6 +371,7 @@ class BlockActivity : AppCompatActivity() {
      * histórico deixar claro que nada foi cobrado.
      */
     private fun onCourtesyUnlock() {
+        onPaymentEvent(PaymentEvent.Completed)
         if (targetPackage.isNotEmpty()) {
             blockPreferences.grantUnlockForToday(targetPackage)
             lifecycleScope.launch {
@@ -393,6 +389,7 @@ class BlockActivity : AppCompatActivity() {
     }
 
     private fun onPaymentSuccess(method: String) {
+        onPaymentEvent(PaymentEvent.Completed)
         if (targetPackage.isNotEmpty()) {
             blockPreferences.grantUnlockForToday(targetPackage)
             // No Play Billing o valor/moeda reais são os do produto no Play Console;
@@ -450,9 +447,6 @@ class BlockActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "DollarBlockPay"
-
-        /** Tempo máximo de espera pela loja do Play antes de liberar por cortesia. */
-        private const val BILLING_READY_TIMEOUT_MS = 8_000L
 
         /** Valor registrado no extrato para um desbloqueio de cortesia. */
         private const val COURTESY_AMOUNT = "0.00"
