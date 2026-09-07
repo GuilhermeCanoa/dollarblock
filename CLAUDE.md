@@ -56,6 +56,33 @@ Run these after the app is installed and registered; re-run if the value reverts
 ./gradlew :app:testDebugUnitTest --console=plain --no-daemon
 ```
 
+### Antes de subir na Play Store
+
+Um comando roda tudo o que precisa estar verde — testes unitários, versão, assinatura
+e (opcional) o AAB — sem emulador e sem teste manual:
+
+```bash
+sh scripts/pre-release-check.sh            # testes + checagens (~15 s)
+sh scripts/pre-release-check.sh --bundle   # + AAB assinado e verificado
+```
+
+Falha com status != 0 em: teste quebrado, `versionName` já publicado (compara com a
+última tag `v*`), chaves de assinatura ausentes, `local.properties` versionado por engano,
+ou AAB gerado sem assinatura.
+
+**Smoke test de UI** (opcional, ~4 min, precisa de um emulador rodando) — instala o app,
+configura um limite, estoura o limite e valida a tela de bloqueio, a saída de cortesia
+(E17) e o extrato, tudo por `adb`:
+
+```bash
+powershell -File scripts/smoke-test-emulator.ps1
+```
+
+> No emulador não existe Play Store, então o Billing nunca fica pronto — é exatamente o
+> cenário de falha que o E17 cobre, o que torna o emulador o melhor lugar para testar a
+> cortesia. O script religa o serviço de acessibilidade após o `pm clear`: sem isso o
+> Android o marca como *crashed service* e o bloqueio nunca dispara.
+
 ---
 
 ## Architecture

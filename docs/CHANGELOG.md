@@ -12,6 +12,22 @@ Descrição funcional.
 
 ---
 
+## [2026-09-07] — Rede de testes antes do release
+
+- Regra da cortesia (E17) extraída da `BlockActivity` para `PaymentUiState` + `reduce`,
+  função pura testável na JVM. A Activity agora só traduz callbacks do Billing em eventos.
+- +19 testes (90 → 109): `PaymentUiStateTest` (14) cobre a máquina de estados — incluindo
+  a invariante de que **cancelar a compra não concede cortesia**, senão abrir a folha de
+  pagamento e cancelar seria um bypass universal do bloqueio; `CourtesyUnlockIntegrationTest`
+  (5, Robolectric + Room) cobre a cortesia no extrato com valor zero, sem contaminar
+  "Money Spent" nem "economizado".
+- `scripts/pre-release-check.sh` — um comando antes de cada publicação: testes, versão
+  não republicada, chaves de assinatura, `local.properties` fora do git e AAB assinado.
+- `scripts/smoke-test-emulator.ps1` — smoke test de UI por `adb`: instala, configura
+  limite, estoura o limite e valida bloqueio, cortesia e extrato (14 verificações).
+- Validado no emulador: Billing indisponível → cortesia → app abre e continua aberto;
+  recibo "Cortesia (falha no pagamento) · R$ 0,00" e Money Spent intacto em R$ 0,00.
+
 ## [2026-09-06] — Saída de cortesia quando o pagamento falha
 **Tipo:** feature
 **Épico:** adhoc (correção de UX crítica no bloqueio)

@@ -46,6 +46,16 @@ uma nova tentativa limpa o estado de falha antes de iniciar o fluxo.
 - [x] `PaymentFailedNotice` composable + strings en/pt
 - [x] Rótulo "Cortesia (falha no pagamento)" no Home e no HistoryScreen
 - [x] Build + testes unitários
+- [x] Regra extraída para `PaymentUiState`/`reduce` (função pura) — antes as transições
+      viviam espalhadas em mutações de `MutableStateFlow` dentro da Activity, onde só um
+      emulador conseguiria testá-las
+- [x] `PaymentUiStateTest` (14 testes) cobrindo a regra, incluindo "cancelar não dá
+      cortesia" — validado por mutação: inverter a regra quebra o teste
+- [x] `CourtesyUnlockIntegrationTest` (5 testes, Robolectric + Room) — cortesia auditável
+      no extrato, sem poluir "gasto" nem "economizado"
+- [x] Validação no emulador: Billing indisponível → timeout de 8 s → cortesia → app abre
+      e o desbloqueio persiste; recibo "Cortesia (falha no pagamento) · R$ 0,00"
+- [x] `scripts/pre-release-check.sh` e `scripts/smoke-test-emulator.ps1`
 
 ## Fora de escopo
 
