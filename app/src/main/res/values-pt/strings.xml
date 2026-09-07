@@ -57,6 +57,7 @@
     <string name="pay_method_google">Google Pay</string>
     <string name="pay_method_play">Google Play</string>
     <string name="pay_method_simulated">Pagamento simulado</string>
+    <string name="pay_method_courtesy">Cortesia (falha no pagamento)</string>
 
     <!-- Tone of voice -->
     <string name="msg_goal_met">Meta atingida. Nada a cobrar.</string>
@@ -265,6 +266,11 @@
     <string name="pay_error">Não foi possível concluir o pagamento.</string>
     <string name="pay_cancelled">Pagamento cancelado. Sábia decisão.</string>
     <string name="pay_unlocked">Pago. Liberado até a meia-noite.</string>
+    <string name="pay_failed_title">A maquininha deu pau</string>
+    <string name="pay_failed_body">Deu algo errado do nosso lado e não conseguimos cobrar você. Você deu sorte: o passe de hoje fica por nossa conta — pode abrir o app sem pagar nada.</string>
+    <string name="pay_failed_action">Abrir o %1$s de graça</string>
+    <string name="pay_failed_retry">Tentar pagar de novo</string>
+    <string name="pay_courtesy_granted">Por nossa conta. Liberado até a meia-noite.</string>
 
     <!-- Common -->
     <string name="unlock">Desbloquear</string>

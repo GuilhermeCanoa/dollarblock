@@ -24,4 +24,10 @@ object PaymentMethod {
     const val PLAY_BILLING = "play_billing"
     const val GOOGLE_PAY = "google_pay"
     const val SIMULATED = "simulado"
+
+    /**
+     * Desbloqueio de cortesia: a cobrança falhou por erro nosso/da loja e o acesso foi
+     * liberado sem cobrar nada. Registrado com valor 0 no extrato.
+     */
+    const val COURTESY = "cortesia"
 }

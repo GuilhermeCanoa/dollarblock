@@ -176,6 +176,7 @@ private fun HistoryEventRow(event: RecentEvent) {
                     val method = when ((event as RecentEvent.Unlocked).method) {
                         PaymentMethod.PLAY_BILLING -> stringResource(R.string.pay_method_play)
                         PaymentMethod.GOOGLE_PAY -> stringResource(R.string.pay_method_google)
+                        PaymentMethod.COURTESY -> stringResource(R.string.pay_method_courtesy)
                         else -> stringResource(R.string.pay_method_simulated)
                     }
                     "${stringResource(R.string.history_entry_paid)} · $method"

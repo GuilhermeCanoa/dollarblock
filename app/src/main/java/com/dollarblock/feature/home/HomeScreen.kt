@@ -533,6 +533,7 @@ private fun RecentEventRow(event: RecentEvent) {
                 val method = when (event.method) {
                     PaymentMethod.PLAY_BILLING -> stringResource(R.string.pay_method_play)
                     PaymentMethod.GOOGLE_PAY -> stringResource(R.string.pay_method_google)
+                    PaymentMethod.COURTESY -> stringResource(R.string.pay_method_courtesy)
                     else -> stringResource(R.string.pay_method_simulated)
                 }
                 Text(

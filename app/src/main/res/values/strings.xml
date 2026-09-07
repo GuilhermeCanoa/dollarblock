@@ -55,6 +55,7 @@
     <string name="pay_method_google">Google Pay</string>
     <string name="pay_method_play">Google Play</string>
     <string name="pay_method_simulated">Simulated payment</string>
+    <string name="pay_method_courtesy">Courtesy (payment failed)</string>
 
     <!-- Tone of voice -->
     <string name="msg_goal_met">Goal met. No charge.</string>
@@ -265,6 +266,11 @@
     <string name="pay_error">Could not complete the payment.</string>
     <string name="pay_cancelled">Payment cancelled. Wise.</string>
     <string name="pay_unlocked">Paid. Free until midnight.</string>
+    <string name="pay_failed_title">The till broke down</string>
+    <string name="pay_failed_body">Something went wrong on our side and we couldn\'t take your money. Lucky you: today\'s pass is on the house — open the app without paying a cent.</string>
+    <string name="pay_failed_action">Open %1$s for free</string>
+    <string name="pay_failed_retry">Try paying again</string>
+    <string name="pay_courtesy_granted">On the house. Free until midnight.</string>
 
     <!-- Common -->
     <string name="unlock">Unlock</string>
