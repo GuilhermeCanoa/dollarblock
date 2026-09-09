@@ -2,6 +2,40 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+---
+
+## REGRA OBRIGATÓRIA — nenhuma versão sai sem os dois scripts
+
+Sempre que for **gerar uma nova versão do app** (bump de `versionCode`/`versionName`,
+`bundleRelease`/`assembleRelease`, ou qualquer build destinado à Play Store), os dois
+scripts abaixo **devem ser executados e passar**, nesta ordem, antes de entregar o
+artefato ou dizer que está pronto:
+
+```bash
+# 1. Obrigatório — testes, versão, assinatura e AAB conferido
+sh scripts/pre-release-check.sh --bundle
+
+# 2. Obrigatório — valida a UI de ponta a ponta (precisa de um emulador rodando)
+powershell -File scripts/smoke-test-emulator.ps1
+```
+
+Regras de execução:
+
+- **Não entregue o AAB/APK antes dos dois terminarem verdes.** Se qualquer verificação
+  falhar, corrija a causa e rode de novo — nunca contorne o script nem publique assim
+  mesmo.
+- **Não vale substituir por inspeção manual, "olhei o código" ou teste via IA.** O ponto
+  dos scripts é justamente não depender disso.
+- Se o smoke test não puder rodar (nenhum emulador disponível e o usuário não quer subir
+  um), **diga isso explicitamente ao entregar** — "o smoke test de UI não rodou porque
+  não havia emulador" — em vez de omitir. Nunca dê a etapa como feita sem ter rodado.
+- Ao relatar, informe o resultado real de cada script (nº de testes, verificações que
+  passaram). Não afirme que passaram sem ter visto a saída.
+
+Detalhes do que cada script cobre estão em [Antes de subir na Play Store](#antes-de-subir-na-play-store).
+
+---
+
 ## Build
 
 This project uses the Gradle wrapper. If JDK is not in PATH, point `JAVA_HOME` to the JBR bundled with Android Studio before running:
@@ -58,6 +92,8 @@ Run these after the app is installed and registered; re-run if the value reverts
 
 ### Antes de subir na Play Store
 
+> **Obrigatório** ao gerar qualquer versão — ver [a regra no topo deste arquivo](#regra-obrigatória--nenhuma-versão-sai-sem-os-dois-scripts).
+
 Um comando roda tudo o que precisa estar verde — testes unitários, versão, assinatura
 e (opcional) o AAB — sem emulador e sem teste manual:
 
@@ -70,7 +106,8 @@ Falha com status != 0 em: teste quebrado, `versionName` já publicado (compara c
 última tag `v*`), chaves de assinatura ausentes, `local.properties` versionado por engano,
 ou AAB gerado sem assinatura.
 
-**Smoke test de UI** (opcional, ~4 min, precisa de um emulador rodando) — instala o app,
+**Smoke test de UI** (~4 min, precisa de um emulador rodando; obrigatório ao gerar
+versão, opcional durante o desenvolvimento) — instala o app,
 configura um limite, estoura o limite e valida a tela de bloqueio, a saída de cortesia
 (E17) e o extrato, tudo por `adb`:
 

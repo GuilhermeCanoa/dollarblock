@@ -8,7 +8,8 @@
 #   sh scripts/pre-release-check.sh          # testes + checagens de release
 #   sh scripts/pre-release-check.sh --bundle # + gera o AAB assinado
 #
-# Smoke test no emulador (opcional, ~4 min, precisa de um emulador rodando):
+# Ao gerar uma versao para a Play Store, o smoke test de UI tambem e OBRIGATORIO
+# (ver a regra no topo do CLAUDE.md):
 #   powershell -File scripts/smoke-test-emulator.ps1
 #
 # Sai com status != 0 se qualquer etapa falhar — dá para usar em CI.
@@ -108,8 +109,19 @@ fi
 
 echo ""
 echo "═══════════════════════════════════════════"
-echo "✅ Tudo verde — pode subir na Play Store."
+if [ "$BUILD_BUNDLE" = "1" ]; then
+  echo "✅ Etapa 1/2 verde (testes, versão, assinatura, AAB)."
+else
+  echo "✅ Etapa 1/2 verde (testes e checagens de release)."
+fi
 echo "═══════════════════════════════════════════"
 echo ""
-echo "Opcional (valida a UI de ponta a ponta num emulador rodando):"
-echo "  powershell -File scripts/smoke-test-emulator.ps1"
+if [ "$BUILD_BUNDLE" = "1" ]; then
+  echo "⚠️  FALTA A ETAPA 2 — obrigatória para publicar (regra no topo do CLAUDE.md):"
+  echo "      powershell -File scripts/smoke-test-emulator.ps1"
+  echo ""
+  echo "    Não suba o AAB antes do smoke test passar."
+else
+  echo "Valida a UI de ponta a ponta (precisa de um emulador rodando):"
+  echo "  powershell -File scripts/smoke-test-emulator.ps1"
+fi
