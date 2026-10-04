@@ -557,6 +557,16 @@ private fun BlockScreen(
                         ),
                         onClick = onPay,
                     )
+                    // A dúvida "pra onde vai meu cartão?" nasce aqui — responde em uma linha.
+                    if (provider == PaymentProvider.PLAY_BILLING) {
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = stringResource(R.string.privacy_payment_note),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = NeutralWhite.copy(alpha = 0.6f),
+                            textAlign = TextAlign.Center,
+                        )
+                    }
                 } else {
                     Text(
                         text = stringResource(
