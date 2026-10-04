@@ -19,8 +19,8 @@ class OnboardingFlowTest {
             listOf(
                 AppPermission.USAGE_ACCESS,
                 AppPermission.ACCESSIBILITY,
-                AppPermission.NOTIFICATIONS,
                 AppPermission.OVERLAY,
+                AppPermission.NOTIFICATIONS,
             ),
             permissionsIn(pages),
         )
@@ -52,16 +52,16 @@ class OnboardingFlowTest {
     }
 
     @Test
-    fun `so uso e acessibilidade sao obrigatorias`() {
+    fun `uso, acessibilidade e sobreposicao sao obrigatorias`() {
         assertEquals(
-            listOf(AppPermission.USAGE_ACCESS, AppPermission.ACCESSIBILITY),
+            listOf(AppPermission.USAGE_ACCESS, AppPermission.ACCESSIBILITY, AppPermission.OVERLAY),
             AppPermission.entries.filter { it.required },
         )
     }
 
     @Test
     fun `faltando so opcionais nao ha obrigatoria pendente`() {
-        val state = PermissionsState(usageAccess = true, accessibility = true)
+        val state = PermissionsState(usageAccess = true, accessibility = true, overlay = true)
         assertTrue(missingRequiredPermissions(state).isEmpty())
     }
 
@@ -70,7 +70,7 @@ class OnboardingFlowTest {
         val state = PermissionsState(usageAccess = true, overlay = true, notifications = true)
         assertEquals(listOf(AppPermission.ACCESSIBILITY), missingRequiredPermissions(state))
         assertEquals(
-            listOf(AppPermission.USAGE_ACCESS, AppPermission.ACCESSIBILITY),
+            listOf(AppPermission.USAGE_ACCESS, AppPermission.ACCESSIBILITY, AppPermission.OVERLAY),
             missingRequiredPermissions(PermissionsState()),
         )
     }

@@ -245,7 +245,7 @@ private fun HistoryEventRowPreview() {
                 RecentEvent.Unlocked(
                     appLabel = "Instagram",
                     timestamp = System.currentTimeMillis(),
-                    amount = "4.99",
+                    amount = "1.99",
                     currency = "BRL",
                     method = PaymentMethod.GOOGLE_PAY,
                 ),

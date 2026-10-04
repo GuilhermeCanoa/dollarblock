@@ -44,7 +44,7 @@ class LimitWarningNotifier @Inject constructor(
             return
         }
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.db_shield)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(
                 context.resources.getQuantityString(
                     R.plurals.notif_limit_warning_title,

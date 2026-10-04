@@ -56,10 +56,10 @@ class PlayBillingManager(
     val ready: StateFlow<Boolean> = _ready
 
     private val _formattedPrice = MutableStateFlow<String?>(null)
-    /** Preço localizado do Play (ex.: "R$ 5,00"); null enquanto não carregado. */
+    /** Preço localizado do Play (ex.: "R$ 1,99"); null enquanto não carregado. */
     val formattedPrice: StateFlow<String?> = _formattedPrice
 
-    /** Valor do preço como decimal (ex.: "5.00"), para registro no extrato. */
+    /** Valor do preço como decimal (ex.: "1.99"), para registro no extrato. */
     val priceAmount: String?
         get() = productDetails?.oneTimePurchaseOfferDetails
             ?.priceAmountMicros?.let { micros -> "%.2f".format(java.util.Locale.US, micros / 1_000_000.0) }

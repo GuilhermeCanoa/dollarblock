@@ -14,9 +14,8 @@ sealed interface OnboardingPage {
 /**
  * Ordem do onboarding (E18): uma permissão por página, cada uma pedida quando o usuário já
  * entende para que serve. O Acesso de uso vem logo antes do Resumo rápido — a recompensa
- * imediata da permissão recém-concedida. Depois a Acessibilidade (a tranca), e as opcionais
- * por último, com o pedido leve (notificações, um diálogo do sistema) entre as idas às
- * Configurações.
+ * imediata da permissão recém-concedida. Depois a Acessibilidade e a Sobreposição (a tranca
+ * e o que garante que ela aparece por cima), e a opcional (notificações) por último.
  *
  * [askNotifications] é false abaixo do Android 13, onde não há permissão de runtime a pedir.
  */
@@ -25,8 +24,8 @@ fun onboardingPages(conceptCount: Int, askNotifications: Boolean): List<Onboardi
     add(OnboardingPage.Permission(AppPermission.USAGE_ACCESS))
     add(OnboardingPage.QuickSummary)
     add(OnboardingPage.Permission(AppPermission.ACCESSIBILITY))
-    if (askNotifications) add(OnboardingPage.Permission(AppPermission.NOTIFICATIONS))
     add(OnboardingPage.Permission(AppPermission.OVERLAY))
+    if (askNotifications) add(OnboardingPage.Permission(AppPermission.NOTIFICATIONS))
     add(OnboardingPage.Control)
 }
 

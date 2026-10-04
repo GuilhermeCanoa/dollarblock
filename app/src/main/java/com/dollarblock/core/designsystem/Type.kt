@@ -41,7 +41,7 @@ val InterFamily = FontFamily(
 
 /**
  * Numerais tabulares (`tnum`) para todo valor de dinheiro e tempo — dígitos de
- * largura fixa, estética de painel financeiro/taxímetro; o count-up anima sem
+ * largura fixa, estética de painel financeiro; o count-up anima sem
  * o texto "dançar". Combinar com tamanho/peso do contexto via `copy()`.
  */
 val TabularNumerals = TextStyle(

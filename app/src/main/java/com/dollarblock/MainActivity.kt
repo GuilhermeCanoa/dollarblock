@@ -130,7 +130,7 @@ private fun MainTabs(mainViewModel: MainViewModel) {
     val navController = rememberNavController()
     val missingPermissions by mainViewModel.missingPermissionsNag.collectAsStateWithLifecycle()
 
-    // Aviso diário de app degradado: sem as permissões o taxímetro não mede nem bloqueia.
+    // Aviso diário de app degradado: sem as permissões a conta não mede nem bloqueia.
     // Re-checa a cada retorno ao foreground; o ViewModel limita a 1 exibição por dia.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { mainViewModel.checkPermissionNag() }
 
@@ -162,7 +162,7 @@ private fun MainTabs(mainViewModel: MainViewModel) {
 
 /**
  * Aviso de mau funcionamento sem permissões, no tom da casa: sem a papelada o
- * taxímetro roda às cegas — não mede, não bloqueia, não cobra.
+ * a conta corre às cegas — não mede, não bloqueia, não cobra.
  */
 @Composable
 private fun PermissionNagDialog(

@@ -4,7 +4,7 @@ package com.dollarblock.domain.model
 enum class AppCurrency { BRL, USD }
 
 /**
- * Configuração monetária do taxímetro: salário líquido mensal usado para precificar o
+ * Configuração monetária da conta: salário líquido mensal usado para precificar o
  * minuto de scroll e a moeda em que esses valores são exibidos.
  */
 data class MoneySettings(

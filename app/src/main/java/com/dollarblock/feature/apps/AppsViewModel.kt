@@ -130,7 +130,7 @@ class AppsViewModel @Inject constructor(
         // Sugeridos ("os suspeitos de sempre"): primeiro os top 5 apps mais usados do
         // próprio usuário na semana (recomendação personalizada), depois os ralos de
         // tempo clássicos. Sempre apenas apps instalados (allRows vem do PackageManager)
-        // e ainda fora do taxímetro; sem candidatos, a seção simplesmente não aparece.
+        // e ainda fora da conta; sem candidatos, a seção simplesmente não aparece.
         val topUsedPackages = weeklyUsageByPkg.entries
             .sortedByDescending { it.value }
             .map { it.key }
@@ -228,7 +228,7 @@ class AppsViewModel @Inject constructor(
     private companion object {
         const val SYNC_INTERVAL_MS = 5_000L
 
-        /** Ralos de tempo clássicos, sugeridos por padrão quando instalados e fora do taxímetro. */
+        /** Ralos de tempo clássicos, sugeridos por padrão quando instalados e fora da conta. */
         val SUGGESTED_PACKAGES = listOf(
             "com.instagram.android",
             "com.facebook.katana",

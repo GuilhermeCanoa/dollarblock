@@ -98,5 +98,5 @@ O DollarBlock não é um aplicativo de produtividade chato ou punitivo; ele é u
 
 ## 6. Aplicação do Logo (Icon Assets)
 
-* **Launcher Icon (App no celular):** O ativo `drawable-nodpi/db_shield.webp` é o ícone oficial do app. Ele é usado tanto no Adaptive Icon do launcher (`mipmap-anydpi-v26/ic_launcher.xml` + `ic_launcher_round.xml`, como `<foreground>`) quanto nas telas internas via `BrandShield` composable. O background do adaptive icon usa `Deep Green Velvet (#0A241D)`. Nunca substituir o foreground por outro ativo sem atualizar ambos os pontos de uso.
+* **Logo (um só):** o ícone do app é o único logo do DollarBlock. O launcher usa `drawable/ic_launcher_foreground.xml` + `ic_launcher_background.xml` (Deep Green Velvet `#0A241D`) no adaptive icon; dentro do app, `BrandShield` desenha `drawable/db_logo.xml` — o mesmo desenho recortado na área visível do launcher; a notificação usa a silhueta `drawable/ic_notification.xml`. Mudou o ícone? Atualize os três juntos. Não existe outra versão do logo (o antigo `db_shield.webp` foi removido).
 * **Versão Horizontal (Brand Mark):** O símbolo à esquerda, seguido pelo texto **DOLLAR** (em peso regular/light) e **BLOCK** (em peso extra bold) na cor branca ou verde esmeralda.

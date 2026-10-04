@@ -95,8 +95,8 @@ Step "Onboarding"
 & $adb shell am start -n "$pkg/.MainActivity" | Out-Null
 Start-Sleep -Seconds 8
 if (TapText "Skip to permissions|Pular para|permiss") { Start-Sleep -Seconds 3 }
-# Uma pagina por permissao (E18): Uso -> Resumo -> Acessibilidade -> Notificacoes ->
-# Sobreposicao -> Controle. Com tudo concedido via adb, cada uma mostra "Continue".
+# Uma pagina por permissao (E18): Uso -> Resumo -> Acessibilidade -> Sobreposicao ->
+# Notificacoes -> Controle. Com tudo concedido via adb, cada uma mostra "Continue".
 for ($i = 0; $i -lt 8; $i++) {
     if (TapText "Continue|Continuar|Challenge accepted|Desafio aceito") { Start-Sleep -Seconds 3 } else { break }
 }
@@ -124,7 +124,7 @@ if ($row) {
     & $adb shell input tap 961 $y   # botão "+" à direita da linha
     Start-Sleep -Seconds 3
 }
-Check "App na régua" ((UiText) -match "on the meter|na r") "não apareceu a seção de apps monitorados"
+Check "App na régua" ((UiText) -match "on the tab|na conta") "não apareceu a seção de apps monitorados"
 
 # Abre o diálogo de limite e salva 1 minuto. O teclado empurra o diálogo para cima,
 # então as coordenadas do Save são lidas do dump DEPOIS de digitar.

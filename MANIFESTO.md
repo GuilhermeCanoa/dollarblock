@@ -23,10 +23,10 @@ O cérebro humano responde a perdas muito mais do que a ganhos. Isso não é fra
 1. **Você escolhe os apps** que quer monitorar — redes sociais, jogos, o que for.
 2. **Você define um limite diário** — 30 minutos de Instagram, 1 hora de YouTube.
 3. **Quando o limite é atingido**, o app é bloqueado. A tela do DollarBlock toma o lugar — a sua fatura chegou.
-4. **Para continuar**, você compra um **passe do dia**: um pagamento único, direto pelo Google Pay, libera aquele app até a meia-noite.
+4. **Para continuar**, você compra um **passe do dia**: um pagamento único de R$ 1,99, direto pelo Google Play, libera aquele app até a meia-noite.
 5. O dinheiro sai de verdade. Isso muda tudo.
 
-Um pagamento por app, por dia, no máximo. À meia-noite o passe expira, o limite reseta e o taxímetro volta a contar. Simples como uma corrida de táxi: estourou o limite, ou desce do carro ou paga a bandeirada.
+Um pagamento por app, por dia, no máximo. À meia-noite o passe expira, o limite reseta e a conta volta a correr do zero. Simples como conta de bar: estourou o limite, ou fecha a conta e vai embora, ou paga pra ficar mais.
 
 ---
 
@@ -53,7 +53,7 @@ Com o tempo, o padrão muda: a associação entre abrir o Instagram e perder din
 
 DollarBlock não julga você. Não te manda frases motivacionais. Te manda a conta.
 
-Não tem mascote. Tem um taxímetro.
+Não tem mascote. Tem uma conta aberta.
 
 Ele só coloca um preço no que você diz que não quer mais fazer — e deixa você decidir se vale a pena.
 
@@ -68,7 +68,7 @@ A voz do DollarBlock é a de um **gerente de banco do seu tempo**: seco, irônic
 - ❌ **Motivacional:** "Você consegue! 💪" — nunca.
 - ❌ **Bronca moralista:** "Você está viciado" — o app não julga, ele cobra.
 
-Vocabulário da casa: *taxímetro, fatura, extrato, recibo, resgate, passe do dia, prejuízo, movimentações, contrato.*
+Vocabulário da casa: *conta, fatura, extrato, recibo, resgate, passe do dia, prejuízo, movimentações, contrato.*
 
 ---
 

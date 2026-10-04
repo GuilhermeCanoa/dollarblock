@@ -25,7 +25,7 @@ ela serve, alternando a "papelada" com uma recompensa:
 | 5 | Resumo rápido (top apps) | recompensa | Prova imediata do valor da permissão que acabou de dar |
 | 6 | **Acessibilidade** | obrigatória | "Agora, a tranca" — com a declaração em destaque (Play) |
 | 7 | **Notificações** | opcional | Pedido leve (diálogo do sistema) entre duas idas às Configurações; só no Android 13+ |
-| 8 | **Sobreposição** | opcional | Confiabilidade da tela de bloqueio em alguns aparelhos |
+| 8 | **Sobreposição** | obrigatória (desde 2026-10-04) | Confiabilidade da tela de bloqueio em alguns aparelhos |
 | 9 | Você no controle + "Topo o desafio" | — | Fecha o contrato |
 
 Cada página de permissão mostra: "Papelada N de M", selo **obrigatória/opcional**, o porquê,
@@ -62,7 +62,10 @@ e um bloco **"Sem ela"** com o que o app perde.
 
 ## Notas / Decisões
 
-- Sobreposição é opcional: o serviço de acessibilidade já é isento das restrições de abrir
-  activity em segundo plano; a sobreposição só melhora a confiabilidade em alguns fabricantes.
+- ~~Sobreposição é opcional~~ — **revisto em 2026-10-04:** virou obrigatória e foi para logo
+  depois da Acessibilidade (ordem 6 → Sobreposição → Notificações). No Android puro a
+  acessibilidade já é isenta das restrições de abrir activity em segundo plano, mas em vários
+  fabricantes (MIUI, ColorOS…) sem a sobreposição a tela de bloqueio é segurada — e a tranca é
+  o produto.
 - Não há avanço automático ao voltar das Configurações com a permissão concedida: a página
   mostra "Concedida" e o botão vira "Continuar" — previsível e fácil de automatizar.

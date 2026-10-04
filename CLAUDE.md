@@ -169,7 +169,7 @@ The disabled E9 flow: `feature/blocking/payment/` wires a **real Stripe charge t
 - `BlockActivity.handlePaymentData` extracts the Google Pay token, isolates the Stripe token `id` via `StripeToken.extractId`, and calls `PaymentApiClient.charge()` → `POST /unlock-charge` (live API Gateway + Lambda + Stripe). Unlock is granted **only** on `status == "succeeded"`; idempotency via a per-request UUID.
 - On success, `BlockPreferences.grantUnlockForToday(pkg)` frees the app until **local midnight** (wall-clock `unlockUntilMs`; at most one payment per app per day by construction); the unlock is logged through `EventsRepository.recordUnlock`.
 - A debug-only "Simulate payment" fallback bypasses the charge.
-- Brand voice (E11): deadpan "time-bank manager" tone — taxímetro/fatura/extrato/recibos vocabulary; see MANIFESTO.md "Como falamos" before writing any user-facing string.
+- Brand voice (E11): deadpan "time-bank manager" tone — conta/fatura/extrato/recibos vocabulary (the running "conta" — EN "tab" — replaced "taxímetro": nothing taxi-related); see MANIFESTO.md "Como falamos" before writing any user-facing string.
 
 Production (`pk_live_`/`sk_live_`, `ENVIRONMENT_PRODUCTION`, merchantId, key out of source) is not yet activated. See `docs/PAYMENTS_SETUP.md` and `docs/BACKEND_STRIPE.md`.
 

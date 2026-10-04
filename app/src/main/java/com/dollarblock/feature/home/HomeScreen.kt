@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Paid
@@ -103,7 +104,11 @@ fun HomeScreen(
         MoneyLostHero(
             moneyLost = uiState.moneyLostToday,
             currency = uiState.moneySettings.currency,
-            onClick = { infoCard = HomeCardInfo.DAMAGE },
+            // Primeira vez (nenhum app monitorado): o bloco inteiro leva direto pra tela de
+            // Apps, em vez de explicar uma conta que ainda não existe.
+            onClick = if (uiState.moneyLostToday == null) onNavigateToApps else {
+                { infoCard = HomeCardInfo.DAMAGE }
+            },
         )
 
         SalaryCard(
@@ -183,7 +188,7 @@ fun HomeScreen(
 }
 
 /**
- * Card "adicione seu salário": calibra o taxímetro com o valor real do usuário no lugar
+ * Card "adicione seu salário": calibra a conta com o valor real do usuário no lugar
  * da referência de R$ 2.000/mês. Depois de configurado, vira um resumo tocável.
  */
 @Composable
@@ -251,7 +256,7 @@ private fun SalaryCard(
 
 /**
  * Balão-tutorial exibido uma única vez, no primeiro acesso após o onboarding, enquanto
- * o salário não foi configurado — aponta pro card acima e convida a calibrar o taxímetro.
+ * o salário não foi configurado — aponta pro card acima e convida a refazer a conta.
  */
 @Composable
 private fun SalaryTipBalloon(onDismiss: () -> Unit, modifier: Modifier = Modifier) {
@@ -378,7 +383,7 @@ private fun MoneyLostHero(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
 ) {
-    // O taxímetro: bloco-herói com count-up de odômetro. Verde (marca) quando o
+    // A conta: bloco-herói com count-up de odômetro. Verde (marca) quando o
     // dia está limpo; "sangra" vermelho quando há dinheiro sendo doado.
     val shape = RoundedCornerShape(24.dp)
     val burning = (moneyLost ?: 0.0) >= 0.01
@@ -393,9 +398,9 @@ private fun MoneyLostHero(
     )
     val glowColor = if (burning) BlockingRed else DollarBlockTheme.colors.glow
 
-    // Count-up de taxímetro: o valor sobe de 0 até o prejuízo ao entrar na tela.
+    // Count-up de odômetro: o valor sobe de 0 até o prejuízo ao entrar na tela.
     // Haptic a cada café inteiro cruzado (HomeMetrics.crossedCoffeeMultiple) — o
-    // taxímetro "sente" o próprio custo subindo.
+    // conta "sente" o próprio custo subindo.
     val animatedValue = remember { Animatable(0f) }
     val haptic = LocalHapticFeedback.current
     LaunchedEffect(moneyLost) {
@@ -464,7 +469,37 @@ private fun MoneyLostHero(
                 style = MaterialTheme.typography.bodyMedium,
                 color = NeutralWhite.copy(alpha = 0.75f),
             )
+            if (moneyLost == null && onClick != null) {
+                Spacer(Modifier.size(6.dp))
+                PickAppsChip()
+            }
         }
+    }
+}
+
+/** Atalho do estado vazio da conta: deixa explícito que tocar leva à escolha dos apps. */
+@Composable
+private fun PickAppsChip() {
+    Row(
+        modifier = Modifier
+            .clip(CircleShape)
+            .background(NeutralWhite)
+            .padding(start = 18.dp, end = 12.dp, top = 10.dp, bottom = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.home_money_lost_cta),
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+            color = DollarBlockTheme.colors.gradientStops.first(),
+        )
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+            contentDescription = null,
+            tint = DollarBlockTheme.colors.gradientStops.first(),
+            modifier = Modifier.size(18.dp),
+        )
     }
 }
 

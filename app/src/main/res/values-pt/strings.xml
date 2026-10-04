@@ -14,6 +14,7 @@
     <string name="home_money_lost_today">Prejuízo de hoje</string>
     <string name="home_money_lost_subtitle">doado às big techs, sem recibo de gratidão</string>
     <string name="home_money_lost_no_data">Monitore seus apps e descubra quanto custa o seu scroll.</string>
+    <string name="home_money_lost_cta">Escolher os apps</string>
     <string name="home_active_limits">Limites ativos</string>
     <string name="home_currently_blocked">Bloqueado agora</string>
     <string name="home_addiction_tracker">Rastreador de vício</string>
@@ -29,7 +30,7 @@
     <string name="home_info_saved_title">Dinheiro economizado</string>
     <string name="home_info_saved_body">Cada dia em que um app bateu no limite e você saiu da tela de bloqueio sem pagar conta como um passe do dia não comprado, ao preço de hoje. Dias em que você pagou não contam. Resistir é o único desconto da casa.</string>
     <string name="home_info_blocked_title">Bloqueado agora</string>
-    <string name="home_info_blocked_body">Apps monitorados que bateram no limite diário e estão trancados neste momento. O taxímetro parou; a fatura está na mesa.</string>
+    <string name="home_info_blocked_body">Apps monitorados que bateram no limite diário e estão trancados neste momento. A conta fechou; a fatura está na mesa.</string>
     <string name="home_info_addiction_title">Rastreador de vício</string>
     <string name="home_info_addiction_body">Quantas vezes você tentou abrir um app bloqueado hoje. Cada tentativa é arquivada. A gente não julga — a gente conta.</string>
     <string name="home_no_events">Nenhum bloqueio hoje. O mercado está impressionado.</string>
@@ -61,7 +62,7 @@
 
     <!-- Tone of voice -->
     <string name="msg_goal_met">Meta atingida. Nada a cobrar.</string>
-    <string name="msg_limit_reached">Limite atingido. O taxímetro para aqui.</string>
+    <string name="msg_limit_reached">Limite atingido. A conta fecha aqui.</string>
     <string name="msg_unlock_needed">Fatura pendente.</string>
     <string name="msg_on_track">Dentro do orçamento. Por enquanto.</string>
     <string name="msg_time_saved_today">Você economizou %1$d minutos hoje. Fatura: R$ 0.</string>
@@ -72,9 +73,9 @@
     <string name="apps_search_placeholder">Buscar app…</string>
     <string name="apps_search_clear">Limpar busca</string>
     <string name="apps_search_empty">Nenhum app encontrado para %1$s.</string>
-    <string name="apps_empty_state">Busque um app acima e coloque no taxímetro.</string>
+    <string name="apps_empty_state">Busque um app acima e coloque na conta.</string>
     <string name="apps_limit_dialog_title">Limite diário · %1$s</string>
-    <string name="apps_limit_dialog_body">Defina quantos minutos por dia este app merece. Passou disso, o taxímetro liga.</string>
+    <string name="apps_limit_dialog_body">Defina quantos minutos por dia este app merece. Passou disso, a fatura chega.</string>
     <string name="apps_limit_dialog_minutes_label">Minutos por dia</string>
     <string name="apps_limit_dialog_no_limit">Sem limite</string>
     <string name="apps_limit_dialog_save">Salvar</string>
@@ -94,21 +95,21 @@
     <string name="apps_deactivated_delete_confirm_cancel">Cancelar</string>
     <string name="apps_suggested_header">Os suspeitos de sempre</string>
     <string name="apps_limit_increased_title">Limite aumentado</string>
-    <string name="apps_limit_increased_body">De %1$s para %2$s por dia. Jeito fácil de caber no orçamento: mudar o orçamento. O taxímetro continua correndo do mesmo jeito — você só vai perder o dinheiro sem perceber. Tem certeza de que o plano é esse?</string>
+    <string name="apps_limit_increased_body">De %1$s para %2$s por dia. Jeito fácil de caber no orçamento: mudar o orçamento. A conta continua correndo do mesmo jeito — você só vai perder o dinheiro sem perceber. Tem certeza de que o plano é esse?</string>
     <string name="apps_limit_decreased_title">Limite reduzido</string>
-    <string name="apps_limit_decreased_body">De %1$s para %2$s por dia. Anotado: tempo é dinheiro, e você resolveu ficar com o seu. O taxímetro respeita.</string>
+    <string name="apps_limit_decreased_body">De %1$s para %2$s por dia. Anotado: tempo é dinheiro, e você resolveu ficar com o seu. A conta agradece.</string>
     <string name="apps_limit_notice_ok">Anotado</string>
     <string name="apps_sabotage_warning_title">Muito esperto</string>
-    <string name="apps_sabotage_warning_body">Passou do limite de %1$s e, em vez de pagar a fatura, resolveu desligar o taxímetro. Muito esperto. Só que quem tá sendo enganado aqui é você mesmo — o relógio não liga pra isso.</string>
+    <string name="apps_sabotage_warning_body">Passou do limite de %1$s e, em vez de pagar a fatura, resolveu rasgar a conta. Muito esperto. Só que quem tá sendo enganado aqui é você mesmo — o relógio não liga pra isso.</string>
     <string name="apps_sabotage_warning_confirm">Desligar mesmo assim</string>
-    <string name="apps_sabotage_warning_cancel">Deixar o taxímetro ligado</string>
+    <string name="apps_sabotage_warning_cancel">Manter na conta</string>
 
     <!-- Statistics -->
     <string name="statistics_title">Extrato</string>
     <string name="statistics_subtitle">Seus gastos de tempo, item por item. Diário, semanal, mensal.</string>
 
     <!-- Apps (monitored list) -->
-    <string name="apps_monitored_count">%1$d apps no taxímetro</string>
+    <string name="apps_monitored_count">%1$d apps na conta</string>
     <string name="apps_limit_label">Limite diário</string>
     <string name="apps_used_of_limit">%1$s de %2$s</string>
     <string name="apps_used_no_limit">%1$s hoje · sem limite definido</string>
@@ -131,7 +132,7 @@
     <string name="stat_worst_day">Pior dia</string>
     <string name="stat_best_day_caption">menor fatura</string>
     <string name="stat_worst_day_caption">maior fatura</string>
-    <string name="stat_no_data">Ainda não há dados de uso.\nAbra apps monitorados e o taxímetro começa a escrever.</string>
+    <string name="stat_no_data">Ainda não há dados de uso.\nAbra apps monitorados e a conta começa a correr.</string>
     <string name="stat_period_total">Total</string>
     <string name="stat_time_spent_total">Tempo gasto total</string>
     <string name="stat_money_lost_total">Prejuízo total</string>
@@ -139,13 +140,13 @@
     <string name="stat_info_top_apps_title">Top Apps</string>
     <string name="stat_info_top_apps_body">Para onde o seu tempo foi no período. Cada fatia é a participação de um app no total medido pelo Android desde a meia-noite de cada dia. O centro mostra o total consolidado.</string>
     <string name="stat_info_overview_title">Visão geral de uso</string>
-    <string name="stat_info_overview_body">Tempo de uso de cada app monitorado ao longo do período: dia a dia na semana, semana a semana no mês e no total. Tempo bruto medido pelo celular — sem arredondar a seu favor. Se a linha desce, o taxímetro está funcionando.</string>
+    <string name="stat_info_overview_body">Tempo de uso de cada app monitorado ao longo do período: dia a dia na semana, semana a semana no mês e no total. Tempo bruto medido pelo celular — sem arredondar a seu favor. Se a linha desce, a conta desce junto.</string>
     <string name="stat_info_statement_title">Extrato</string>
     <string name="stat_info_statement_body">A fatura de cada dia: tempo nos apps monitorados convertido em dinheiro pela sua taxa salarial (salário mensal ÷ 43.200 minutos). Melhor dia é a menor fatura; pior dia, a maior.</string>
     <string name="stat_info_money_lost_title">Prejuízo</string>
     <string name="stat_info_money_lost_body">A soma da fatura de cada dia do período. Minutos nos apps monitorados × sua taxa por minuto (salário mensal ÷ 43.200 minutos no mês).</string>
     <string name="stat_info_time_spent_title">Tempo gasto</string>
-    <string name="stat_info_time_spent_body">Tempo total nos apps monitorados no período, exatamente como o Android mediu. O taxímetro não arredonda a seu favor.</string>
+    <string name="stat_info_time_spent_body">Tempo total nos apps monitorados no período, exatamente como o Android mediu. A conta não arredonda a seu favor.</string>
     <string name="stat_info_most_used_title">Mais usado</string>
     <string name="stat_info_most_used_body">O app com mais tempo acumulado no período. Alguém precisa liderar a fatura.</string>
     <string name="stat_day_no_usage">sem movimentação</string>
@@ -198,21 +199,21 @@
     <string name="pref_currency_brl">Real (R$)</string>
     <string name="pref_currency_usd">Dólar ($)</string>
 
-    <!-- Salário (calibragem do taxímetro) -->
+    <!-- Salário (base da conta) -->
     <string name="home_salary_card_title">Adicione o seu salário</string>
-    <string name="home_salary_card_title_set">Salário no taxímetro</string>
-    <string name="home_salary_card_subtitle">O taxímetro está rodando com uma referência de %1$s/mês. O seu provavelmente é outro.</string>
-    <string name="home_salary_card_subtitle_set">Taxímetro calibrado em %1$s/mês · toque para ajustar</string>
+    <string name="home_salary_card_title_set">O preço do seu minuto</string>
+    <string name="home_salary_card_subtitle">A conta está sendo feita com uma referência de %1$s/mês. O seu salário provavelmente é outro.</string>
+    <string name="home_salary_card_subtitle_set">Conta feita sobre %1$s/mês · toque para ajustar</string>
     <string name="home_salary_dialog_title">Quanto vale o seu tempo?</string>
     <string name="home_salary_dialog_body">Coloque seu salário líquido pra gente simular melhor quanto o seu tempo vale — e, portanto, quanto dinheiro você perde em redes sociais. Você vai ver que este app sai barato perto da educação que você vai ganhar.</string>
     <string name="home_salary_dialog_provoke">Não sabe seu salário líquido mensal? É hora de ir atrás de saber… vida adulta, amigão.</string>
     <string name="home_salary_dialog_label">Salário líquido mensal</string>
-    <string name="home_salary_dialog_save">Calibrar o taxímetro</string>
+    <string name="home_salary_dialog_save">Refazer a conta</string>
     <string name="home_salary_dialog_remove">Voltar ao padrão</string>
     <string name="home_salary_tip_body">Adicione seu salário e descubra exatamente quanto dinheiro você perde enquanto rola a tela.</string>
 
     <!-- Aviso diário de permissões -->
-    <string name="perm_nag_title">O taxímetro está rodando às cegas</string>
+    <string name="perm_nag_title">A conta está correndo às cegas</string>
     <string name="perm_nag_body">Sem estas permissões, o DollarBlock não mede, não bloqueia e não cobra — por enquanto é só enfeite. Regularize a papelada:</string>
     <string name="perm_nag_fix">Regularizar a papelada</string>
     <string name="perm_nag_later">Seguir no escuro</string>
@@ -287,9 +288,9 @@
 
     <!-- Onboarding (E2 — first run) -->
     <string name="onb_welcome_title">Tempo é dinheiro. O seu está vazando.</string>
-    <string name="onb_welcome_body">Instagram, TikTok e YouTube têm equipes inteiras de engenheiros pagos pra te manter rolando a tela. O DollarBlock coloca um taxímetro neles: escolha os apps que comem o seu dia, defina um limite diário e, passado o limite, eles bloqueiam.</string>
+    <string name="onb_welcome_body">Instagram, TikTok e YouTube têm equipes inteiras de engenheiros pagos pra te manter rolando a tela. O DollarBlock abre uma conta pra cada um deles: escolha os apps que comem o seu dia, defina um limite diário e, passado o limite, eles bloqueiam.</string>
     <string name="onb_penalty_title">O contrato</string>
-    <string name="onb_penalty_body">Cláusula 1: você escolhe os apps. Cláusula 2: você define os limites. Cláusula 3: passou do limite, o app tranca — e se precisar mesmo dele, paga R$ 5 por um passe do dia, válido até a meia-noite. O dinheiro sai de verdade. Esse é exatamente o ponto. Sem choro: a ideia foi sua.</string>
+    <string name="onb_penalty_body">Cláusula 1: você escolhe os apps. Cláusula 2: você define os limites. Cláusula 3: passou do limite, o app tranca — e se precisar mesmo dele, paga R$ 1,99 por um passe do dia, válido até a meia-noite. O dinheiro sai de verdade. Esse é exatamente o ponto. Sem choro: a ideia foi sua.</string>
     <string name="onb_contract_header">DOLLARBLOCK · ACORDO</string>
     <string name="onb_contract_footer">Ao topar o desafio, você concorda em ser cobrado pelas suas próprias desculpas.</string>
     <string name="onb_summary_title">Resumo rápido</string>
@@ -327,7 +328,7 @@
     <string name="onb_perm_optional">opcional</string>
     <string name="onb_perm_not_now">Agora não</string>
     <string name="onb_perm_without">Sem ela</string>
-    <string name="onb_perm_usage_title">Primeiro, o taxímetro</string>
+    <string name="onb_perm_usage_title">Primeiro, a medição</string>
     <string name="onb_perm_usage_body">Pra cobrar um minuto, primeiro é preciso contá-lo. O Acesso de uso deixa o DollarBlock ler quanto tempo você passa em cada app — o mesmo número que o tempo de tela do seu celular já mostra. Isso nunca sai do aparelho.</string>
     <string name="onb_perm_usage_without">Sem medição não tem limite nem bloqueio. O DollarBlock vira enfeite.</string>
     <string name="onb_perm_accessibility_title">Agora, a tranca</string>
@@ -337,8 +338,8 @@
     <string name="onb_perm_notifications_body">Antes da tranca descer, mandamos um aviso: seu tempo está acabando. Só isso — sem propaganda, sem \"sentimos sua falta\".</string>
     <string name="onb_perm_notifications_without">A tranca desce sem aviso. Justo, mas abrupto.</string>
     <string name="onb_perm_overlay_title">A tranca, por cima</string>
-    <string name="onb_perm_overlay_body">Deixa o DollarBlock abrir a tela de bloqueio por cima do app que você está usando. Em alguns celulares, sem ela o sistema pode segurar a tela de bloqueio.</string>
-    <string name="onb_perm_overlay_without">Na maioria dos celulares, nada muda. Em alguns, a tela de bloqueio pode chegar atrasada — ou nem chegar.</string>
+    <string name="onb_perm_overlay_body">Deixa o DollarBlock abrir a tela de bloqueio por cima do app que você está usando. Em vários celulares, sem ela o sistema segura a tela de bloqueio — e a tranca não fecha.</string>
+    <string name="onb_perm_overlay_without">A tela de bloqueio pode chegar atrasada — ou nem chegar. Você estoura o limite e o app continua aberto, como se nada fosse.</string>
     <string name="onb_skip_required_title">Seguir sem %1$s?</string>
     <string name="onb_skip_required_body">%1$s\n\nDá pra conceder depois, no Perfil.</string>
     <string name="onb_skip_required_grant">Conceder agora</string>

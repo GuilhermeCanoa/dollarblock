@@ -60,7 +60,7 @@ declaração de Acessibilidade, ficha da loja) já existem em
 
 ## 2. Perfil de pagamentos (merchant) — obrigatório para vender o "passe do dia"
 
-O DollarBlock cobra R$ 5,00 via **Google Play Billing** (produto consumível `day_pass`).
+O DollarBlock cobra R$ 1,99 via **Google Play Billing** (produto consumível `day_pass`).
 Vender qualquer produto in-app exige um **perfil de pagamentos** vinculado à conta de
 developer.
 
@@ -206,7 +206,7 @@ mostra "indisponível".
 4. **Nome**: algo como "Passe do dia" (visível internamente, não é o que o usuário vê no
    checkout — o checkout mostra nome do app + preço).
 5. **Descrição**: "Libera o app bloqueado até a meia-noite."
-6. **Preço**: **R$ 5,00** — precisa bater com `GooglePayConfig.DEFAULT_PRICE` no código
+6. **Preço**: **R$ 1,99** — precisa bater com `GooglePayConfig.DEFAULT_PRICE` no código
    (usado como fallback de exibição e no cálculo de "total economizado" quando o preço do
    Play ainda não carregou). Se mudar o preço aqui, atualize a constante no app também.
 7. **Ativar** o produto (status precisa estar "Ativo", não "Rascunho").

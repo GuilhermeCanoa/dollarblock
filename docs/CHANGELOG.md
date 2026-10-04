@@ -12,6 +12,27 @@ Descrição funcional.
 
 ---
 
+## [2026-10-04] — Passe a R$ 1,99, "a conta" no lugar do taxímetro, logo único
+
+**Tipo:** regra / feature
+**Épico:** adhoc
+
+- **Preço:** passe do dia agora custa **R$ 1,99** (`GooglePayConfig.DEFAULT_PRICE = "1.99"`, texto
+  do onboarding e docs da Play Store). O produto `day_pass` no Play Console precisa ser ajustado
+  para o mesmo valor.
+- **Fim do taxímetro:** o conceito virou **"a conta"** (EN: *the tab*) — a conta corrente do
+  seu tempo, que corre enquanto você rola a tela e fecha com a fatura. Combina com
+  fatura/extrato/recibo e com o "te manda a conta" do MANIFESTO. Todas as strings, comentários,
+  MANIFESTO e CLAUDE.md atualizados; o smoke test procura "na conta|on the tab".
+- **Logo único:** o ícone do app é o único logo. `db_shield.webp` (versão brilhante) removido;
+  `BrandShield` desenha `drawable/db_logo.xml` (o ícone do launcher recortado na área visível) e
+  a notificação usa a silhueta `drawable/ic_notification.xml`.
+- **Sobreposição obrigatória:** em vários fabricantes, sem ela a tela de bloqueio não aparece.
+  Entrou em `AppPermission.required` (selo, "Seguir sem X?", aviso diário) e passou para antes
+  das Notificações no onboarding (Uso → Resumo → Acessibilidade → Sobreposição → Notificações).
+- **Home, primeira vez:** sem nenhum app monitorado, o bloco "Prejuízo de hoje" ganha o botão
+  "Escolher os apps →" e o bloco inteiro leva direto à tela de Apps.
+
 ## [2026-10-04] — Sigilo bancário (privacidade como argumento)
 
 **Tipo:** feature

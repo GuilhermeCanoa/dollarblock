@@ -40,7 +40,7 @@ class MainViewModel @Inject constructor(
     private val _missingPermissionsNag = MutableStateFlow<List<AppPermission>?>(null)
 
     /**
-     * Lista de permissões faltando quando o aviso diário de "taxímetro às cegas" deve
+     * Lista de permissões faltando quando o aviso diário de "conta às cegas" deve
      * aparecer; null quando não há nada a avisar (tudo concedido ou já avisado hoje).
      */
     val missingPermissionsNag: StateFlow<List<AppPermission>?> = _missingPermissionsNag.asStateFlow()
@@ -57,7 +57,7 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             val state = permissionsProvider.currentState()
             // Só as obrigatórias: recusar uma opcional (ex.: notificações) é escolha legítima,
-            // não "taxímetro às cegas" — não merece aviso diário.
+            // não "conta às cegas" — não merece aviso diário.
             val missing = AppPermission.entries.filter { it.required && !state.isGranted(it) }
             if (missing.isEmpty()) {
                 _missingPermissionsNag.value = null

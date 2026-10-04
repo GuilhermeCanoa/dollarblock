@@ -23,7 +23,7 @@ import javax.inject.Singleton
  *   mundo usa Dólar (mesmo critério do idioma em [AppLanguage]).
  * - [BRL] / [USD]: força a moeda independentemente do celular.
  *
- * Só afeta **exibição** dos valores derivados do salário (taxímetro/extrato); a
+ * Só afeta **exibição** dos valores derivados do salário (conta/extrato); a
  * cobrança real do passe do dia continua em BRL no backend.
  */
 enum class CurrencyPreference { SYSTEM, BRL, USD }
@@ -52,7 +52,7 @@ fun resolveCurrency(
 private val Context.moneyDataStore by preferencesDataStore(name = "dollarblock_money")
 
 /**
- * Persiste o salário líquido mensal informado pelo usuário (base do taxímetro; na
+ * Persiste o salário líquido mensal informado pelo usuário (base da conta; na
  * ausência, vale a referência de R$ 2.000 — [MoneySettings.DEFAULT_MONTHLY_SALARY])
  * e a preferência de moeda de exibição.
  */

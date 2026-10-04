@@ -138,7 +138,7 @@ class BlockActivity : AppCompatActivity() {
     private val unlocksPaidToday = MutableStateFlow(0)
     private val dayPassPrice = MutableStateFlow(GooglePayConfig.DEFAULT_PRICE)
 
-    /** Preço localizado vindo do Play Billing (ex.: "R$ 5,00"); null usa o fallback. */
+    /** Preço localizado vindo do Play Billing (ex.: "R$ 1,99"); null usa o fallback. */
     private val billingPrice = MutableStateFlow<String?>(null)
 
     private val paymentLauncher =

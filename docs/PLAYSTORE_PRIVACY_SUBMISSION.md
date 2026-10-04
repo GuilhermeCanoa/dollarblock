@@ -77,7 +77,7 @@ identifica qual aplicativo está em primeiro plano.
 
 #### 4. Pagamentos (opcional)
 
-Se você optar por pagar R$ 5,00 por um "passe do dia" para liberar um app bloqueado, a
+Se você optar por pagar R$ 1,99 por um "passe do dia" para liberar um app bloqueado, a
 compra é processada inteiramente pelo **Google Play** (faturamento do Google Play / Google
 Play Billing), como qualquer compra dentro de aplicativo na Play Store. Nesse fluxo:
 
@@ -273,7 +273,7 @@ exigência do Google.
 
 1. **Produto in-app no Play Console**: criar o produto gerenciado **consumível** com ID
    exatamente `day_pass` (o mesmo de `PaymentConfig.PLAY_PRODUCT_DAY_PASS`), preço
-   **R$ 5,00** — igual a `GooglePayConfig.DEFAULT_PRICE`, que alimenta o fallback de
+   **R$ 1,99** — igual a `GooglePayConfig.DEFAULT_PRICE`, que alimenta o fallback de
    exibição e o cálculo de "total economizado"; se mudar o preço lá, mude a constante.
    Requer **perfil de pagamentos (merchant)** ativo na conta de developer.
 2. **`versionCode`/`versionName`** de release e build assinado (keystore de upload).

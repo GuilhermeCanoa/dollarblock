@@ -76,7 +76,7 @@ object HomeMetrics {
 
     /**
      * true quando o count-up cruzou um múltiplo inteiro de café (para disparar haptic
-     * no taxímetro da Home). Compara o inteiro de cafés antes e depois do frame.
+     * na conta da Home). Compara o inteiro de cafés antes e depois do frame.
      */
     fun crossedCoffeeMultiple(previousLost: Double, newLost: Double): Boolean {
         if (newLost <= previousLost) return false

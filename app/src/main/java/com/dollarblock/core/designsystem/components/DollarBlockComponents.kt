@@ -226,7 +226,7 @@ fun SectionHeader(
     )
 }
 
-/** Emblema do escudo DollarBlock (asset de marca), com halo opcional. */
+/** O logo do DollarBlock — o mesmo desenho do ícone do app ([R.drawable.db_logo]), com halo opcional. */
 @Composable
 fun BrandShield(
     modifier: Modifier = Modifier,
@@ -236,7 +236,7 @@ fun BrandShield(
 ) {
     val shape = RoundedCornerShape(cornerRadius)
     Image(
-        painter = painterResource(R.drawable.db_shield),
+        painter = painterResource(R.drawable.db_logo),
         contentDescription = null,
         modifier = modifier
             .size(size)

@@ -18,13 +18,15 @@ import javax.inject.Singleton
 /**
  * As quatro permissões que o onboarding (E2/E18) explica e solicita.
  *
- * [required]: sem ela o app perde a função central (medir ou bloquear). As opcionais só
- * melhoram a experiência — o usuário pode recusá-las sem ser cobrado por isso depois.
+ * [required]: sem ela o app perde a função central (medir ou bloquear). A Sobreposição entra
+ * aqui porque, em vários fabricantes (MIUI, ColorOS…), sem ela a tela de bloqueio é segurada
+ * pelo sistema — e uma tranca que às vezes não fecha não é tranca. A opcional só melhora a
+ * experiência — o usuário pode recusá-la sem ser cobrado por isso depois.
  */
 enum class AppPermission(val required: Boolean) {
     USAGE_ACCESS(required = true),
     ACCESSIBILITY(required = true),
-    OVERLAY(required = false),
+    OVERLAY(required = true),
     NOTIFICATIONS(required = false),
 }
 

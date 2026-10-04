@@ -153,7 +153,7 @@ fun AppsScreen(
                 }
             }
 
-            // Sugeridos (ralos de tempo clássicos instalados e fora do taxímetro) —
+            // Sugeridos (ralos de tempo clássicos instalados e fora da conta) —
             // sempre acima dos desativados quando ambas as seções existem.
             if (uiState.suggestedRows.isNotEmpty()) {
                 item {
