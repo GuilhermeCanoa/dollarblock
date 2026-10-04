@@ -304,6 +304,8 @@
     <string name="onb_a11y_disclosure_body">DollarBlock asks for the Accessibility permission for one single purpose: detecting which app you have open in the foreground, so it can show the block screen on top of it once you\'ve hit your own daily limit.\n\nWith this permission, the app does NOT read your screen content, does NOT capture text you type, does NOT collect passwords, and does NOT send any data off your device. It only checks which app is currently in front.\n\nYou can revoke this permission at any time in Android Settings.</string>
     <string name="onb_a11y_disclosure_allow">Allow</string>
     <string name="onb_a11y_disclosure_deny">Not now</string>
+    <string name="onb_a11y_tutorial_open">See how to turn it on</string>
+    <string name="onb_a11y_tutorial_description">Steps: in Accessibility, tap DollarBlock, turn on the switch and tap Allow</string>
     <string name="notif_channel_name">Limit warnings</string>
     <plurals name="notif_limit_warning_title">
         <item quantity="one">1 minute of %2$s left</item>

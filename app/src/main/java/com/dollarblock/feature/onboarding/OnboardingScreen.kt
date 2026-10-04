@@ -39,6 +39,7 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.QueryStats
 import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material3.AlertDialog
@@ -154,6 +155,7 @@ fun OnboardingScreen(
     ) { viewModel.recheckPermissions() }
     var showAccessibilityDisclosure by remember { mutableStateOf(false) }
     var skipWarningFor by remember { mutableStateOf<AppPermission?>(null) }
+    var showAccessibilityTutorial by remember { mutableStateOf(false) }
 
     fun request(permission: AppPermission) {
         if (permission == AppPermission.NOTIFICATIONS &&
@@ -179,6 +181,10 @@ fun OnboardingScreen(
             },
             onDeny = { showAccessibilityDisclosure = false },
         )
+    }
+
+    if (showAccessibilityTutorial) {
+        AccessibilityTutorialDialog(onDismiss = { showAccessibilityTutorial = false })
     }
 
     skipWarningFor?.let { permission ->
@@ -226,6 +232,7 @@ fun OnboardingScreen(
                     step = permissionPages.indexOf(page) + 1,
                     stepCount = permissionPages.size,
                     granted = permissionsState.isGranted(page.permission),
+                    onShowTutorial = { showAccessibilityTutorial = true },
                 )
                 OnboardingPage.Control -> ControlPageContent()
             }
@@ -851,6 +858,7 @@ private fun PermissionPageContent(
     step: Int,
     stepCount: Int,
     granted: Boolean,
+    onShowTutorial: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val copy = permissionCopy(permission)
@@ -906,6 +914,20 @@ private fun PermissionPageContent(
         if (granted) {
             GrantedChip(modifier = Modifier.padding(top = 24.dp))
         } else {
+            // O caminho nas Configurações é o mais chato dos quatro: mostra o passo a passo.
+            if (permission == AppPermission.ACCESSIBILITY) {
+                TextButton(onClick = onShowTutorial, modifier = Modifier.padding(top = 12.dp)) {
+                    Icon(
+                        imageVector = Icons.Filled.PlayCircle,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Text(
+                        text = stringResource(R.string.onb_a11y_tutorial_open),
+                        modifier = Modifier.padding(start = 8.dp),
+                    )
+                }
+            }
             Column(
                 modifier = Modifier
                     .padding(top = 24.dp)

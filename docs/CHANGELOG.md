@@ -27,6 +27,14 @@ Descrição funcional.
   transferência direta para um celular novo (Android 12+) continua permitida.
 - Spec: `docs/specs/E19-sigilo-bancario-privacidade.md`.
 
+## [2026-10-04] — Tutorial visual da Acessibilidade
+**Tipo:** feature
+**Épico:** E20
+Na página de Acessibilidade do onboarding, o link "Ver como ativar" abre um pop-up sem texto com os
+4 passos nas Configurações do Android (DollarBlock → chave → Permitir → ligado), em loop como um GIF.
+Quadros recortados do emulador (`drawable-nodpi/a11y_tutorial_N.webp`), animados com `Crossfade` —
+sem dependência nova. Ver `docs/specs/E20-tutorial-acessibilidade.md`.
+
 ## [2026-10-04] — Onboarding: uma permissão por página
 **Tipo:** feature
 **Épico:** E18
