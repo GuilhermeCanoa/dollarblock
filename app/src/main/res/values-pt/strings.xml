@@ -160,6 +160,14 @@
     <string name="profile_goals">Metas</string>
     <string name="profile_permissions">Permissões</string>
     <string name="profile_preferences">Preferências</string>
+
+    <!-- Sigilo bancário: os dados não saem do aparelho (sem servidor, conta ou rastreador) -->
+    <string name="privacy_title">Sigilo bancário</string>
+    <string name="privacy_row_desc">Seus dados não saem do seu celular</string>
+    <string name="privacy_dialog_title">Seu extrato não sai daqui</string>
+    <string name="privacy_dialog_body">O DollarBlock não tem servidor para guardar os seus dados. Não tem conta, não tem login, não pede nome, e-mail nem telefone e não tem rastreador de anúncios nem de estatísticas.\n\nFica só no seu celular: o tempo de uso de cada app, os limites que você definiu e os recibos de bloqueio e resgate. Nem o backup do Google leva esses dados.\n\nO passe do dia é cobrado pelo Google Play. O DollarBlock não vê o seu cartão — só recebe o \"pago\".\n\nPara apagar tudo, desinstale o app ou limpe os dados dele nas Configurações do Android. Não sobra cópia nossa em lugar nenhum, porque nunca houve uma.</string>
+    <string name="privacy_payment_note">Cobrança feita pelo Google Play. O DollarBlock não vê o seu cartão.</string>
+
     <string name="perm_usage">Acesso de uso</string>
     <string name="perm_usage_desc">Medir quanto tempo cada app é usado</string>
     <string name="perm_accessibility">Acessibilidade</string>

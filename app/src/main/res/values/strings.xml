@@ -160,6 +160,14 @@
     <string name="profile_goals">Goals</string>
     <string name="profile_permissions">Permissions</string>
     <string name="profile_preferences">Preferences</string>
+
+    <!-- Banking secrecy: data never leaves the device (no server, account or tracker) -->
+    <string name="privacy_title">Banking secrecy</string>
+    <string name="privacy_row_desc">Your data never leaves your phone</string>
+    <string name="privacy_dialog_title">Your statement stays here</string>
+    <string name="privacy_dialog_body">DollarBlock has no server to keep your data on. No account, no login, no name, email or phone number, and no ad or analytics tracker.\n\nIt all stays on your phone: how long you use each app, the limits you set and the receipts for every block and unlock. Not even Google backup takes this data.\n\nThe day pass is charged by Google Play. DollarBlock never sees your card — it only gets a \"paid\".\n\nTo erase everything, uninstall the app or clear its data in Android Settings. No copy of ours is left anywhere, because there never was one.</string>
+    <string name="privacy_payment_note">Charged by Google Play. DollarBlock never sees your card.</string>
+
     <string name="perm_usage">Usage Access</string>
     <string name="perm_usage_desc">Measure how long each app is used</string>
     <string name="perm_accessibility">Accessibility</string>

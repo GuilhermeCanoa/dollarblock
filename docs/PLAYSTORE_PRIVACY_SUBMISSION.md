@@ -53,8 +53,8 @@ que fica no seu aparelho, o que é enviado para fora e por quê.
 
 #### 2. Dados que o aplicativo acessa **e mantém apenas no seu aparelho**
 
-Para funcionar, o DollarBlock lê e armazena localmente (banco de dados interno do app, sem
-backup em nuvem nosso):
+Para funcionar, o DollarBlock lê e armazena localmente (banco de dados interno do app, fora
+de qualquer backup em nuvem — nem o nosso, nem o backup automático do Google):
 
 - **Estatísticas de uso de aplicativos** (via permissão "Acesso de uso"/Usage Access):
   tempo de tela por app e por dia, usado para calcular limites, o "prejuízo" em reais e as

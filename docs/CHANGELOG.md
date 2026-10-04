@@ -12,6 +12,21 @@ Descrição funcional.
 
 ---
 
+## [2026-10-04] — Sigilo bancário (privacidade como argumento)
+
+**Tipo:** feature
+**Épico:** E19 (adhoc)
+
+- Perfil: cartão "Sigilo bancário — Seus dados não saem do seu celular", acima das
+  Permissões; abre um diálogo com o extrato do que fica no aparelho, do que não existe
+  (servidor, conta, login, rastreador), do pagamento via Google Play e de como apagar tudo.
+- Tela de bloqueio: uma linha discreta sob "Pagar o passe do dia" — "Cobrança feita pelo
+  Google Play. O DollarBlock não vê o seu cartão." (só com Play Billing).
+- Backup em nuvem do Google desativado para todos os dados do app (`data_extraction_rules`
+  / `backup_rules`), para que "não sai do seu celular" seja literalmente verdade. A
+  transferência direta para um celular novo (Android 12+) continua permitida.
+- Spec: `docs/specs/E19-sigilo-bancario-privacidade.md`.
+
 ## [2026-09-07] — Rede de testes antes do release
 
 - Regra da cortesia (E17) extraída da `BlockActivity` para `PaymentUiState` + `reduce`,

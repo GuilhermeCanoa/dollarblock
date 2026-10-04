@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Layers
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Palette
@@ -152,6 +153,7 @@ private fun ProfileScreenContent(
     var showThemeDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showAboutDialog by remember { mutableStateOf(false) }
+    var showPrivacyDialog by remember { mutableStateOf(false) }
     var showAccessibilityDisclosure by remember { mutableStateOf(false) }
 
     if (showAccessibilityDisclosure) {
@@ -193,6 +195,10 @@ private fun ProfileScreenContent(
 
     if (showAboutDialog) {
         AboutDialog(onDismiss = { showAboutDialog = false })
+    }
+
+    if (showPrivacyDialog) {
+        PrivacyDialog(onDismiss = { showPrivacyDialog = false })
     }
 
     if (showResetDialog) {
@@ -237,6 +243,10 @@ private fun ProfileScreenContent(
                 modifier = Modifier.weight(1f),
             )
         }
+
+        // Sigilo bancário logo acima das permissões: é ali que nasce a desconfiança
+        // ("por que esse app quer Acessibilidade?"), então a resposta mora ao lado.
+        PrivacyCard(onClick = { showPrivacyDialog = true })
 
         SectionHeader(text = stringResource(R.string.profile_permissions))
         Card(
@@ -635,6 +645,70 @@ private fun AboutDialog(onDismiss: () -> Unit) {
         overline = "DOLLARBLOCK · " + stringResource(R.string.app_slogan).uppercase(),
         title = stringResource(R.string.pref_about),
         body = stringResource(R.string.about_body),
+        confirmText = stringResource(R.string.home_card_info_ok),
+        onConfirm = onDismiss,
+    )
+}
+
+/**
+ * Cartão "Sigilo bancário": uma linha só, sempre à mão no Perfil. Os detalhes ficam no
+ * [PrivacyDialog] — o resto do app não repete o aviso.
+ */
+@Composable
+private fun PrivacyCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+        ),
+        border = BorderStroke(1.dp, DollarBlockTheme.colors.success.copy(alpha = 0.35f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Lock,
+                contentDescription = null,
+                tint = DollarBlockTheme.colors.success,
+                modifier = Modifier.size(24.dp),
+            )
+            Spacer(Modifier.size(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.privacy_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = stringResource(R.string.privacy_row_desc),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(22.dp),
+            )
+        }
+    }
+}
+
+/** O extrato do que fica no aparelho, do que não existe e de como apagar tudo. */
+@Composable
+private fun PrivacyDialog(onDismiss: () -> Unit) {
+    DollarBlockDialog(
+        onDismissRequest = onDismiss,
+        overline = "DOLLARBLOCK · " + stringResource(R.string.privacy_title).uppercase(),
+        title = stringResource(R.string.privacy_dialog_title),
+        body = stringResource(R.string.privacy_dialog_body),
         confirmText = stringResource(R.string.home_card_info_ok),
         onConfirm = onDismiss,
     )
