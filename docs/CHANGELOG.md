@@ -27,6 +27,18 @@ Descrição funcional.
   transferência direta para um celular novo (Android 12+) continua permitida.
 - Spec: `docs/specs/E19-sigilo-bancario-privacidade.md`.
 
+## [2026-10-04] — Onboarding: uma permissão por página
+**Tipo:** feature
+**Épico:** E18
+A página única "A burocracia" (4 permissões de uma vez) virou quatro páginas, cada uma com
+"Papelada N de 4", selo **obrigatória/opcional**, o porquê e um bloco "Sem ela" com o que o app
+perde. Ordem: Acesso de uso → Resumo rápido (recompensa imediata) → Acessibilidade (com a
+declaração em destaque) → Notificações (só Android 13+) → Sobreposição. "Agora não" sempre avança;
+numa obrigatória, antes mostra "Seguir sem X?". O botão final nunca fica desabilitado — se faltar
+obrigatória, lista o que falta e aponta o Perfil. O aviso diário pós-onboarding passou a considerar
+só as obrigatórias (`AppPermission.required`). Lógica em `OnboardingFlow.kt` + `OnboardingFlowTest`.
+Smoke test atualizado para as páginas novas.
+
 ## [2026-09-07] — Rede de testes antes do release
 
 - Regra da cortesia (E17) extraída da `BlockActivity` para `PaymentUiState` + `reduce`,

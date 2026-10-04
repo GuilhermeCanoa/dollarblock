@@ -95,7 +95,9 @@ Step "Onboarding"
 & $adb shell am start -n "$pkg/.MainActivity" | Out-Null
 Start-Sleep -Seconds 8
 if (TapText "Skip to permissions|Pular para|permiss") { Start-Sleep -Seconds 3 }
-for ($i = 0; $i -lt 4; $i++) {
+# Uma pagina por permissao (E18): Uso -> Resumo -> Acessibilidade -> Notificacoes ->
+# Sobreposicao -> Controle. Com tudo concedido via adb, cada uma mostra "Continue".
+for ($i = 0; $i -lt 8; $i++) {
     if (TapText "Continue|Continuar|Challenge accepted|Desafio aceito") { Start-Sleep -Seconds 3 } else { break }
 }
 # Se o servico de acessibilidade ainda nao registrou, a Home mostra o aviso de

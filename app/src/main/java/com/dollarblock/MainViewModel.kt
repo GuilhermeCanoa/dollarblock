@@ -56,7 +56,9 @@ class MainViewModel @Inject constructor(
     fun checkPermissionNag() {
         viewModelScope.launch {
             val state = permissionsProvider.currentState()
-            val missing = AppPermission.entries.filterNot(state::isGranted)
+            // Só as obrigatórias: recusar uma opcional (ex.: notificações) é escolha legítima,
+            // não "taxímetro às cegas" — não merece aviso diário.
+            val missing = AppPermission.entries.filter { it.required && !state.isGranted(it) }
             if (missing.isEmpty()) {
                 _missingPermissionsNag.value = null
                 return@launch

@@ -15,8 +15,18 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/** As quatro permissões que o onboarding (E2) explica e solicita. */
-enum class AppPermission { USAGE_ACCESS, ACCESSIBILITY, OVERLAY, NOTIFICATIONS }
+/**
+ * As quatro permissões que o onboarding (E2/E18) explica e solicita.
+ *
+ * [required]: sem ela o app perde a função central (medir ou bloquear). As opcionais só
+ * melhoram a experiência — o usuário pode recusá-las sem ser cobrado por isso depois.
+ */
+enum class AppPermission(val required: Boolean) {
+    USAGE_ACCESS(required = true),
+    ACCESSIBILITY(required = true),
+    OVERLAY(required = false),
+    NOTIFICATIONS(required = false),
+}
 
 /** Estado consolidado das permissões usado pelo onboarding e (futuramente) pelo Profile. */
 data class PermissionsState(

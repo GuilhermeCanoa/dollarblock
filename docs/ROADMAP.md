@@ -76,6 +76,10 @@ Dados são mock e serão substituídos nos épicos E3 (Apps), E7 (Statistics) e 
   Overlay, Notifications — cada uma com ícone, o **porquê** e botão que abre a tela do
   sistema (ou o runtime permission de Notifications no Android 13+). Status "Concedida"
   re-checado em `ON_RESUME`. Usage Access é obrigatória para concluir.
+- **E18 (2026-10-04):** as permissões passaram a ser pedidas **uma por página**, intercaladas
+  com o conteúdo (Uso → Resumo rápido → Acessibilidade → Notificações → Sobreposição), com
+  selo obrigatória/opcional e o que se perde sem cada uma. Nenhuma trava a conclusão. Ver
+  `docs/specs/E18-onboarding-permissoes-progressivas.md`.
 - `data/permissions/PermissionsProvider` agrega checagem + intents das 4 permissões.
 - Gate de roteamento na `MainActivity`: flag `onboarding_completed` em
   `data/local/prefs/OnboardingPreferences` (DataStore) decide onboarding vs. abas;
