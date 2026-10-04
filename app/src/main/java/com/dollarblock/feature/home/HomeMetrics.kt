@@ -1,5 +1,6 @@
 package com.dollarblock.feature.home
 
+import com.dollarblock.domain.model.AppCurrency
 import com.dollarblock.domain.model.MonitoredAppUsage
 
 /**
@@ -17,18 +18,16 @@ data class DailyMetrics(
 
 /**
  * Equivalência concreta do prejuízo do dia, para o cérebro sentir o número
- * (efeito de concretude): "R$ 2,18" vira "um café".
+ * (efeito de concretude): "R$ 2,18" vira "36% de um café" ou "9% de um Big Mac".
+ * Exatamente um de [count]/[percent] é preenchido.
  */
-sealed interface MoneyEquivalence {
-    /** Fração de um café — prejuízo menor que um café inteiro. */
-    data class CoffeeFraction(val percent: Int) : MoneyEquivalence
-
-    /** Cafés inteiros. */
-    data class Coffees(val count: Int) : MoneyEquivalence
-
-    /** Pizzas inteiras — para dias realmente caros. */
-    data class Pizzas(val count: Int) : MoneyEquivalence
-}
+data class MoneyEquivalence(
+    val item: ComparisonItem,
+    /** Unidades inteiras do item (prejuízo >= preço do item). */
+    val count: Int? = null,
+    /** Percentual de uma unidade (prejuízo < preço do item). */
+    val percent: Int? = null,
+)
 
 /** Um dia do extrato, identificado por epoch day, com o total gasto (uso convertido em BRL). */
 data class DaySpend(val epochDay: Long, val amount: Double)
@@ -45,21 +44,37 @@ object HomeMetrics {
     /** Preço do minuto de scroll dado o salário líquido mensal configurado. */
     fun perMinuteRate(monthlySalary: Double): Double = monthlySalary / MINUTES_PER_MONTH
 
-    /** Preços de referência das equivalências (BRL). */
+    /** Preço do café (BRL) — unidade do haptic do count-up da conta. */
     const val COFFEE_PRICE = 6.0
-    const val PIZZA_PRICE = 45.0
+
+    /** Acima disso a comparação vira "37 cafés" — número grande demais pra sentir. */
+    private const val MAX_COUNT = 30
 
     /**
-     * Converte o prejuízo em algo palpável. Retorna null quando o prejuízo é
-     * desprezível (< 1% de um café) — nada a declarar.
+     * Converte o prejuízo em algo palpável, escolhendo entre os itens do
+     * [ComparisonItem] que têm preço em [currency] e dão um número legível
+     * (de 1% de uma unidade até [MAX_COUNT] unidades). [seed] escolhe qual — a
+     * Home sorteia um por visita para a frase não se repetir.
+     * Retorna null quando o prejuízo é desprezível (< 1% do item mais barato).
      */
-    fun equivalence(moneyLost: Double): MoneyEquivalence? = when {
-        moneyLost >= PIZZA_PRICE -> MoneyEquivalence.Pizzas((moneyLost / PIZZA_PRICE).toInt())
-        moneyLost >= COFFEE_PRICE -> MoneyEquivalence.Coffees((moneyLost / COFFEE_PRICE).toInt())
-        else -> {
-            val percent = (moneyLost / COFFEE_PRICE * 100).toInt()
-            if (percent < 1) null else MoneyEquivalence.CoffeeFraction(percent)
+    fun equivalence(
+        moneyLost: Double,
+        currency: AppCurrency = AppCurrency.BRL,
+        seed: Int = 0,
+    ): MoneyEquivalence? {
+        if (moneyLost <= 0.0) return null
+        val candidates = ComparisonItem.entries.mapNotNull { item ->
+            val price = item.priceIn(currency) ?: return@mapNotNull null
+            val ratio = moneyLost / price
+            when {
+                ratio >= 1.0 -> (ratio.toInt()).takeIf { it <= MAX_COUNT }
+                    ?.let { MoneyEquivalence(item, count = it) }
+                else -> (ratio * 100).toInt().takeIf { it >= 1 }
+                    ?.let { MoneyEquivalence(item, percent = it) }
+            }
         }
+        if (candidates.isEmpty()) return null
+        return candidates[Math.floorMod(seed, candidates.size)]
     }
 
     /**

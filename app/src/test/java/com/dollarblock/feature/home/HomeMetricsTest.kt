@@ -1,8 +1,10 @@
 package com.dollarblock.feature.home
 
+import com.dollarblock.domain.model.AppCurrency
 import com.dollarblock.domain.model.MonitoredAppUsage
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class HomeMetricsTest {
@@ -70,28 +72,59 @@ class HomeMetricsTest {
     }
 
     @Test
-    fun `equivalencia despreza valores menores que 1 porcento de um cafe`() {
+    fun `equivalencia despreza valores menores que 1 porcento do item mais barato`() {
         assertNull(HomeMetrics.equivalence(0.0))
-        assertNull(HomeMetrics.equivalence(0.05))
+        assertNull(HomeMetrics.equivalence(0.01)) // 0,2% de uma passagem de R$ 5
     }
 
     @Test
-    fun `equivalencia abaixo de um cafe vira fracao de cafe`() {
-        val equiv = HomeMetrics.equivalence(3.0) // café = R$ 6
-
-        assertEquals(MoneyEquivalence.CoffeeFraction(50), equiv)
+    fun `equivalencia sempre gera numero legivel`() {
+        listOf(0.5, 3.0, 6.0, 29.9, 95.0, 400.0).forEach { lost ->
+            repeat(50) { seed ->
+                val equiv = requireNotNull(HomeMetrics.equivalence(lost, AppCurrency.BRL, seed))
+                val price = requireNotNull(equiv.item.priceBrl)
+                if (equiv.count != null) {
+                    assertNull(equiv.percent)
+                    assertEquals((lost / price).toInt(), equiv.count)
+                    assertTrue(equiv.count!! in 1..30)
+                } else {
+                    assertEquals((lost / price * 100).toInt(), equiv.percent)
+                    assertTrue(equiv.percent!! in 1..99)
+                }
+            }
+        }
     }
 
     @Test
-    fun `equivalencia entre cafe e pizza vira cafes inteiros`() {
-        assertEquals(MoneyEquivalence.Coffees(1), HomeMetrics.equivalence(6.0))
-        assertEquals(MoneyEquivalence.Coffees(4), HomeMetrics.equivalence(29.9))
+    fun `equivalencia varia com a seed`() {
+        val items = (0 until 50).mapNotNull { HomeMetrics.equivalence(20.0, AppCurrency.BRL, it)?.item }.toSet()
+        assertTrue("esperava variedade, veio $items", items.size >= 10)
     }
 
     @Test
-    fun `equivalencia a partir de uma pizza vira pizzas`() {
-        assertEquals(MoneyEquivalence.Pizzas(1), HomeMetrics.equivalence(45.0))
-        assertEquals(MoneyEquivalence.Pizzas(2), HomeMetrics.equivalence(95.0))
+    fun `equivalencia e estavel para a mesma seed`() {
+        assertEquals(
+            HomeMetrics.equivalence(20.0, AppCurrency.BRL, 7),
+            HomeMetrics.equivalence(20.0, AppCurrency.BRL, 7),
+        )
+    }
+
+    @Test
+    fun `equivalencia respeita a moeda`() {
+        repeat(50) { seed ->
+            val usd = requireNotNull(HomeMetrics.equivalence(10.0, AppCurrency.USD, seed))
+            assertTrue(usd.item.priceUsd != null)
+            val brl = requireNotNull(HomeMetrics.equivalence(10.0, AppCurrency.BRL, seed))
+            assertTrue(brl.item.priceBrl != null)
+        }
+    }
+
+    @Test
+    fun `equivalencia compara com acao da NVIDIA`() {
+        // R$ 51 = 5% de uma ação da NVIDIA (R$ 1.020)
+        val nvidia = (0 until 50).mapNotNull { HomeMetrics.equivalence(51.0, AppCurrency.BRL, it) }
+            .first { it.item == ComparisonItem.NVIDIA_SHARE }
+        assertEquals(5, nvidia.percent)
     }
 
     @Test

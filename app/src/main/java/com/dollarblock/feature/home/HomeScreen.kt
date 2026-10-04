@@ -38,6 +38,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -78,6 +79,7 @@ import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import kotlin.random.Random
 
 @Composable
 fun HomeScreen(
@@ -446,16 +448,17 @@ private fun MoneyLostHero(
                 color = NeutralWhite,
                 lineHeight = 62.sp,
             )
-            val equivalence = moneyLost?.let { HomeMetrics.equivalence(it) }
+            // Sorteia a comparação uma vez por visita à Home: "3 cafés" hoje,
+            // "12% de uma ação da NVIDIA" na próxima — o número muda de roupa.
+            val equivalenceSeed = rememberSaveable { Random.nextInt() }
+            val equivalence = moneyLost?.let { HomeMetrics.equivalence(it, currency, equivalenceSeed) }
             if (equivalence != null) {
+                val itemText = equivalence.item.text
                 Text(
-                    text = when (equivalence) {
-                        is MoneyEquivalence.Pizzas ->
-                            pluralStringResource(R.plurals.home_equiv_pizzas, equivalence.count, equivalence.count)
-                        is MoneyEquivalence.Coffees ->
-                            pluralStringResource(R.plurals.home_equiv_coffees, equivalence.count, equivalence.count)
-                        is MoneyEquivalence.CoffeeFraction ->
-                            stringResource(R.string.home_equiv_coffee_fraction, equivalence.percent)
+                    text = if (equivalence.count != null) {
+                        pluralStringResource(itemText.countRes, equivalence.count, equivalence.count)
+                    } else {
+                        stringResource(itemText.fractionRes, equivalence.percent ?: 0)
                     },
                     style = MaterialTheme.typography.labelLarge,
                     color = NeutralWhite.copy(alpha = 0.9f),

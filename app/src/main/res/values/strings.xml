@@ -37,21 +37,144 @@
     <string name="home_event_blocked">Blocked %1$s</string>
     <string name="home_event_unlocked">Bailed out %1$s</string>
     <string name="home_event_unlock_detail">R$ %1$s · %2$s</string>
-    <string name="home_equiv_coffee_fraction">= %1$d%% of a coffee</string>
-    <plurals name="home_equiv_coffees">
+    <plurals name="home_equiv_bus_fare">
+        <item quantity="one">= %d bus fare</item>
+        <item quantity="other">= %d bus fares</item>
+    </plurals>
+    <string name="home_equiv_bus_fare_fraction">= %1$d%% of a bus fare</string>
+    <plurals name="home_equiv_pao_de_queijo">
+        <item quantity="one">= %d pão de queijo</item>
+        <item quantity="other">= %d pães de queijo</item>
+    </plurals>
+    <string name="home_equiv_pao_de_queijo_fraction">= %1$d%% of a pão de queijo</string>
+    <plurals name="home_equiv_coffee">
         <item quantity="one">= %d coffee</item>
         <item quantity="other">= %d coffees</item>
     </plurals>
-    <plurals name="home_equiv_pizzas">
+    <string name="home_equiv_coffee_fraction">= %1$d%% of a coffee</string>
+    <plurals name="home_equiv_gas">
+        <item quantity="one">= %d gallon of gas</item>
+        <item quantity="other">= %d gallons of gas</item>
+    </plurals>
+    <string name="home_equiv_gas_fraction">= %1$d%% of a gallon of gas</string>
+    <plurals name="home_equiv_coxinha">
+        <item quantity="one">= %d coxinha</item>
+        <item quantity="other">= %d coxinhas</item>
+    </plurals>
+    <string name="home_equiv_coxinha_fraction">= %1$d%% of a coxinha</string>
+    <plurals name="home_equiv_eggs_dozen">
+        <item quantity="one">= %d dozen eggs</item>
+        <item quantity="other">= %d dozen eggs</item>
+    </plurals>
+    <string name="home_equiv_eggs_dozen_fraction">= %1$d%% of a dozen eggs</string>
+    <plurals name="home_equiv_draft_beer">
+        <item quantity="one">= %d draft beer</item>
+        <item quantity="other">= %d draft beers</item>
+    </plurals>
+    <string name="home_equiv_draft_beer_fraction">= %1$d%% of a draft beer</string>
+    <plurals name="home_equiv_acai">
+        <item quantity="one">= %d açaí bowl</item>
+        <item quantity="other">= %d açaí bowls</item>
+    </plurals>
+    <string name="home_equiv_acai_fraction">= %1$d%% of an açaí bowl</string>
+    <plurals name="home_equiv_big_mac">
+        <item quantity="one">= %d Big Mac</item>
+        <item quantity="other">= %d Big Macs</item>
+    </plurals>
+    <string name="home_equiv_big_mac_fraction">= %1$d%% of a Big Mac</string>
+    <plurals name="home_equiv_spotify_month">
+        <item quantity="one">= %d month of Spotify Premium</item>
+        <item quantity="other">= %d months of Spotify Premium</item>
+    </plurals>
+    <string name="home_equiv_spotify_month_fraction">= %1$d%% of a month of Spotify Premium</string>
+    <plurals name="home_equiv_uber_ride">
+        <item quantity="one">= %d Uber ride</item>
+        <item quantity="other">= %d Uber rides</item>
+    </plurals>
+    <string name="home_equiv_uber_ride_fraction">= %1$d%% of an Uber ride</string>
+    <plurals name="home_equiv_petrobras_share">
+        <item quantity="one">= %d Petrobras share</item>
+        <item quantity="other">= %d Petrobras shares</item>
+    </plurals>
+    <string name="home_equiv_petrobras_share_fraction">= %1$d%% of a Petrobras share</string>
+    <plurals name="home_equiv_movie_ticket">
+        <item quantity="one">= %d movie ticket</item>
+        <item quantity="other">= %d movie tickets</item>
+    </plurals>
+    <string name="home_equiv_movie_ticket_fraction">= %1$d%% of a movie ticket</string>
+    <plurals name="home_equiv_pizza">
         <item quantity="one">= %d whole pizza</item>
         <item quantity="other">= %d whole pizzas</item>
     </plurals>
+    <string name="home_equiv_pizza_fraction">= %1$d%% of a pizza</string>
+    <plurals name="home_equiv_netflix_month">
+        <item quantity="one">= %d month of Netflix</item>
+        <item quantity="other">= %d months of Netflix</item>
+    </plurals>
+    <string name="home_equiv_netflix_month_fraction">= %1$d%% of a month of Netflix</string>
+    <plurals name="home_equiv_book">
+        <item quantity="one">= %d book</item>
+        <item quantity="other">= %d books</item>
+    </plurals>
+    <string name="home_equiv_book_fraction">= %1$d%% of a book</string>
+    <plurals name="home_equiv_coca_cola_share">
+        <item quantity="one">= %d Coca-Cola share</item>
+        <item quantity="other">= %d Coca-Cola shares</item>
+    </plurals>
+    <string name="home_equiv_coca_cola_share_fraction">= %1$d%% of a Coca-Cola share</string>
+    <plurals name="home_equiv_picanha_kg">
+        <item quantity="one">= %d kg of picanha</item>
+        <item quantity="other">= %d kg of picanha</item>
+    </plurals>
+    <string name="home_equiv_picanha_kg_fraction">= %1$d%% of a kilo of picanha</string>
+    <plurals name="home_equiv_gym_month">
+        <item quantity="one">= %d month of gym</item>
+        <item quantity="other">= %d months of gym</item>
+    </plurals>
+    <string name="home_equiv_gym_month_fraction">= %1$d%% of a month of gym</string>
+    <plurals name="home_equiv_nvidia_share">
+        <item quantity="one">= %d NVIDIA share</item>
+        <item quantity="other">= %d NVIDIA shares</item>
+    </plurals>
+    <string name="home_equiv_nvidia_share_fraction">= %1$d%% of an NVIDIA share</string>
+    <plurals name="home_equiv_apple_share">
+        <item quantity="one">= %d Apple share</item>
+        <item quantity="other">= %d Apple shares</item>
+    </plurals>
+    <string name="home_equiv_apple_share_fraction">= %1$d%% of an Apple share</string>
+    <plurals name="home_equiv_ps5">
+        <item quantity="one">= %d PlayStation 5</item>
+        <item quantity="other">= %d PlayStation 5s</item>
+    </plurals>
+    <string name="home_equiv_ps5_fraction">= %1$d%% of a PlayStation 5</string>
+    <plurals name="home_equiv_iphone">
+        <item quantity="one">= %d new iPhone</item>
+        <item quantity="other">= %d new iPhones</item>
+    </plurals>
+    <string name="home_equiv_iphone_fraction">= %1$d%% of a new iPhone</string>
     <string-array name="home_quotes">
         <item>Time is money. You\'re paying to confirm it.</item>
         <item>You didn\'t lose an hour. You bought an hour of nothing, upfront.</item>
         <item>47 minutes of scrolling. None of them will make your résumé.</item>
         <item>TikTok thanks you for the donation.</item>
-        <item>They have engineers paid to keep you scrolling. You have R$ 1 and self-respect. Now it\'s a fair fight.</item>
+        <item>They have engineers paid to keep you scrolling. You have a day pass and self-respect. Now it\'s a fair fight.</item>
+        <item>The feed is infinite. Your day isn\'t.</item>
+        <item>Nobody on their deathbed asked for a few more minutes of Reels.</item>
+        <item>Your thumb scrolled a good few meters of feed today. To nowhere.</item>
+        <item>The algorithm knows what you want to see. We know what it cost.</item>
+        <item>Scrolling isn\'t rest. It\'s unpaid overtime.</item>
+        <item>Attention is the one asset you can\'t buy back.</item>
+        <item>Every 15-second video was charged to your tab.</item>
+        <item>You accepted the terms of service. This is the statement.</item>
+        <item>Compound interest works on time too. Up or down.</item>
+        <item>Platforms bill your time. Here at least you get the receipt.</item>
+        <item>“Last video,” you said. Forty minutes ago.</item>
+        <item>Your screen time has more hours than most internships.</item>
+        <item>No notification here is urgent. Just the bill.</item>
+        <item>The app is free. You\'re the product.</item>
+        <item>Being bored is free. We recommend it.</item>
+        <item>Turning off the screen is also an option. No service fee.</item>
+        <item>The market closed. You can too.</item>
     </string-array>
     <string name="pay_method_google">Google Pay</string>
     <string name="pay_method_play">Google Play</string>
@@ -253,9 +376,72 @@
 
     <!-- Block screen -->
     <string name="block_screen_title">Your bill has arrived</string>
-    <string name="block_screen_message">Daily limit reached. To keep using it today, settle the bill — access stays open until midnight.</string>
-    <string name="block_screen_message_repeat">Second bill today. Fine — it\'s your money.</string>
-    <string name="block_screen_message_many">Another bill. At this point, a subscription would be cheaper.</string>
+    <string-array name="block_screen_messages_first">
+        <item>Daily limit reached. To keep using it today, settle the tab — access stays open until midnight.</item>
+        <item>The limit you set yourself is up. To keep going today, it\'s a day pass — good until midnight.</item>
+        <item>Agreed time is over. Want to continue? Settle the tab and access is free until midnight.</item>
+        <item>End of today\'s limit. The app comes back tomorrow for free, or now with a day pass until midnight.</item>
+        <item>Your daily limit closed. Paying frees the app until midnight; not paying frees your day.</item>
+        <item>Limit reached. From here on, day pass only — valid until midnight.</item>
+        <item>Today\'s quota is closed. From now on access is paid and lasts until midnight.</item>
+        <item>Today\'s free time is over. The day pass unlocks the app until midnight.</item>
+        <item>You hit the limit you agreed on with yourself. To continue, settle the tab — open until midnight.</item>
+        <item>Daily limit reached. It resets tomorrow. If you can\'t wait, the pass is good until midnight.</item>
+        <item>Today\'s time is up. The app will be here tomorrow — or now, with a day pass until midnight.</item>
+        <item>Today\'s tab closed at the limit. To reopen it, day pass; access runs until midnight.</item>
+        <item>Limit blown. Midnight gives the app back for free; the pass gives it back now.</item>
+        <item>Time to close the tab. To keep using it today, the pass unlocks it until midnight.</item>
+        <item>This was the deal. Paying unlocks the app until midnight. Leaving is free.</item>
+        <item>Your daily time on this app is over. Continuing today costs a pass, valid until midnight.</item>
+        <item>Limit reached. From here on access has a price; the pass is good until midnight.</item>
+        <item>Shift\'s over on this app. Overtime is paid: day pass, until midnight.</item>
+        <item>Today\'s time fully spent. If you still want it, the day pass unlocks it until midnight.</item>
+        <item>Daily limit reached. Your call: keep the money, or keep the feed until midnight.</item>
+    </string-array>
+    <string-array name="block_screen_messages_repeat">
+        <item>Second bill of the day. That\'s fine — it\'s your money.</item>
+        <item>Second bill today. The house thanks you for your loyalty.</item>
+        <item>You already settled one tab today. This would be the second.</item>
+        <item>Second trip to the register today. Your statement is getting interesting.</item>
+        <item>Another bill. Nobody\'s counting. Kidding, we are.</item>
+        <item>Second bailout of the day, if you want it. Filed with care.</item>
+        <item>Another limit hit. Same price as this morning.</item>
+        <item>Bill number two. This month\'s statement thanks you.</item>
+        <item>You\'re back. We saved your spot in line.</item>
+        <item>Second round. The counter is still open.</item>
+        <item>Repeat visit logged. No fine — just the usual fee.</item>
+        <item>This was the deal. You can change your mind; the receipt can\'t.</item>
+        <item>Second bill. There\'s still time to keep the change.</item>
+        <item>Second pass through the register. Your loyalty has been noted.</item>
+        <item>Back again. The price didn\'t go up. The monthly total did.</item>
+        <item>Second time today. We don\'t judge, we just add.</item>
+        <item>The limit is the same as always. You\'re the one who came back.</item>
+        <item>Bill two of today. The daily total is rounding up nicely.</item>
+        <item>There\'s already been one bailout today. The second costs the same.</item>
+        <item>Another limit. Today\'s first bill sends its regards.</item>
+    </string-array>
+    <string-array name="block_screen_messages_many">
+        <item>Another bill. At this point, a subscription would be cheaper.</item>
+        <item>Third bill or more. You\'re now a preferred customer.</item>
+        <item>At this point we know your order by heart.</item>
+        <item>Frequent customer detected. Sadly, we have no rewards program.</item>
+        <item>The cashier knows you by name now.</item>
+        <item>One more. Today\'s statement will need a second page.</item>
+        <item>You\'re keeping DollarBlock afloat almost single-handedly. Thank you, sincerely.</item>
+        <item>The day has produced several bills. This is just one more on the pad.</item>
+        <item>If this were a gym, you\'d be the most dedicated member.</item>
+        <item>Another bill. The feed is still there. Your money, less and less.</item>
+        <item>At this rate, the end of the day will feel like the end of the month.</item>
+        <item>Paid, scrolled, blocked. We know this song.</item>
+        <item>Another pass. Today\'s receipt is already longer than your feed.</item>
+        <item>You\'re recurring. Just like the notifications.</item>
+        <item>Another bill. No judgment, just a tired calculator.</item>
+        <item>Above today\'s average. Well above.</item>
+        <item>Midnight is coming. For your wallet, not fast enough.</item>
+        <item>Another unlock. The algorithm celebrates quietly.</item>
+        <item>Some days are like this. Today seems to be one.</item>
+        <item>One more tab. The total is getting hard to ignore.</item>
+    </string-array>
     <string name="block_stamp">BLOCKED</string>
     <string name="block_receipt_header">DOLLARBLOCK · INVOICE</string>
     <string name="block_receipt_caption">day pass · valid until midnight</string>

@@ -37,23 +37,167 @@
     <string name="home_event_blocked">%1$s bloqueado</string>
     <string name="home_event_unlocked">%1$s resgatado</string>
     <string name="home_event_unlock_detail">R$ %1$s · %2$s</string>
-    <string name="home_equiv_coffee_fraction">= %1$d%% de um café</string>
-    <plurals name="home_equiv_coffees">
+    <plurals name="home_equiv_bus_fare">
+        <item quantity="one">= %d passagem de ônibus</item>
+        <item quantity="many">= %d passagens de ônibus</item>
+        <item quantity="other">= %d passagens de ônibus</item>
+    </plurals>
+    <string name="home_equiv_bus_fare_fraction">= %1$d%% de uma passagem de ônibus</string>
+    <plurals name="home_equiv_pao_de_queijo">
+        <item quantity="one">= %d pão de queijo</item>
+        <item quantity="many">= %d pães de queijo</item>
+        <item quantity="other">= %d pães de queijo</item>
+    </plurals>
+    <string name="home_equiv_pao_de_queijo_fraction">= %1$d%% de um pão de queijo</string>
+    <plurals name="home_equiv_coffee">
         <item quantity="one">= %d café</item>
         <item quantity="many">= %d cafés</item>
         <item quantity="other">= %d cafés</item>
     </plurals>
-    <plurals name="home_equiv_pizzas">
+    <string name="home_equiv_coffee_fraction">= %1$d%% de um café</string>
+    <plurals name="home_equiv_gas">
+        <item quantity="one">= %d litro de gasolina</item>
+        <item quantity="many">= %d litros de gasolina</item>
+        <item quantity="other">= %d litros de gasolina</item>
+    </plurals>
+    <string name="home_equiv_gas_fraction">= %1$d%% de um litro de gasolina</string>
+    <plurals name="home_equiv_coxinha">
+        <item quantity="one">= %d coxinha</item>
+        <item quantity="many">= %d coxinhas</item>
+        <item quantity="other">= %d coxinhas</item>
+    </plurals>
+    <string name="home_equiv_coxinha_fraction">= %1$d%% de uma coxinha</string>
+    <plurals name="home_equiv_eggs_dozen">
+        <item quantity="one">= %d dúzia de ovos</item>
+        <item quantity="many">= %d dúzias de ovos</item>
+        <item quantity="other">= %d dúzias de ovos</item>
+    </plurals>
+    <string name="home_equiv_eggs_dozen_fraction">= %1$d%% de uma dúzia de ovos</string>
+    <plurals name="home_equiv_draft_beer">
+        <item quantity="one">= %d chope</item>
+        <item quantity="many">= %d chopes</item>
+        <item quantity="other">= %d chopes</item>
+    </plurals>
+    <string name="home_equiv_draft_beer_fraction">= %1$d%% de um chope</string>
+    <plurals name="home_equiv_acai">
+        <item quantity="one">= %d açaí de 500 ml</item>
+        <item quantity="many">= %d açaís de 500 ml</item>
+        <item quantity="other">= %d açaís de 500 ml</item>
+    </plurals>
+    <string name="home_equiv_acai_fraction">= %1$d%% de um açaí de 500 ml</string>
+    <plurals name="home_equiv_big_mac">
+        <item quantity="one">= %d Big Mac</item>
+        <item quantity="many">= %d Big Macs</item>
+        <item quantity="other">= %d Big Macs</item>
+    </plurals>
+    <string name="home_equiv_big_mac_fraction">= %1$d%% de um Big Mac</string>
+    <plurals name="home_equiv_spotify_month">
+        <item quantity="one">= %d mês de Spotify Premium</item>
+        <item quantity="many">= %d meses de Spotify Premium</item>
+        <item quantity="other">= %d meses de Spotify Premium</item>
+    </plurals>
+    <string name="home_equiv_spotify_month_fraction">= %1$d%% de um mês de Spotify Premium</string>
+    <plurals name="home_equiv_uber_ride">
+        <item quantity="one">= %d corrida de Uber</item>
+        <item quantity="many">= %d corridas de Uber</item>
+        <item quantity="other">= %d corridas de Uber</item>
+    </plurals>
+    <string name="home_equiv_uber_ride_fraction">= %1$d%% de uma corrida de Uber</string>
+    <plurals name="home_equiv_petrobras_share">
+        <item quantity="one">= %d ação da Petrobras</item>
+        <item quantity="many">= %d ações da Petrobras</item>
+        <item quantity="other">= %d ações da Petrobras</item>
+    </plurals>
+    <string name="home_equiv_petrobras_share_fraction">= %1$d%% de uma ação da Petrobras</string>
+    <plurals name="home_equiv_movie_ticket">
+        <item quantity="one">= %d ingresso de cinema</item>
+        <item quantity="many">= %d ingressos de cinema</item>
+        <item quantity="other">= %d ingressos de cinema</item>
+    </plurals>
+    <string name="home_equiv_movie_ticket_fraction">= %1$d%% de um ingresso de cinema</string>
+    <plurals name="home_equiv_pizza">
         <item quantity="one">= %d pizza inteira</item>
         <item quantity="many">= %d pizzas inteiras</item>
         <item quantity="other">= %d pizzas inteiras</item>
     </plurals>
+    <string name="home_equiv_pizza_fraction">= %1$d%% de uma pizza</string>
+    <plurals name="home_equiv_netflix_month">
+        <item quantity="one">= %d mês de Netflix</item>
+        <item quantity="many">= %d meses de Netflix</item>
+        <item quantity="other">= %d meses de Netflix</item>
+    </plurals>
+    <string name="home_equiv_netflix_month_fraction">= %1$d%% de um mês de Netflix</string>
+    <plurals name="home_equiv_book">
+        <item quantity="one">= %d livro</item>
+        <item quantity="many">= %d livros</item>
+        <item quantity="other">= %d livros</item>
+    </plurals>
+    <string name="home_equiv_book_fraction">= %1$d%% de um livro</string>
+    <plurals name="home_equiv_coca_cola_share">
+        <item quantity="one">= %d ação da Coca-Cola</item>
+        <item quantity="many">= %d ações da Coca-Cola</item>
+        <item quantity="other">= %d ações da Coca-Cola</item>
+    </plurals>
+    <string name="home_equiv_coca_cola_share_fraction">= %1$d%% de uma ação da Coca-Cola</string>
+    <plurals name="home_equiv_picanha_kg">
+        <item quantity="one">= %d kg de picanha</item>
+        <item quantity="many">= %d kg de picanha</item>
+        <item quantity="other">= %d kg de picanha</item>
+    </plurals>
+    <string name="home_equiv_picanha_kg_fraction">= %1$d%% de um quilo de picanha</string>
+    <plurals name="home_equiv_gym_month">
+        <item quantity="one">= %d mês de academia</item>
+        <item quantity="many">= %d meses de academia</item>
+        <item quantity="other">= %d meses de academia</item>
+    </plurals>
+    <string name="home_equiv_gym_month_fraction">= %1$d%% de um mês de academia</string>
+    <plurals name="home_equiv_nvidia_share">
+        <item quantity="one">= %d ação da NVIDIA</item>
+        <item quantity="many">= %d ações da NVIDIA</item>
+        <item quantity="other">= %d ações da NVIDIA</item>
+    </plurals>
+    <string name="home_equiv_nvidia_share_fraction">= %1$d%% de uma ação da NVIDIA</string>
+    <plurals name="home_equiv_apple_share">
+        <item quantity="one">= %d ação da Apple</item>
+        <item quantity="many">= %d ações da Apple</item>
+        <item quantity="other">= %d ações da Apple</item>
+    </plurals>
+    <string name="home_equiv_apple_share_fraction">= %1$d%% de uma ação da Apple</string>
+    <plurals name="home_equiv_ps5">
+        <item quantity="one">= %d PlayStation 5</item>
+        <item quantity="many">= %d PlayStation 5</item>
+        <item quantity="other">= %d PlayStation 5</item>
+    </plurals>
+    <string name="home_equiv_ps5_fraction">= %1$d%% de um PlayStation 5</string>
+    <plurals name="home_equiv_iphone">
+        <item quantity="one">= %d iPhone novo</item>
+        <item quantity="many">= %d iPhones novos</item>
+        <item quantity="other">= %d iPhones novos</item>
+    </plurals>
+    <string name="home_equiv_iphone_fraction">= %1$d%% de um iPhone novo</string>
     <string-array name="home_quotes">
         <item>Tempo é dinheiro. Você está pagando pra confirmar.</item>
         <item>Você não perdeu uma hora. Comprou uma hora de nada, à vista.</item>
         <item>47 minutos de rolagem. Nenhum deles vai entrar no seu currículo.</item>
         <item>O TikTok agradece a doação.</item>
-        <item>Eles têm engenheiros pagos pra te prender na tela. Você tem R$ 1 e amor-próprio. Agora a briga é justa.</item>
+        <item>Eles têm engenheiros pagos pra te prender na tela. Você tem um passe do dia e amor-próprio. Agora a briga é justa.</item>
+        <item>O feed é infinito. O seu dia, não.</item>
+        <item>Ninguém no leito de morte pediu mais uns minutinhos de Reels.</item>
+        <item>Seu polegar já rolou uns bons metros de feed hoje. Pra lugar nenhum.</item>
+        <item>O algoritmo sabe o que você quer ver. A gente sabe quanto custou.</item>
+        <item>Rolar a tela não é descanso. É expediente não remunerado.</item>
+        <item>Atenção é o único ativo que você não recompra.</item>
+        <item>Cada vídeo de 15 segundos foi lançado na sua conta.</item>
+        <item>Você aceitou os termos de uso. Este é o extrato.</item>
+        <item>Juros compostos também funcionam com tempo. Pra cima ou pra baixo.</item>
+        <item>As plataformas faturam com o seu tempo. Aqui pelo menos você vê a nota.</item>
+        <item>“Último vídeo”, você disse. Faz quarenta minutos.</item>
+        <item>Seu tempo de tela já tem mais horas que muito estágio.</item>
+        <item>Nenhuma notificação aqui é urgente. Só a fatura.</item>
+        <item>O app é gratuito. O produto é você.</item>
+        <item>Ficar entediado é de graça. Recomendamos.</item>
+        <item>Desligar a tela também é uma opção. Sem taxa de serviço.</item>
+        <item>O mercado fechou. Você também pode.</item>
     </string-array>
     <string name="pay_method_google">Google Pay</string>
     <string name="pay_method_play">Google Play</string>
@@ -253,9 +397,72 @@
 
     <!-- Block screen -->
     <string name="block_screen_title">Sua fatura chegou</string>
-    <string name="block_screen_message">Limite diário atingido. Pra continuar usando hoje, acerte a conta — o acesso fica liberado até a meia-noite.</string>
-    <string name="block_screen_message_repeat">Segunda fatura do dia. Tudo bem — o dinheiro é seu.</string>
-    <string name="block_screen_message_many">Mais uma fatura. A essa altura, uma assinatura sairia mais barato.</string>
+    <string-array name="block_screen_messages_first">
+        <item>Limite diário atingido. Pra continuar usando hoje, acerte a conta — o acesso fica liberado até a meia-noite.</item>
+        <item>O limite que você mesmo definiu acabou. Pra seguir hoje, é um passe do dia — vale até a meia-noite.</item>
+        <item>Tempo combinado esgotado. Quer continuar? Acerte a conta e o acesso fica livre até a meia-noite.</item>
+        <item>Fim do limite de hoje. O app volta amanhã de graça, ou agora com um passe do dia até a meia-noite.</item>
+        <item>Seu limite diário fechou. Pagar libera o app até a meia-noite; não pagar libera o seu dia.</item>
+        <item>Limite atingido. Daqui pra frente, só com passe do dia — válido até a meia-noite.</item>
+        <item>Cota do dia encerrada. A partir de agora o acesso é pago e vale até a meia-noite.</item>
+        <item>O tempo gratuito de hoje acabou. O passe do dia libera o app até a meia-noite.</item>
+        <item>Você bateu o limite que combinou consigo mesmo. Pra continuar, acerte a conta — liberado até a meia-noite.</item>
+        <item>Limite diário atingido. Amanhã zera. Se não der pra esperar, o passe vale até a meia-noite.</item>
+        <item>Acabou o tempo de hoje. O app continua aqui amanhã — ou agora, com o passe do dia até a meia-noite.</item>
+        <item>A conta de hoje fechou no limite. Pra reabrir, passe do dia; o acesso vai até a meia-noite.</item>
+        <item>Limite estourado. A meia-noite devolve o app de graça; o passe devolve agora.</item>
+        <item>Hora de fechar a conta. Pra continuar usando hoje, o passe libera até a meia-noite.</item>
+        <item>O combinado era até aqui. Pagar libera o app até a meia-noite. Sair é de graça.</item>
+        <item>Seu tempo diário neste app terminou. Continuar hoje custa um passe, válido até a meia-noite.</item>
+        <item>Limite alcançado. Daqui em diante o acesso tem preço; o passe vale até a meia-noite.</item>
+        <item>Expediente encerrado neste app. Hora extra é paga: passe do dia, até a meia-noite.</item>
+        <item>Tempo de hoje gasto por completo. Se ainda quiser, o passe do dia libera até a meia-noite.</item>
+        <item>Limite diário atingido. A escolha é sua: ficar com o dinheiro ou com o feed até a meia-noite.</item>
+    </string-array>
+    <string-array name="block_screen_messages_repeat">
+        <item>Segunda fatura do dia. Tudo bem — o dinheiro é seu.</item>
+        <item>Segunda fatura hoje. A casa agradece a preferência.</item>
+        <item>Você já acertou uma conta hoje. Esta seria a segunda.</item>
+        <item>Segunda vez no caixa hoje. Seu extrato está ficando interessante.</item>
+        <item>Mais uma fatura. Ninguém está contando. Mentira, a gente está.</item>
+        <item>Segundo resgate do dia, se você quiser. Arquivado com carinho.</item>
+        <item>Outro limite batido. O preço é o mesmo de hoje cedo.</item>
+        <item>Fatura número dois. O extrato do mês agradece.</item>
+        <item>Voltou. A gente guardou o seu lugar na fila.</item>
+        <item>Segunda rodada. O balcão continua aberto.</item>
+        <item>Reincidência registrada. Sem multa — só a tarifa de sempre.</item>
+        <item>O combinado foi esse. Você pode mudar de ideia; o recibo, não.</item>
+        <item>Segunda fatura. Ainda dá tempo de ficar com o troco.</item>
+        <item>Segunda passagem pelo caixa. Sua fidelidade foi notada.</item>
+        <item>De novo por aqui. O preço não aumentou. A conta do mês, sim.</item>
+        <item>Segunda vez hoje. A gente não julga, só soma.</item>
+        <item>O limite é o mesmo de sempre. Você é que voltou.</item>
+        <item>Fatura dois de hoje. O total do dia está ficando redondo.</item>
+        <item>Já houve um resgate hoje. O segundo sai pelo mesmo preço.</item>
+        <item>Mais um limite. A primeira fatura de hoje manda lembranças.</item>
+    </string-array>
+    <string-array name="block_screen_messages_many">
+        <item>Mais uma fatura. A essa altura, uma assinatura sairia mais barato.</item>
+        <item>Terceira fatura ou mais. Você agora é cliente preferencial.</item>
+        <item>A essa altura a gente já sabe o seu pedido de cor.</item>
+        <item>Cliente frequente detectado. Infelizmente não temos programa de pontos.</item>
+        <item>O caixa já te conhece pelo nome.</item>
+        <item>Mais uma. O extrato de hoje vai precisar de uma segunda página.</item>
+        <item>Você está sustentando o DollarBlock quase sozinho. Obrigado, sinceramente.</item>
+        <item>O dia já rendeu várias faturas. Esta é só mais uma no bloco.</item>
+        <item>Se fosse academia, você seria o aluno mais assíduo.</item>
+        <item>Mais uma fatura. O feed continua lá. O seu dinheiro, cada vez menos.</item>
+        <item>Nesse ritmo, o fim do dia vai ter cara de fim de mês.</item>
+        <item>Pagou, rolou, bloqueou. A gente já conhece essa música.</item>
+        <item>Mais um passe. O recibo de hoje já está mais comprido que o seu feed.</item>
+        <item>Você é recorrente. Igual às notificações.</item>
+        <item>Outra fatura. Nenhum julgamento, só uma calculadora cansada.</item>
+        <item>Acima da média do dia. Bem acima.</item>
+        <item>A meia-noite está chegando. Pra sua carteira, não rápido o bastante.</item>
+        <item>Mais um desbloqueio. O algoritmo comemora em silêncio.</item>
+        <item>Tem dia que é assim. Hoje parece ser um deles.</item>
+        <item>Mais uma conta. O total está ficando difícil de ignorar.</item>
+    </string-array>
     <string name="block_stamp">BLOQUEADO</string>
     <string name="block_receipt_header">DOLLARBLOCK · FATURA</string>
     <string name="block_receipt_caption">passe do dia · vale até a meia-noite</string>

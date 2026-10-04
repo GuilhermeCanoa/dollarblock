@@ -472,6 +472,15 @@ private fun BlockScreen(
 ) {
     val quotes = stringArrayResource(R.array.home_quotes)
     val quote = remember { quotes.random() }
+    // Mensagem do recibo sorteada por situação (1ª fatura do dia, 2ª, 3ª+), para a
+    // tela não repetir o mesmo texto a cada bloqueio.
+    val messagesRes = when {
+        unlocksPaidToday >= 2 -> R.array.block_screen_messages_many
+        unlocksPaidToday == 1 -> R.array.block_screen_messages_repeat
+        else -> R.array.block_screen_messages_first
+    }
+    val messages = stringArrayResource(messagesRes)
+    val message = remember(messagesRes) { messages.random() }
     val mintGlow = Color(0xFF64FFDA)
 
     // Fundo com gradiente vertical de marca (Velvet → tom intermediário) para um
@@ -520,13 +529,7 @@ private fun BlockScreen(
             InvoiceReceipt(
                 appLabel = appLabel,
                 priceText = priceText,
-                message = stringResource(
-                    when {
-                        unlocksPaidToday >= 2 -> R.string.block_screen_message_many
-                        unlocksPaidToday == 1 -> R.string.block_screen_message_repeat
-                        else -> R.string.block_screen_message
-                    },
-                ),
+                message = message,
             )
             Spacer(Modifier.height(32.dp))
 

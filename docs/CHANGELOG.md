@@ -12,6 +12,22 @@ Descrição funcional.
 
 ---
 
+## [2026-10-04] — Comparações variadas na conta e frases da tela de bloqueio sem repetição
+
+**Tipo:** feature
+**Épico:** adhoc
+
+- **Conta da Home:** o prejuízo do dia deixou de ser sempre "= N cafés". `ComparisonItem` é um
+  catálogo de 23 itens com preço de referência em BRL e USD (Big Mac, litro/galão de gasolina,
+  passagem de ônibus, mês de Netflix/Spotify, ingresso de cinema, ação da Petrobras/NVIDIA/Apple,
+  PS5, iPhone…). `HomeMetrics.equivalence(moneyLost, currency, seed)` filtra os itens que dão
+  um número legível (de 1% de uma unidade até 30 unidades) e a Home sorteia um por visita
+  ("= 2 Big Macs", "= 5% de uma ação da NVIDIA"). Itens sem preço na moeda ficam fora.
+  O haptic do count-up continua marcando cada café.
+- **Tela de bloqueio:** citações do topo passaram de 5 para 22; a mensagem do recibo virou
+  20 variações sorteadas por situação (1ª fatura do dia, 2ª, 3ª+). Toda variação da 1ª fatura
+  diz que o limite acabou e que o passe vale até a meia-noite.
+
 ## [2026-10-04] — Passe a R$ 1,99, "a conta" no lugar do taxímetro, logo único
 
 **Tipo:** regra / feature
