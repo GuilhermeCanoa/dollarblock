@@ -12,6 +12,30 @@ Descrição funcional.
 
 ---
 
+## [2026-10-05] — Onboarding animado em 5 páginas
+**Tipo:** feature
+**Épico:** E21 — spec: `docs/specs/E21-onboarding-animado-enxuto.md`
+
+- **De 9 para 5 páginas:** Entrada → Contrato → Medição → Tranca → Últimos ajustes.
+  Boas-vindas e "você já tentou antes" viraram a Entrada; "Você no controle" virou a
+  cláusula 4 do contrato; o Resumo rápido passou a ser a própria página da medição depois
+  de concedida; Sobreposição e Notificações dividem a última página.
+- **Entrada:** escudo animado e a conta correndo ao vivo desde que o app abriu
+  (referência de R$ 2.000/mês, rotulada).
+- **Contrato:** cláusulas impressas uma a uma; a assinatura animada saiu do fim e foi para
+  o botão "Assinar o contrato".
+- **Medição:** concedido o Acesso de uso, a página mostra "Sua última semana custou R$ X",
+  com comparação (`HomeMetrics.equivalence`), donut animado e só apps de verdade (sem
+  launcher, Configurações e afins).
+- **Como ativar:** cada permissão tem um passo a passo animado desenhado em Compose
+  (`PermissionHowTo`) — substitui os prints do E20 (removidos).
+- **Confiança:** cartões de destaque na medição ("Sigilo bancário: nada sai do seu
+  celular") e na tranca ("Não lê sua tela, o que você digita nem suas senhas").
+- **Fechamento:** carimbos "CONCEDIDA" por permissão e "CONTA ABERTA" ao terminar; barra
+  de progresso no topo; "remover animações" do sistema respeitado.
+- Regras de permissão inalteradas (obrigatórias, "Seguir sem X?", declaração da
+  Acessibilidade). Smoke test atualizado para os botões novos.
+
 ## [2026-10-04] — Comparações variadas na conta e frases da tela de bloqueio sem repetição
 
 **Tipo:** feature

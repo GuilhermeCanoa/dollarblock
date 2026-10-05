@@ -94,11 +94,11 @@ Step "Onboarding"
 & $adb logcat -c
 & $adb shell am start -n "$pkg/.MainActivity" | Out-Null
 Start-Sleep -Seconds 8
-if (TapText "Skip to permissions|Pular para|permiss") { Start-Sleep -Seconds 3 }
-# Uma pagina por permissao (E18): Uso -> Resumo -> Acessibilidade -> Sobreposicao ->
-# Notificacoes -> Controle. Com tudo concedido via adb, cada uma mostra "Continue".
+# Onboarding em 5 paginas (E21): Entrada -> Contrato (assinar) -> Medicao -> Tranca ->
+# Ultimos ajustes (abrir a conta). Com tudo concedido via adb, as de permissao mostram
+# "Continue"; a ultima fecha com o carimbo "CONTA ABERTA" (~1,3 s) antes da Home.
 for ($i = 0; $i -lt 8; $i++) {
-    if (TapText "Continue|Continuar|Challenge accepted|Desafio aceito") { Start-Sleep -Seconds 3 } else { break }
+    if (TapText "Continue|Continuar|Sign the deal|Assinar o contrato|Open the tab|Abrir a conta") { Start-Sleep -Seconds 3 } else { break }
 }
 # Se o servico de acessibilidade ainda nao registrou, a Home mostra o aviso de
 # permissoes — reconcede e segue.

@@ -3,18 +3,29 @@ package com.dollarblock.feature.onboarding
 import com.dollarblock.data.permissions.AppPermission
 import com.dollarblock.data.permissions.PermissionsState
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class OnboardingFlowTest {
 
-    private fun permissionsIn(pages: List<OnboardingPage>) =
-        pages.filterIsInstance<OnboardingPage.Permission>().map { it.permission }
+    @Test
+    fun `cinco paginas - entrada, contrato, medicao, tranca e ultimos ajustes`() {
+        assertEquals(
+            listOf(
+                OnboardingPage.Entry,
+                OnboardingPage.Contract,
+                OnboardingPage.Measurement,
+                OnboardingPage.Lock,
+                OnboardingPage.FinalSettings(askNotifications = true),
+            ),
+            onboardingPages(askNotifications = true),
+        )
+    }
 
     @Test
-    fun `uma pagina por permissao, na ordem obrigatorias antes das opcionais`() {
-        val pages = onboardingPages(conceptCount = 3, askNotifications = true)
+    fun `toda permissao aparece exatamente uma vez, obrigatorias antes das opcionais`() {
+        val asked = onboardingPages(askNotifications = true).flatMap(::permissionsOn)
         assertEquals(
             listOf(
                 AppPermission.USAGE_ACCESS,
@@ -22,33 +33,21 @@ class OnboardingFlowTest {
                 AppPermission.OVERLAY,
                 AppPermission.NOTIFICATIONS,
             ),
-            permissionsIn(pages),
+            asked,
         )
     }
 
     @Test
-    fun `resumo rapido vem logo depois do acesso de uso`() {
-        val pages = onboardingPages(conceptCount = 3, askNotifications = true)
-        val usage = pages.indexOf(OnboardingPage.Permission(AppPermission.USAGE_ACCESS))
-        assertEquals(OnboardingPage.QuickSummary, pages[usage + 1])
+    fun `abaixo do Android 13 os ultimos ajustes so pedem a sobreposicao`() {
+        val pages = onboardingPages(askNotifications = false)
+        assertEquals(5, pages.size)
+        assertEquals(listOf(AppPermission.OVERLAY), permissionsOn(pages.last()))
     }
 
     @Test
-    fun `conceito abre e controle fecha o fluxo`() {
-        val pages = onboardingPages(conceptCount = 3, askNotifications = true)
-        assertEquals(
-            listOf(OnboardingPage.Concept(0), OnboardingPage.Concept(1), OnboardingPage.Concept(2)),
-            pages.take(3),
-        )
-        assertEquals(OnboardingPage.Control, pages.last())
-        assertEquals(9, pages.size)
-    }
-
-    @Test
-    fun `abaixo do Android 13 nao ha pagina de notificacoes`() {
-        val pages = onboardingPages(conceptCount = 3, askNotifications = false)
-        assertFalse(AppPermission.NOTIFICATIONS in permissionsIn(pages))
-        assertEquals(8, pages.size)
+    fun `entrada e contrato nao pedem permissao`() {
+        assertTrue(permissionsOn(OnboardingPage.Entry).isEmpty())
+        assertTrue(permissionsOn(OnboardingPage.Contract).isEmpty())
     }
 
     @Test
@@ -63,6 +62,7 @@ class OnboardingFlowTest {
     fun `faltando so opcionais nao ha obrigatoria pendente`() {
         val state = PermissionsState(usageAccess = true, accessibility = true, overlay = true)
         assertTrue(missingRequiredPermissions(state).isEmpty())
+        assertNull(pendingRequiredOn(OnboardingPage.FinalSettings(askNotifications = true), state))
     }
 
     @Test
@@ -73,5 +73,31 @@ class OnboardingFlowTest {
             listOf(AppPermission.USAGE_ACCESS, AppPermission.ACCESSIBILITY, AppPermission.OVERLAY),
             missingRequiredPermissions(PermissionsState()),
         )
+    }
+
+    @Test
+    fun `pendente da pagina considera so as permissoes dela`() {
+        val nothing = PermissionsState()
+        assertEquals(AppPermission.USAGE_ACCESS, pendingRequiredOn(OnboardingPage.Measurement, nothing))
+        assertEquals(AppPermission.ACCESSIBILITY, pendingRequiredOn(OnboardingPage.Lock, nothing))
+        assertEquals(
+            AppPermission.OVERLAY,
+            pendingRequiredOn(OnboardingPage.FinalSettings(askNotifications = true), nothing),
+        )
+        assertNull(pendingRequiredOn(OnboardingPage.Contract, nothing))
+    }
+
+    @Test
+    fun `custo do tempo de tela usa a referencia de R$ 2000 por mes`() {
+        // 43.200 min/mês → R$ 2.000 / 43.200 ≈ R$ 0,0463 por minuto.
+        assertEquals(2000.0 / 43_200.0, screenTimeCost(60_000L), 1e-9)
+        // Uma semana de 18 h no feed ≈ R$ 50.
+        assertEquals(50.0, screenTimeCost(18L * 60 * 60_000), 1e-9)
+        assertEquals(0.0, screenTimeCost(0L), 0.0)
+    }
+
+    @Test
+    fun `custo segue o salario quando informado`() {
+        assertEquals(4000.0 / 43_200.0, screenTimeCost(60_000L, monthlySalary = 4000.0), 1e-9)
     }
 }

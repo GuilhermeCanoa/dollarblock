@@ -28,6 +28,8 @@ data class QuickSummaryEntry(
 
 data class QuickSummaryState(
     val topApps: List<QuickSummaryEntry> = emptyList(),
+    /** Tempo somado dos [topApps] — a base do "sua última semana custou". */
+    val topMillis: Long = 0L,
     val totalTime: String = "",
     val isLoading: Boolean = true,
 )
@@ -61,10 +63,16 @@ class OnboardingViewModel @Inject constructor(
     }
 
     private suspend fun loadQuickSummary() {
-        val usage = usageStatsProvider.getWeeklyUsageByPackage()
-            .filter { it.key != context.packageName }
-        val totalMillis = usage.values.sum()
         val pm = context.packageManager
+        // Só apps que a pessoa abre pela gaveta — launcher, "Controlador de permissões" e
+        // afins não são o que rouba o tempo dela. As Configurações também ficam de fora.
+        val usage = usageStatsProvider.getWeeklyUsageByPackage()
+            .filter { (pkg, _) ->
+                pkg != context.packageName &&
+                    pkg != SETTINGS_PACKAGE &&
+                    pm.getLaunchIntentForPackage(pkg) != null
+            }
+        val totalMillis = usage.values.sum()
         val top5 = usage.entries
             .sortedByDescending { it.value }
             .take(5)
@@ -82,7 +90,8 @@ class OnboardingViewModel @Inject constructor(
             }
         _quickSummaryState.value = QuickSummaryState(
             topApps = top5,
-            totalTime = formatMillis(totalMillis),
+            topMillis = top5.sumOf { it.millis },
+            totalTime = formatMillis(top5.sumOf { it.millis }),
             isLoading = false,
         )
     }
@@ -109,3 +118,5 @@ class OnboardingViewModel @Inject constructor(
         return if (hours > 0) "${hours}h ${minutes}m" else "${minutes}m"
     }
 }
+
+private const val SETTINGS_PACKAGE = "com.android.settings"
