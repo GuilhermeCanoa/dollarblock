@@ -87,3 +87,19 @@ do próprio sistema Android:
 - **A aparência das telas** (cores, textos, tradução PT/EN).
 
 Esses pontos estão documentados em `docs/specs/TESTING-strategy.md`.
+
+---
+
+## Arte: `build-onb-hero.ps1` — gera a ilustração da 1ª página do onboarding
+
+**Não é teste e não roda no build.** Só serve para regerar a imagem
+`app/src/main/res/drawable-nodpi/onb_hero.jpg` a partir do mockup original
+(`docs/art/onb_hero_mockup.webp`), caso a gente queira ajustar a arte (posição da lixeira,
+tamanho da luminária, paisagem da janela…). Mude o número no script e rode:
+
+```powershell
+powershell -File scripts/build-onb-hero.ps1
+```
+
+As animações por cima da arte (ventilador, luz, vapor, brilho nos ícones) ficam em
+`OnboardingHero.kt`; se mudar posição ou tamanho de algo aqui, confira as coordenadas de lá.
