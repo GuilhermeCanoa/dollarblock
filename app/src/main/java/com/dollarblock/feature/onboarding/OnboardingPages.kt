@@ -2,8 +2,6 @@ package com.dollarblock.feature.onboarding
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -17,6 +15,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -53,6 +52,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
@@ -63,7 +63,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dollarblock.R
 import com.dollarblock.core.designsystem.DollarBlockTheme
-import com.dollarblock.core.designsystem.components.BrandShield
 import com.dollarblock.data.permissions.AppPermission
 import com.dollarblock.data.permissions.PermissionsState
 import com.dollarblock.domain.model.AppCurrency
@@ -76,6 +75,12 @@ import kotlin.math.roundToInt
 /** Quantas páginas de "papelada" (permissões) o onboarding tem — para o "Papelada N de M". */
 private const val PAPERWORK_PAGES = 3
 
+/** Respiro acima da arte da 1ª página. Pouco: o teto esticado da arte já ocupa o espaço de cima. */
+private val HERO_TOP_GAP = 6.dp
+
+/** Distância do pé do mascote até o título (~0,5 cm). */
+private val HERO_TEXT_GAP = 31.dp
+
 // ---------------------------------------------------------------------------------------
 // 1. Entrada
 // ---------------------------------------------------------------------------------------
@@ -87,55 +92,68 @@ private const val PAPERWORK_PAGES = 3
 @Composable
 fun EntryPage(active: Boolean, modifier: Modifier = Modifier) {
     val animate = rememberAnimationsEnabled()
-    val shieldScale = remember { Animatable(if (animate) 0.6f else 1f) }
-    val shieldAlpha = remember { Animatable(if (animate) 0f else 1f) }
+    // Fundo entra como cena de cinema: aparece e "assenta" de um leve zoom.
+    val heroScale = remember { Animatable(if (animate) 1.08f else 1f) }
+    val heroAlpha = remember { Animatable(if (animate) 0f else 1f) }
     LaunchedEffect(Unit) {
         if (!animate) return@LaunchedEffect
-        shieldAlpha.animateTo(1f, tween(350))
+        heroAlpha.animateTo(1f, tween(500))
     }
     LaunchedEffect(Unit) {
         if (!animate) return@LaunchedEffect
-        shieldScale.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = 300f))
+        heroScale.animateTo(1f, tween(1_200, easing = FastOutSlowInEasing))
     }
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(top = 24.dp),
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
     ) {
-        BrandShield(
-            size = 112.dp,
-            cornerRadius = 26.dp,
-            modifier = Modifier.graphicsLayer {
-                scaleX = shieldScale.value
-                scaleY = shieldScale.value
-                alpha = shieldAlpha.value
-            },
+        // Escudo no sofá com ventilador de teto girando: fundo de ponta a ponta que se
+        // dissolve na página (o texto sobe por cima da parte esmaecida).
+        OnboardingHero(
+            modifier = Modifier
+                .padding(top = HERO_TOP_GAP)
+                .graphicsLayer {
+                    scaleX = heroScale.value
+                    scaleY = heroScale.value
+                    alpha = heroAlpha.value
+                },
         )
-        Reveal(active, order = 3) {
-            Text(
-                text = stringResource(R.string.onb_welcome_title),
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 28.dp),
-            )
-        }
-        Reveal(active, order = 5) {
-            Text(
-                text = stringResource(R.string.onb_entry_body),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 14.dp),
-            )
-        }
-        Reveal(active, order = 8) {
-            RunningTabMeter(modifier = Modifier.padding(top = 28.dp))
+        // O texto começa HERO_TEXT_GAP abaixo do pé do mascote (a arte ocupa a largura toda,
+        // então a altura dela — e a do pé — sai da largura da tela).
+        // Positivo vira espaço de verdade (entra na rolagem); negativo sobe o texto sobre a arte.
+        val heroHeight = LocalConfiguration.current.screenWidthDp.dp / HERO_ASPECT
+        val textShift = HERO_TEXT_GAP - heroHeight * (1f - HERO_FOOT_Y)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .padding(horizontal = 24.dp)
+                .padding(top = textShift.coerceAtLeast(0.dp))
+                .offset(y = textShift.coerceAtMost(0.dp)),
+        ) {
+            Reveal(active, order = 3) {
+                Text(
+                    text = stringResource(R.string.onb_welcome_title),
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    textAlign = TextAlign.Center,
+                )
+            }
+            Reveal(active, order = 5) {
+                Text(
+                    text = stringResource(R.string.onb_entry_body),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 14.dp),
+                )
+            }
+            Reveal(active, order = 8) {
+                RunningTabMeter(modifier = Modifier.padding(top = 28.dp))
+            }
         }
     }
 }

@@ -12,6 +12,24 @@ Descrição funcional.
 
 ---
 
+## [2026-10-09] — Entrada do onboarding com cena ilustrada animada
+**Tipo:** feature
+**Épico:** E21
+
+- **Nova arte de fundo** (`onb_hero.jpg`, criada com o Guilherme): o escudo de óculos
+  escuros relaxando no sofá. A cena ocupa a largura toda da tela e esmaece em cima e
+  embaixo para se fundir com a página. O título começa logo abaixo do pé do mascote.
+- **Animações em Canvas por cima da arte** (`OnboardingHero.kt`): ventilador de teto
+  girando, cone de luz da luminária, vapor saindo da caneca "Disciplina rende" e um brilho
+  que passa pelos ícones de Instagram/TikTok/Facebook na lixeira revelando a cor original
+  deles (cor só no Android 10+, abaixo disso só o reflexo). Tudo fica parado se as
+  animações do sistema estiverem desligadas.
+- **Ajustes na arte:** teto mais alto, luminária maior e mais alta, natureza no lugar dos
+  prédios da janela e lixeira menor e mais à esquerda com os ícones no tamanho original.
+- **Layout:** a margem lateral de 24dp saiu do contêiner do onboarding e foi para cada
+  peça (progresso, páginas, botões), para a arte da 1ª página poder ir até a borda.
+- O emblema anterior (cifrão-ampulheta, `onb_emblem.png`) saiu.
+
 ## [2026-10-05] — Onboarding animado em 5 páginas
 **Tipo:** feature
 **Épico:** E21 — spec: `docs/specs/E21-onboarding-animado-enxuto.md`

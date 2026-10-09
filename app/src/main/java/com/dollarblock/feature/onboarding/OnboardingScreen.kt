@@ -160,9 +160,12 @@ fun OnboardingScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp, vertical = 16.dp),
+                .padding(vertical = 16.dp),
         ) {
-            OnboardingProgress(current = pagerState.currentPage, count = pages.size)
+            // A margem lateral fica em cada peça, não no Column: assim a arte da 1ª página
+            // pode sangrar até as bordas da tela (o pager corta o que passa da largura dele).
+            val gutter = Modifier.padding(horizontal = 24.dp)
+            OnboardingProgress(current = pagerState.currentPage, count = pages.size, modifier = gutter)
 
             HorizontalPager(
                 state = pagerState,
@@ -174,23 +177,25 @@ fun OnboardingScreen(
                 val active = pagerState.settledPage == index
                 when (val page = pages[index]) {
                     OnboardingPage.Entry -> EntryPage(active)
-                    OnboardingPage.Contract -> ContractPage(active)
+                    OnboardingPage.Contract -> ContractPage(active, modifier = gutter)
                     OnboardingPage.Measurement -> MeasurementPage(
                         active = active,
                         granted = permissionsState.usageAccess,
                         summary = quickSummaryState,
+                        modifier = gutter,
                     )
-                    OnboardingPage.Lock -> LockPage(active, granted = permissionsState.accessibility)
+                    OnboardingPage.Lock -> LockPage(active, granted = permissionsState.accessibility, modifier = gutter)
                     is OnboardingPage.FinalSettings -> FinalSettingsPage(
                         active = active,
                         page = page,
                         permissions = permissionsState,
                         onRequest = ::request,
+                        modifier = gutter,
                     )
                 }
             }
 
-            Column(modifier = Modifier.padding(top = 16.dp)) {
+            Column(modifier = gutter.padding(top = 16.dp)) {
                 when (currentPage) {
                     OnboardingPage.Entry -> PrimaryActionButton(
                         text = stringResource(R.string.onb_continue),
