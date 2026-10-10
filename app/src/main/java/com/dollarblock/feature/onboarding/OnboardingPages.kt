@@ -51,6 +51,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -846,21 +847,64 @@ fun LockPage(active: Boolean, granted: Boolean, modifier: Modifier = Modifier) {
                 fontSize = 28.sp,
             )
         }
+        // O segurança da porta: deixa a fila entrar até o limite e aí fecha a corda.
         Reveal(active, order = 2) {
-            PageBody(stringResource(R.string.onb_lock_body), Modifier.padding(top = 10.dp))
+            BouncerScene(
+                Modifier
+                    .padding(top = 12.dp)
+                    .fillMaxWidth()
+                    .aspectRatio(BOUNCER_ASPECT),
+            )
         }
         Reveal(active, order = 3) {
-            SecurityVault(
-                active = active,
-                titleRes = R.string.onb_lock_privacy,
-                points = listOf(
-                    SecurityPoint(Icons.Filled.VisibilityOff, R.string.onb_trust_lock_1),
-                    SecurityPoint(Icons.Filled.PhonelinkLock, R.string.onb_trust_lock_2),
-                    SecurityPoint(Icons.Filled.PowerSettingsNew, R.string.onb_trust_lock_3),
-                ),
-                firstOrder = 3,
-                modifier = Modifier.padding(top = 22.dp),
+            // Um pouco menor que o PageBody, para caber em 2 linhas e o tutorial subir.
+            Text(
+                text = stringResource(R.string.onb_lock_body),
+                style = MaterialTheme.typography.bodyLarge,
+                fontSize = 15.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp),
             )
+        }
+        // Uma linha só de privacidade (o cofre completo fica na Medição).
+        var privacySize by remember { mutableStateOf(12.sp) }
+        var privacyFits by remember { mutableStateOf(false) }
+        Reveal(active, order = 4) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = 12.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.VisibilityOff,
+                    contentDescription = null,
+                    tint = DollarBlockTheme.colors.success,
+                    modifier = Modifier.size(18.dp),
+                )
+                Text(
+                    text = stringResource(R.string.onb_trust_lock_1),
+                    style = MaterialTheme.typography.bodyMedium,
+                    // Numa linha só: encolhe até caber (a fonte do sistema pode estar maior)
+                    // e só aparece depois de caber, para não piscar cortada.
+                    fontSize = privacySize,
+                    maxLines = 1,
+                    softWrap = false,
+                    onTextLayout = { layout ->
+                        if (layout.hasVisualOverflow && privacySize.value > 8f) {
+                            privacySize *= 0.94f
+                        } else {
+                            privacyFits = true
+                        }
+                    },
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier
+                        .padding(start = 8.dp)
+                        .drawWithContent { if (privacyFits) drawContent() },
+                )
+            }
         }
         if (granted) {
             // Mesmo carimbo de madeira da Medição, no mesmo tamanho (espaço para o cabo na batida).

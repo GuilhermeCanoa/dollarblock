@@ -12,6 +12,29 @@ Descrição funcional.
 
 ---
 
+## [2026-10-10] — Tranca: o segurança da porta, com feed interativo e a tela de bloqueio em miniatura
+**Tipo:** feature
+**Épico:** E21 (onboarding)
+
+- **"Now, the lock" / "Agora, a tranca"** ganhou cena própria (`OnboardingBouncerScene.kt`) no
+  lugar do cofre de segurança (que ficou só na Medição): o celular é a porta da balada, com
+  dois pedestais dourados e a corda de veludo na frente e o segurança — o escudo do
+  DollarBlock no formato em camadas do personagem da entrada, nas cores do escudo da marca
+  (sobrancelhas grossas, óculos wayfarer), de terno, gravata verde e ponto no ouvido.
+- Na tela do celular, o feed das redes rola sozinho e o usuário pode arrastá-lo (com inércia);
+  só a tela captura o dedo. Cada rolagem adianta o cronômetro (o mesmo da Medição); sozinho,
+  estoura em ~9 s. No limite: o cronômetro fica vermelho, o segurança engancha a corda,
+  ergue uma placa de madeira (tábuas num poste) com "DOOMSCROLL" pichado (letras de grafite
+  desenhadas à mão, com tinta escorrendo) e um X vermelho translúcido por cima, e
+  franze as sobrancelhas, e a tela vira uma
+  miniatura da tela de bloqueio real (mesmas strings da `BlockActivity`: "Sua fatura chegou", recibo com o
+  Instagram, carimbo BLOQUEADO caindo de 2,4× para 1×, preço do passe e o botão de pagar).
+  Tentar rolar trancado faz a tela tremer e o segurança balançar a cabeça. Reabre ~4 s depois.
+  Sem animações do sistema, nada anda sozinho — só o arrasto.
+- O cofre deu lugar a uma única linha de privacidade ("Só vê o nome do app que está aberto.
+  Nunca o conteúdo."), que encolhe até caber numa linha; o texto da página ficou em 15 sp (2
+  linhas), e o tutorial do Guilherme subiu e aparece inteiro sem rolar.
+
 ## [2026-10-10] — Medição: cena do tempo de tela (feed e cronômetro) e cofre de segurança
 **Tipo:** feature
 **Épico:** E21 (onboarding)
