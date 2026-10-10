@@ -543,8 +543,11 @@
     <string name="onb_measure_result_title">Sua última semana custou %1$s</string>
     <string name="onb_measure_result_body">%1$s nos apps que mais te tomaram tempo.</string>
     <string name="onb_measure_result_note">Na referência de R$ 3.000/mês. Dá pra pôr o seu salário depois, na Home.</string>
-    <string name="onb_lock_body">Pra trancar o app na hora certa, o DollarBlock precisa saber qual app está aberto. Só isso.</string>
+    <string name="onb_lock_body">Pra trancar o app na hora certa, o DollarBlock precisa saber qual app está aberto.</string>
     <string name="onb_lock_privacy">Não lê sua tela, o que você digita nem suas senhas.</string>
+    <string name="onb_a11y_tutorial_description">Passos: em Acessibilidade, toque em DollarBlock, ligue a chave e toque em Permitir</string>
+    <string name="onb_a11y_tutorial_open">Ver como ativar</string>
+    <string name="onb_a11y_tutorial_close">Fechar</string>
     <string name="onb_trust_lock_1">Só vê o nome do app que está aberto. Nunca o conteúdo.</string>
     <string name="onb_trust_lock_2">Nada disso sai do seu celular.</string>
     <string name="onb_trust_lock_3">Dá pra desligar quando quiser, nas Configurações do Android.</string>

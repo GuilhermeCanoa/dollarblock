@@ -30,6 +30,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -42,7 +43,10 @@ import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -167,35 +171,61 @@ fun OnboardingScreen(
             val gutter = Modifier.padding(horizontal = 24.dp)
             OnboardingProgress(current = pagerState.currentPage, count = pages.size, modifier = gutter)
 
+            // O pager se estende por baixo da área dos botões (até o fim da tela), que é
+            // desenhada por cima dele. Só a Medição com acesso concedido usa esse espaço — a
+            // praia continua até embaixo e se funde com o fundo; as outras páginas recuam.
+            val density = LocalDensity.current
+            var actionsHeightPx by remember { mutableIntStateOf(0) }
+            val bottomBleed = with(density) { actionsHeightPx.toDp() } + 16.dp
             HorizontalPager(
                 state = pagerState,
                 userScrollEnabled = currentPage is OnboardingPage.Entry,
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .layout { measurable, constraints ->
+                        val extra = bottomBleed.roundToPx()
+                        val placeable = measurable.measure(
+                            constraints.copy(
+                                minHeight = constraints.minHeight + extra,
+                                maxHeight = constraints.maxHeight + extra,
+                            ),
+                        )
+                        layout(placeable.width, placeable.height - extra) { placeable.place(0, 0) }
+                    },
             ) { index ->
                 val active = pagerState.settledPage == index
-                when (val page = pages[index]) {
-                    OnboardingPage.Entry -> EntryPage(active)
-                    OnboardingPage.Contract -> ContractPage(active, modifier = gutter)
-                    OnboardingPage.Measurement -> MeasurementPage(
-                        active = active,
-                        granted = permissionsState.usageAccess,
-                        summary = quickSummaryState,
-                        modifier = gutter,
-                    )
-                    OnboardingPage.Lock -> LockPage(active, granted = permissionsState.accessibility, modifier = gutter)
-                    is OnboardingPage.FinalSettings -> FinalSettingsPage(
-                        active = active,
-                        page = page,
-                        permissions = permissionsState,
-                        onRequest = ::request,
-                        modifier = gutter,
-                    )
+                val page = pages[index]
+                val bleeds = page is OnboardingPage.Measurement && permissionsState.usageAccess
+                Box(Modifier.fillMaxSize().padding(bottom = if (bleeds) 0.dp else bottomBleed)) {
+                    when (page) {
+                        OnboardingPage.Entry -> EntryPage(active)
+                        OnboardingPage.Contract -> ContractPage(active, modifier = gutter)
+                        OnboardingPage.Measurement -> MeasurementPage(
+                            active = active,
+                            granted = permissionsState.usageAccess,
+                            summary = quickSummaryState,
+                            modifier = gutter,
+                            bottomBleed = if (bleeds) bottomBleed else 0.dp,
+                        )
+                        OnboardingPage.Lock -> LockPage(active, granted = permissionsState.accessibility, modifier = gutter)
+                        is OnboardingPage.FinalSettings -> FinalSettingsPage(
+                            active = active,
+                            page = page,
+                            permissions = permissionsState,
+                            onRequest = ::request,
+                            modifier = gutter,
+                        )
+                    }
                 }
             }
 
-            Column(modifier = gutter.padding(top = 16.dp)) {
+            Column(
+                modifier = Modifier
+                    .onSizeChanged { actionsHeightPx = it.height }
+                    .then(gutter)
+                    .padding(top = 16.dp),
+            ) {
                 when (currentPage) {
                     OnboardingPage.Entry -> PrimaryActionButton(
                         text = stringResource(R.string.onb_continue),

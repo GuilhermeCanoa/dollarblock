@@ -521,8 +521,11 @@
     <string name="onb_measure_result_title">Your last week cost %1$s</string>
     <string name="onb_measure_result_body">%1$s on the apps that took the most of your time.</string>
     <string name="onb_measure_result_note">At a R$ 3,000/month reference. You can enter your own salary later, on Home.</string>
-    <string name="onb_lock_body">To lock an app at the right moment, DollarBlock needs to know which app is open. That\'s all.</string>
+    <string name="onb_lock_body">To lock an app at the right moment, DollarBlock needs to know which app is open.</string>
     <string name="onb_lock_privacy">It doesn\'t read your screen, what you type or your passwords.</string>
+    <string name="onb_a11y_tutorial_description">Steps: in Accessibility, tap DollarBlock, turn on the switch and tap Allow</string>
+    <string name="onb_a11y_tutorial_open">See how to turn it on</string>
+    <string name="onb_a11y_tutorial_close">Close</string>
     <string name="onb_trust_lock_1">It only sees the name of the open app. Never what\'s on it.</string>
     <string name="onb_trust_lock_2">None of it leaves your phone.</string>
     <string name="onb_trust_lock_3">You can turn it off anytime in Android Settings.</string>

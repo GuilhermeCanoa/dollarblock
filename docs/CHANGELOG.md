@@ -12,6 +12,29 @@ Descrição funcional.
 
 ---
 
+## [2026-10-10] — Tranca com tutorial do Guilherme e cofre de segurança; praia de dia
+**Tipo:** feature
+**Épico:** E21 (onboarding)
+
+- **Tranca (Acessibilidade):** título maior e mais alto; texto sem o "Só isso.". No lugar do
+  passo a passo desenhado entra o tutorial do Guilherme (E20, quadros `a11y_tutorial_*` trazidos
+  do master) como miniatura em loop (2,2 s por quadro); um toque abre um pop-up com a versão
+  grande e interativa (toque pausa, arrastar troca de passo, bolinhas pulam para um passo).
+- **Tranca — segurança em destaque** (`OnboardingSecurity.kt`): cartão "cofre" com borda neon
+  que corre devagar, escudo do app (o do ícone) com halo pulsando na quina superior esquerda,
+  selo "SIGILO BANCÁRIO", a frase "Não lê sua tela…" centralizada na cor primária e cada
+  garantia com ícone próprio, entrando uma a uma.
+- **Tranca — concedida:** o mesmo carimbo de madeira da Medição, no mesmo tamanho.
+- **Medição — praia de dia:** sol alto com raios, céu e mar mais claros, nuvens claras; ilha
+  nova (areia, morro de dois cumes iluminado, reflexo, coqueiros com folhas cheias e cocos). O
+  céu clareia aos poucos desde acima da cena, por trás do texto (sem degrau de tom), e a areia
+  continua por baixo do botão até o fim da tela — o pager se estende sob a área dos botões e
+  só a Medição concedida usa esse espaço; as outras páginas recuam.
+- **Medição — personagem relaxado:** nova ilustração (`docs/art/onb_lounge_source.webp`) com o
+  personagem de mãos atrás da nuca e o letreiro "Dollar Block" pintado no guarda-sol (o letreiro
+  desenhado pelo app saiu). `scripts/build-onb-lounge.ps1` reescrito: separa o primeiro plano
+  pela cor do fundo de cada altura e gera `onb_lounge_fg.png` (560×460) com as sombras na areia.
+
 ## [2026-10-10] — Contrato com pena, carimbo animado, cena da praia e salário de referência R$ 3.000
 **Tipo:** feature + regra
 **Épico:** E21 (onboarding) / adhoc (salário)

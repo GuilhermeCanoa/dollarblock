@@ -28,6 +28,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.PhonelinkLock
+import androidx.compose.material.icons.filled.PowerSettingsNew
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -72,8 +75,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.TextUnit
 import com.dollarblock.R
 import com.dollarblock.core.designsystem.DollarBlockTheme
 import com.dollarblock.data.permissions.AppPermission
@@ -516,10 +521,11 @@ private fun RequirementTag(required: Boolean, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun PageTitle(text: String, modifier: Modifier = Modifier) {
+private fun PageTitle(text: String, modifier: Modifier = Modifier, fontSize: TextUnit = TextUnit.Unspecified) {
     Text(
         text = text,
         style = MaterialTheme.typography.headlineMedium,
+        fontSize = fontSize,
         fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.onBackground,
         textAlign = TextAlign.Center,
@@ -552,6 +558,7 @@ fun MeasurementPage(
     granted: Boolean,
     summary: QuickSummaryState,
     modifier: Modifier = Modifier,
+    bottomBleed: Dp = 0.dp, // espaço por baixo do botão (a praia continua até o fim da tela)
 ) {
     Column(
         modifier = modifier
@@ -599,10 +606,11 @@ fun MeasurementPage(
             // Fecho da página: sob o guarda-sol do DollarBlock, as redes sociais quicam para longe.
             LoungeScene(
                 rainSource = rainSource,
+                bottomExtension = bottomBleed,
                 modifier = Modifier
                     .padding(top = 4.dp)
                     .fillMaxWidth()
-                    .height(160.dp),
+                    .height(160.dp + bottomBleed),
             )
         }
     }
@@ -808,28 +816,34 @@ fun LockPage(active: Boolean, granted: Boolean, modifier: Modifier = Modifier) {
     ) {
         PaperworkHeader(step = 2, required = true)
         Reveal(active, order = 1) {
-            PageTitle(stringResource(R.string.onb_perm_accessibility_title), Modifier.padding(top = 24.dp))
+            PageTitle(
+                stringResource(R.string.onb_perm_accessibility_title),
+                Modifier.padding(top = 14.dp),
+                fontSize = 28.sp,
+            )
         }
         Reveal(active, order = 2) {
-            PageBody(stringResource(R.string.onb_lock_body), Modifier.padding(top = 12.dp))
+            PageBody(stringResource(R.string.onb_lock_body), Modifier.padding(top = 10.dp))
         }
         Reveal(active, order = 3) {
-            TrustCard(
+            SecurityVault(
+                active = active,
                 titleRes = R.string.onb_lock_privacy,
-                pointsRes = listOf(R.string.onb_trust_lock_1, R.string.onb_trust_lock_2, R.string.onb_trust_lock_3),
-                modifier = Modifier.padding(top = 20.dp),
+                points = listOf(
+                    SecurityPoint(Icons.Filled.VisibilityOff, R.string.onb_trust_lock_1),
+                    SecurityPoint(Icons.Filled.PhonelinkLock, R.string.onb_trust_lock_2),
+                    SecurityPoint(Icons.Filled.PowerSettingsNew, R.string.onb_trust_lock_3),
+                ),
+                firstOrder = 3,
+                modifier = Modifier.padding(top = 22.dp),
             )
         }
         if (granted) {
-            GrantedStamp(modifier = Modifier.padding(top = 36.dp))
+            // Mesmo carimbo de madeira da Medição, no mesmo tamanho (espaço para o cabo na batida).
+            RubberStampGranted(active, modifier = Modifier.padding(top = 52.dp, bottom = 8.dp))
         } else {
-            Reveal(active, order = 5) {
-                PermissionHowTo(
-                    screenTitle = stringResource(R.string.perm_accessibility),
-                    steps = listOf(HowToStep.LIST, HowToStep.TOGGLE, HowToStep.CONFIRM),
-                    description = stringResource(R.string.onb_howto_accessibility_description),
-                    modifier = Modifier.padding(top = 24.dp),
-                )
+            Reveal(active, order = 7) {
+                AccessibilityTutorialThumbnail(modifier = Modifier.padding(top = 16.dp, bottom = 8.dp))
             }
         }
     }

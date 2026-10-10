@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -24,6 +25,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -35,58 +37,73 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.res.imageResource
+import androidx.compose.ui.zIndex
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.TextMeasurer
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.drawText
-import androidx.compose.ui.text.rememberTextMeasurer
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.unit.sp
 import com.dollarblock.R
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.math.sqrt
 
-// Unidade da cena: px da arte `onb_lounge_fg` (460×460, primeiro plano recortado da
-// ilustração original: guarda-sol, personagem, cadeira, cooler). A cena tem sempre
-// ART_H de altura; a largura acompanha a tela. O fundo de praia é desenhado aqui.
+// Unidade da cena: px da arte `onb_lounge_fg` (560×460, primeiro plano recortado da
+// ilustração docs/art/onb_lounge_source.webp por scripts/build-onb-lounge.ps1: guarda-sol
+// com o letreiro "Dollar Block", personagem de braços atrás da nuca, cadeira, cooler e as
+// sombras deles). A cena tem sempre ART_H de altura; a largura acompanha a tela. O fundo de
+// praia é desenhado aqui.
 private const val ART_H = 460f
-private const val FG_SIZE = 460
+private const val FG_W = 560
+private const val FG_H = 460
 
-/** Superfície de cima do guarda-sol (onde os ícones batem), da ponta esquerda à direita. */
+/**
+ * Superfície de cima do guarda-sol (onde os ícones batem), da ponta esquerda à direita —
+ * o contorno que o build-onb-lounge.ps1 imprime, sem a ponta do mastro.
+ */
 private val CanopyTop = listOf(
-    Offset(12f, 207f),
     Offset(22f, 172f),
-    Offset(54f, 120f),
-    Offset(86f, 82f),
-    Offset(113f, 57f),
-    Offset(140f, 33f),
-    Offset(240f, 32f),
-    Offset(310f, 40f),
-    Offset(387f, 63f),
-    Offset(398f, 85f),
+    Offset(30f, 160f),
+    Offset(50f, 134f),
+    Offset(70f, 110f),
+    Offset(90f, 85f),
+    Offset(110f, 64f),
+    Offset(130f, 48f),
+    Offset(150f, 36f),
+    Offset(190f, 21f),
+    Offset(230f, 12f),
+    Offset(270f, 11f),
+    Offset(310f, 13f),
+    Offset(350f, 15f),
+    Offset(390f, 21f),
+    Offset(430f, 33f),
+    Offset(470f, 47f),
+    Offset(480f, 60f),
 )
 
-// Praia (tudo em verdes, como a arte da 1ª página).
+// Praia de dia (tudo em verdes, como a arte da 1ª página).
 private const val HORIZON = 300f
-private val SkyTop = Color(0xFF0A2A1E)
-private val SkyMid = Color(0xFF1A5038)
-private val SkyHorizon = Color(0xFF4F9C69)
-private val SunColor = Color(0xFFE3F7A8)
-private val SeaFar = Color(0xFF1D6047)
-private val SeaNear = Color(0xFF2E8261)
+private val SkyTop = Color(0xFF0C3022)
+private val SkyMid = Color(0xFF2C7653)
+private val SkyHorizon = Color(0xFF8CCB98)
+private val SunColor = Color(0xFFF2FFC4)
+private val SeaFar = Color(0xFF2A7A5A)
+private val SeaNear = Color(0xFF3A9572)
 private val Foam = Color(0xFFA6EBC0)
 private val IslandDark = Color(0xFF0F3B2A)
-private val IslandRim = Color(0xFF5FA06A)
+private val IslandRim = Color(0xFF9FDB9A)
+private val IslandLit = Color(0xFF3F8F5E)
+private val IslandSand = Color(0xFFB9DFA6)
 private val PalmTrunk = Color(0xFF0B2E20)
-private val PalmLeaf = Color(0xFF16553A)
+private val PalmLeaf = Color(0xFF1F6B45)
+private val PalmLeafLit = Color(0xFF3A9A62)
+private val Coconut = Color(0xFF2F3A1C)
 private val SandTop = Color(0xFF66AF79)
 private val SandBottom = Color(0xFF3B7C55)
-private val CloudColor = Color(0xFF2F6E50)
+private val CloudColor = Color(0xFFD4F2DC)
 
 // Chuva de ícones.
 private const val ICON_COUNT = 9
@@ -98,6 +115,9 @@ private const val SCENE_LOOP_MS = 27_000  // múltiplo da vida dos ícones: o lo
 
 /** Quanto a cena sangra para os lados, até a borda da tela (a margem lateral das páginas). */
 private val SCENE_BLEED: Dp = 24.dp
+
+/** Quanto o céu sobe acima da arte, por trás do conteúdo de cima, clareando aos poucos. */
+private val SCENE_TOP_GLOW: Dp = 72.dp
 
 private enum class SocialIcon { INSTAGRAM, TIKTOK, FACEBOOK, YOUTUBE, X, SNAPCHAT, DISCORD }
 
@@ -112,9 +132,13 @@ class RainSource(val center: Offset, val radius: Float)
  * do sistema, fica parada (sem a chuva).
  */
 @Composable
-fun LoungeScene(rainSource: RainSource?, modifier: Modifier = Modifier) {
+fun LoungeScene(
+    rainSource: RainSource?,
+    modifier: Modifier = Modifier,
+    bottomExtension: Dp = 0.dp,
+    topExtension: Dp = SCENE_TOP_GLOW,
+) {
     val foreground = ImageBitmap.imageResource(R.drawable.onb_lounge_fg)
-    val textMeasurer = rememberTextMeasurer()
     val animate = rememberAnimationsEnabled()
     val seconds = if (animate) {
         rememberInfiniteTransition(label = "lounge").animateFloat(
@@ -126,31 +150,50 @@ fun LoungeScene(rainSource: RainSource?, modifier: Modifier = Modifier) {
     } else {
         null
     }
-    var topLeftInRoot by remember { mutableStateOf(Offset.Zero) }
+    // Altura total desenhada (com o céu que sobe por trás do conteúdo de cima), para a
+    // camada da chuva ter exatamente a mesma área da praia.
+    var fullHeightPx by remember { mutableIntStateOf(0) }
 
+    // Geometria comum às duas camadas: a arte fica entre o céu extra de cima e a areia extra
+    // de baixo (que passa por baixo do botão).
+    fun DrawScope.artTop() = topExtension.toPx()
+    fun DrawScope.artHeight() = size.height - topExtension.toPx() - bottomExtension.toPx()
+    fun DrawScope.artScale() = artHeight() / ART_H
+
+    // Camada de baixo (zIndex -1): o céu sobe por trás do texto acima da cena sem cobri-lo.
     Box(
         modifier = modifier
-            // Sangra até a borda da tela, para fundir com a página.
+            .zIndex(-1f)
+            // Sangra até a borda da tela e sobe [topExtension] por trás do conteúdo de cima.
             .layout { measurable, constraints ->
                 val extra = SCENE_BLEED.roundToPx()
+                val top = topExtension.roundToPx()
                 val width = constraints.maxWidth + 2 * extra
-                val placeable = measurable.measure(constraints.copy(minWidth = width, maxWidth = width))
-                layout(constraints.maxWidth, placeable.height) { placeable.place(-extra, 0) }
-            }
-            .onGloballyPositioned { topLeftInRoot = it.positionInRoot() },
+                val height = constraints.maxHeight + top
+                val placeable = measurable.measure(Constraints.fixed(width, height))
+                fullHeightPx = height
+                layout(constraints.maxWidth, constraints.maxHeight) { placeable.place(-extra, -top) }
+            },
     ) {
-        // Praia: esmaecimento longo em cima, embaixo e à direita, dissolvendo no fundo da página.
+        // Praia: o céu clareia aos poucos desde bem acima da arte (sem degrau de tom com o
+        // fundo da página); embaixo e à direita, dissolve no fundo.
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
                 .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
                 .drawWithContent {
                     drawContent()
+                    val e = artTop() / size.height
+                    val a = artHeight() / size.height
                     drawRect(
                         Brush.verticalGradient(
                             0f to Color.Transparent,
-                            0.3f to Color.Black,
-                            0.7f to Color.Black,
+                            e * 0.35f to Color.Black.copy(alpha = 0.08f),
+                            e * 0.7f to Color.Black.copy(alpha = 0.3f),
+                            e to Color.Black.copy(alpha = 0.62f),
+                            e + 0.1f * a to Color.Black.copy(alpha = 0.9f),
+                            e + 0.2f * a to Color.Black,
+                            e + 0.86f * a to Color.Black,
                             1f to Color.Transparent,
                         ),
                         blendMode = BlendMode.DstIn,
@@ -161,9 +204,15 @@ fun LoungeScene(rainSource: RainSource?, modifier: Modifier = Modifier) {
                     )
                 },
         ) {
-            val scale = size.height / ART_H
+            val scale = artScale()
+            val topPx = artTop()
             val worldW = size.width / scale
-            withTransform({ scale(scale, scale, pivot = Offset.Zero) }) { drawBeach(worldW, seconds ?: 0f) }
+            val worldTop = -artTop() / scale
+            val worldH = (artHeight() + bottomExtension.toPx()) / scale
+            withTransform({
+                translate(0f, topPx)
+                scale(scale, scale, pivot = Offset.Zero)
+            }) { drawBeach(worldW, worldTop, worldH, seconds ?: 0f) }
         }
         // Primeiro plano (guarda-sol, personagem, cooler): só a base esmaece, para o topo do
         // guarda-sol não sumir junto com o céu.
@@ -173,27 +222,53 @@ fun LoungeScene(rainSource: RainSource?, modifier: Modifier = Modifier) {
                 .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
                 .drawWithContent {
                     drawContent()
+                    val top = artTop()
+                    val art = artHeight()
+                    val bottom = size.height - top - art
                     drawRect(
-                        Brush.verticalGradient(0.82f to Color.Black, 1f to Color.Transparent),
+                        Brush.verticalGradient(
+                            (top + 0.82f * art) / size.height to Color.Black,
+                            (top + art + 0.35f * bottom) / size.height to Color.Transparent,
+                        ),
                         blendMode = BlendMode.DstIn,
                     )
                 },
         ) {
-            val scale = size.height / ART_H
-            withTransform({ scale(scale, scale, pivot = Offset.Zero) }) {
-                drawImage(foreground, dstOffset = IntOffset.Zero, dstSize = IntSize(FG_SIZE, FG_SIZE))
-                drawNeonTitle(textMeasurer, seconds ?: 0f)
+            val scale = artScale()
+            val topPx = artTop()
+            withTransform({
+                translate(0f, topPx)
+                scale(scale, scale, pivot = Offset.Zero)
+            }) {
+                drawImage(foreground, dstOffset = IntOffset.Zero, dstSize = IntSize(FG_W, FG_H))
             }
         }
-        // A chuva, fora da camada: pode desenhar acima da cena, desde o gráfico.
-        if (seconds != null) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                val scale = size.height / ART_H
-                val source = rainSource?.let {
-                    RainSourceArt(center = (it.center - topLeftInRoot) / scale, radius = it.radius / scale)
+    }
+
+    // Camada de cima: a chuva, por cima do gráfico de onde sai. Ocupa altura zero no layout
+    // e se desenha sobre a mesma área da praia.
+    if (seconds != null) {
+        var topLeftInRoot by remember { mutableStateOf(Offset.Zero) }
+        Canvas(
+            modifier = Modifier
+                .layout { measurable, constraints ->
+                    val extra = SCENE_BLEED.roundToPx()
+                    val width = constraints.maxWidth + 2 * extra
+                    val placeable = measurable.measure(Constraints.fixed(width, fullHeightPx))
+                    layout(constraints.maxWidth, 0) { placeable.place(-extra, -fullHeightPx) }
                 }
-                withTransform({ scale(scale, scale, pivot = Offset.Zero) }) { drawSocialRain(seconds, source) }
+                .onGloballyPositioned { topLeftInRoot = it.positionInRoot() },
+        ) {
+            val scale = artScale()
+            val topPx = artTop()
+            val origin = topLeftInRoot + Offset(0f, artTop())
+            val source = rainSource?.let {
+                RainSourceArt(center = (it.center - origin) / scale, radius = it.radius / scale)
             }
+            withTransform({
+                translate(0f, topPx)
+                scale(scale, scale, pivot = Offset.Zero)
+            }) { drawSocialRain(seconds, source) }
         }
     }
 }
@@ -202,78 +277,47 @@ fun LoungeScene(rainSource: RainSource?, modifier: Modifier = Modifier) {
 private class RainSourceArt(val center: Offset, val radius: Float)
 
 // ---------------------------------------------------------------------------------------
-// Letreiro neon no guarda-sol
-// ---------------------------------------------------------------------------------------
-
-/** Uma palavra do letreiro: centrada entre as bordas do gomo escuro, inclinada como elas. */
-private class BandWord(val text: String, val center: Offset, val tilt: Float, val size: Float)
-
-/**
- * "Dollar" no gomo escuro da esquerda e "Block" na faixa escura da frente (as listras azuis
- * da ilustração). Centro e inclinação vêm das bordas de cada faixa, medidas coluna a coluna
- * no `onb_lounge_fg`: a da frente tem ~48 px de altura entre x 165 e 245 e sobe ~15,6°; o
- * gomo da esquerda, entre a borda de cima e a bainha, tem a linha do meio a ~38° (a palavra
- * fica 10° mais deitada que ela, que lê melhor).
- */
-private val BandWords = listOf(
-    BandWord("Dollar", Offset(101f, 111f), tilt = -28f, size = 30f),
-    BandWord("Block", Offset(205f, 71f), tilt = -15.6f, size = 27f),
-)
-
-private val NeonCore = Color(0xFFCFFFE0)
-private val NeonGlow = Color(0xFF39FF88)
-
-/** Letreiro em negrito neon; o brilho sobe e desce devagar, como luz de neon respirando. */
-private fun DrawScope.drawNeonTitle(textMeasurer: TextMeasurer, t: Float) {
-    val glow = 0.6f + 0.4f * (0.5f + 0.5f * sin(t * 1.5f))
-    for (word in BandWords) {
-        val c = word.center
-        rotate(word.tilt, pivot = c) {
-            // Achatado como o tecido, que está inclinado em relação a quem olha.
-            withTransform({ scale(1f, 0.9f, pivot = c) }) {
-                fun layout(color: Color, blur: Float) = textMeasurer.measure(
-                    word.text,
-                    TextStyle(
-                        color = color,
-                        fontSize = word.size.toSp(),
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.4.sp,
-                        shadow = if (blur > 0f) Shadow(NeonGlow.copy(alpha = glow), Offset.Zero, blur) else null,
-                    ),
-                )
-                // Halo largo, halo justo e o miolo claro do tubo de neon.
-                val wide = layout(NeonGlow.copy(alpha = 0.5f * glow), 16f * glow)
-                val tight = layout(NeonGlow.copy(alpha = 0.9f), 4f)
-                val core = layout(NeonCore, 0f)
-                // Centro visual = meio da altura das maiúsculas (≈ 0,7 do tamanho), não da caixa do texto.
-                val capMiddle = core.firstBaseline - word.size * 0.35f
-                val topLeft = Offset(c.x - core.size.width / 2f, c.y - capMiddle)
-                drawText(wide, topLeft = topLeft)
-                drawText(tight, topLeft = topLeft)
-                drawText(core, topLeft = topLeft, alpha = 0.8f + 0.2f * glow)
-            }
-        }
-    }
-}
-
-// ---------------------------------------------------------------------------------------
 // Praia
 // ---------------------------------------------------------------------------------------
 
-/** Céu, sol, nuvens, gaivotas, mar com reflexo, ilha com coqueiros e areia — em verdes. */
-private fun DrawScope.drawBeach(w: Float, t: Float) {
-    // Céu.
+/** Céu de dia, sol alto, nuvens, gaivotas, mar com brilho, ilha com coqueiros e areia — em verdes. */
+private fun DrawScope.drawBeach(w: Float, top: Float, h: Float, t: Float) {
+    // Céu: claro perto do horizonte (dia limpo), escurecendo para cima desde [top] (acima da
+    // arte, por trás do conteúdo de cima) até o tom do fundo da página.
+    fun at(y: Float) = ((y - top) / (HORIZON - top)).coerceIn(0f, 1f)
     drawRect(
-        Brush.verticalGradient(0f to SkyTop, 0.45f to SkyMid, 1f to SkyHorizon, startY = 0f, endY = HORIZON),
-        size = Size(w, HORIZON),
+        Brush.verticalGradient(
+            0f to SkyTop,
+            at(20f) to lerp(SkyTop, SkyMid, 0.35f),
+            at(140f) to SkyMid,
+            1f to SkyHorizon,
+            startY = top,
+            endY = HORIZON,
+        ),
+        topLeft = Offset(0f, top),
+        size = Size(w, HORIZON - top),
     )
-    // Sol baixo, com halo que respira.
-    val sun = Offset(w * 0.74f, HORIZON - 52f)
+    // Sol alto, com raios girando devagar e halo que respira.
+    val sun = Offset(w * 0.8f, 96f)
     val pulse = 1f + 0.05f * sin(t * 1.3f)
-    drawCircle(Brush.radialGradient(listOf(SunColor.copy(alpha = 0.45f), Color.Transparent), sun, 110f * pulse), 110f * pulse, sun)
-    drawCircle(SunColor, 30f, sun)
-    // Nuvens chapadas passando devagar.
-    for ((i, fy) in listOf(70f, 130f, 45f).withIndex()) {
+    drawCircle(Brush.radialGradient(listOf(SunColor.copy(alpha = 0.5f), Color.Transparent), sun, 130f * pulse), 130f * pulse, sun)
+    rotate(t * 6f, pivot = sun) {
+        for (k in 0 until 12) {
+            val ang = k * 30f * PI.toFloat() / 180f
+            val long = if (k % 2 == 0) 62f else 52f
+            drawLine(
+                SunColor.copy(alpha = 0.4f),
+                Offset(sun.x + cos(ang) * 40f, sun.y + sin(ang) * 40f),
+                Offset(sun.x + cos(ang) * long, sun.y + sin(ang) * long),
+                strokeWidth = 3.5f,
+                cap = StrokeCap.Round,
+            )
+        }
+    }
+    drawCircle(SunColor, 28f, sun)
+    drawCircle(Color.White.copy(alpha = 0.55f), 18f, Offset(sun.x - 5f, sun.y - 5f))
+    // Nuvens fofas passando devagar.
+    for ((i, fy) in listOf(70f, 150f, 40f).withIndex()) {
         val span = w + 300f
         val cx = ((t * (8f + i * 4f) + i * span / 3f) % span) - 150f
         drawCloud(Offset(cx, fy), 1f - i * 0.2f)
@@ -300,11 +344,11 @@ private fun DrawScope.drawBeach(w: Float, t: Float) {
         topLeft = Offset(0f, HORIZON),
         size = Size(w, 400f - HORIZON),
     )
-    // Reflexo do sol: tracinhos que piscam.
-    for (k in 0 until 9) {
-        val y = HORIZON + 8f + k * 9f
-        val half = 26f - k * 1.8f + 6f * sin(t * 3f + k)
-        drawLine(SunColor.copy(alpha = 0.55f - k * 0.04f), Offset(sun.x - half, y), Offset(sun.x + half, y), strokeWidth = 2.5f, cap = StrokeCap.Round)
+    // Brilho do sol na água: faíscas que piscam embaixo do sol.
+    for (k in 0 until 8) {
+        val y = HORIZON + 10f + k * 11f
+        val half = 18f + k * 2.5f + 6f * sin(t * 3f + k)
+        drawLine(SunColor.copy(alpha = 0.45f - k * 0.04f), Offset(sun.x - half, y), Offset(sun.x + half, y), strokeWidth = 2.5f, cap = StrokeCap.Round)
     }
     // Ondinhas.
     for (k in 0 until 7) {
@@ -314,18 +358,18 @@ private fun DrawScope.drawBeach(w: Float, t: Float) {
     }
 
     // Ilhas: a grande com coqueiros e uma pequena ao fundo.
-    drawIsland(Offset(w * 0.9f, HORIZON + 2f), 0.45f, t, palms = false)
-    drawIsland(Offset(w * 0.6f, HORIZON + 4f), 1f, t, palms = true)
+    drawIsland(Offset(w * 0.92f, HORIZON + 2f), 0.42f, t, palms = false)
+    drawIsland(Offset(w * 0.6f, HORIZON + 6f), 1f, t, palms = true)
 
-    // Areia com a espuma da beira.
+    // Areia com a espuma da beira, até o fim da cena (inclusive a extensão por baixo do botão).
     val sand = Path().apply {
         moveTo(0f, 392f)
         cubicTo(w * 0.3f, 378f, w * 0.6f, 404f, w, 386f)
-        lineTo(w, ART_H)
-        lineTo(0f, ART_H)
+        lineTo(w, h)
+        lineTo(0f, h)
         close()
     }
-    drawPath(sand, Brush.verticalGradient(0f to SandTop, 1f to SandBottom, startY = 378f, endY = ART_H))
+    drawPath(sand, Brush.verticalGradient(0f to SandTop, 1f to SandBottom, startY = 378f, endY = maxOf(h, ART_H)))
     val swash = 3f * sin(t * 1.6f)
     drawPath(
         Path().apply {
@@ -335,57 +379,112 @@ private fun DrawScope.drawBeach(w: Float, t: Float) {
         Foam.copy(alpha = 0.7f),
         style = Stroke(3.5f, cap = StrokeCap.Round),
     )
-    // Sombra do guarda-sol e da cadeira na areia.
-    drawOval(Color.Black.copy(alpha = 0.28f), Offset(40f, 428f), Size(440f, 34f))
 }
 
 private fun DrawScope.drawCloud(c: Offset, s: Float) {
-    val color = CloudColor.copy(alpha = 0.7f)
-    drawRoundRect(color, Offset(c.x - 44f * s, c.y - 8f * s), Size(88f * s, 18f * s), CornerRadius(9f * s))
-    drawCircle(color, 15f * s, Offset(c.x - 12f * s, c.y - 8f * s))
-    drawCircle(color, 11f * s, Offset(c.x + 12f * s, c.y - 6f * s))
+    val color = CloudColor.copy(alpha = 0.55f)
+    drawRoundRect(color, Offset(c.x - 46f * s, c.y - 6f * s), Size(92f * s, 18f * s), CornerRadius(9f * s))
+    drawCircle(color, 16f * s, Offset(c.x - 14f * s, c.y - 6f * s))
+    drawCircle(color, 20f * s, Offset(c.x + 6f * s, c.y - 10f * s))
+    drawCircle(color, 12f * s, Offset(c.x + 26f * s, c.y - 2f * s))
 }
 
+/**
+ * Ilha: reflexo na água, faixa de areia clara com espuma, morro de dois cumes iluminado
+ * pelo sol (da direita) e, na grande, coqueiros de tronco afinando, com folhas cheias
+ * caídas balançando e cocos.
+ */
 private fun DrawScope.drawIsland(base: Offset, s: Float, t: Float, palms: Boolean) {
     val half = 135f * s
-    drawOval(IslandRim, Offset(base.x - half - 8f * s, base.y - 6f * s), Size(2 * half + 16f * s, 12f * s))
+    // Reflexo escuro na água.
+    drawOval(IslandDark.copy(alpha = 0.35f), Offset(base.x - half * 0.85f, base.y + 1f * s), Size(half * 1.7f, 16f * s))
+    // Faixa de areia.
     drawPath(
         Path().apply {
-            moveTo(base.x - half, base.y)
-            cubicTo(base.x - half * 0.5f, base.y - 40f * s, base.x + half * 0.3f, base.y - 46f * s, base.x + half, base.y)
+            moveTo(base.x - half - 10f * s, base.y + 2f * s)
+            cubicTo(base.x - half * 0.4f, base.y - 16f * s, base.x + half * 0.4f, base.y - 16f * s, base.x + half + 10f * s, base.y + 2f * s)
             close()
         },
-        IslandDark,
+        IslandSand,
     )
+    drawLine(Foam.copy(alpha = 0.7f), Offset(base.x - half - 8f * s, base.y + 2f * s), Offset(base.x + half + 8f * s, base.y + 2f * s), strokeWidth = 2.5f * s, cap = StrokeCap.Round)
+    // Morro de dois cumes.
+    val ridge = Path().apply {
+        moveTo(base.x - half * 0.92f, base.y - 4f * s)
+        cubicTo(base.x - half * 0.72f, base.y - 34f * s, base.x - half * 0.38f, base.y - 52f * s, base.x - half * 0.08f, base.y - 46f * s)
+        cubicTo(base.x + half * 0.16f, base.y - 42f * s, base.x + half * 0.26f, base.y - 32f * s, base.x + half * 0.44f, base.y - 32f * s)
+        cubicTo(base.x + half * 0.64f, base.y - 32f * s, base.x + half * 0.84f, base.y - 20f * s, base.x + half * 0.92f, base.y - 4f * s)
+    }
+    val hill = Path().apply {
+        addPath(ridge)
+        close()
+    }
+    drawPath(hill, Brush.verticalGradient(0f to IslandLit, 1f to IslandDark, startY = base.y - 52f * s, endY = base.y))
+    // Luz do sol batendo na encosta da direita.
+    drawPath(
+        hill,
+        Brush.horizontalGradient(0.45f to Color.Transparent, 1f to IslandRim.copy(alpha = 0.45f), startX = base.x - half, endX = base.x + half),
+    )
+    drawPath(ridge, IslandRim.copy(alpha = 0.55f), style = Stroke(2f * s, cap = StrokeCap.Round))
     if (!palms) return
-    for ((i, px) in listOf(-30f, 22f, 52f).withIndex()) {
-        val root = Offset(base.x + px * s, base.y - 26f * s)
-        val lean = if (i == 1) -1f else 1f
-        val top = Offset(root.x + lean * 14f * s, root.y - (52f - i * 8f) * s)
-        drawPath(
-            Path().apply {
-                moveTo(root.x, root.y)
-                quadraticTo(root.x + lean * 2f * s, (root.y + top.y) / 2, top.x, top.y)
-            },
-            PalmTrunk,
-            style = Stroke(5f * s, cap = StrokeCap.Round),
-        )
-        // Folhas balançando de leve.
-        val sway = sin(t * 1.4f + i) * 6f
-        for (k in 0 until 6) {
-            val ang = (-160f + k * 28f + sway) * PI.toFloat() / 180f
-            val tip = Offset(top.x + cos(ang) * 30f * s, top.y + sin(ang) * 30f * s + 14f * s)
-            val ctrl = Offset(top.x + cos(ang) * 16f * s, top.y + sin(ang) * 16f * s - 8f * s)
+
+    // Coqueiros: posição no morro, altura, inclinação.
+    val palmsAt = listOf(Triple(-48f, 58f, -1f), Triple(-12f, 66f, 1f), Triple(40f, 48f, 1f))
+    for ((i, palm) in palmsAt.withIndex()) {
+        val (px, height, lean) = palm
+        val groundY = when {
+            px < -20f -> base.y - 40f * s
+            px < 20f -> base.y - 44f * s
+            else -> base.y - 30f * s
+        }
+        val root = Offset(base.x + px * s, groundY + 4f * s)
+        val top = Offset(root.x + lean * 16f * s, root.y - height * s)
+        val ctrl = Offset(root.x + lean * 2f * s, (root.y + top.y) / 2f)
+        // Tronco afinando: três passadas cada vez mais finas, da base para o alto.
+        for ((k, width) in listOf(6.5f, 5f, 3.5f).withIndex()) {
+            val from = k / 3f
+            val p0 = quadPoint(root, ctrl, top, from)
+            val c = quadPoint(root, ctrl, top, (from + 1f) / 2f)
+            drawPath(
+                Path().apply {
+                    moveTo(p0.x, p0.y)
+                    quadraticTo(c.x, c.y, top.x, top.y)
+                },
+                PalmTrunk,
+                style = Stroke(width * s, cap = StrokeCap.Round),
+            )
+        }
+        // Folhas cheias, caídas, balançando de leve.
+        val sway = sin(t * 1.4f + i) * 5f
+        for (k in 0 until 7) {
+            val ang = (-175f + k * 28f + sway) * PI.toFloat() / 180f
+            val len = (34f - (k % 2) * 5f) * s
+            val tip = Offset(top.x + cos(ang) * len, top.y + sin(ang) * len * 0.55f + 16f * s)
+            val mid = Offset((top.x + tip.x) / 2f, (top.y + tip.y) / 2f - 9f * s)
+            val dx = tip.x - top.x
+            val dy = tip.y - top.y
+            val norm = sqrt(dx * dx + dy * dy).coerceAtLeast(0.001f)
+            val perp = Offset(-dy / norm, dx / norm) * (6f * s)
             drawPath(
                 Path().apply {
                     moveTo(top.x, top.y)
-                    quadraticTo(ctrl.x, ctrl.y, tip.x, tip.y)
+                    quadraticTo(mid.x + perp.x, mid.y + perp.y, tip.x, tip.y)
+                    quadraticTo(mid.x - perp.x * 0.3f, mid.y - perp.y * 0.3f, top.x, top.y)
+                    close()
                 },
-                PalmLeaf,
-                style = Stroke(5f * s, cap = StrokeCap.Round),
+                if (k % 2 == 0) PalmLeaf else PalmLeafLit,
             )
         }
+        // Cocos.
+        drawCircle(Coconut, 3.2f * s, Offset(top.x - 3f * s, top.y + 4f * s))
+        drawCircle(Coconut, 3.2f * s, Offset(top.x + 3f * s, top.y + 5f * s))
     }
+}
+
+/** Ponto da curva quadrática (a, c, b) em [f]. */
+private fun quadPoint(a: Offset, c: Offset, b: Offset, f: Float): Offset {
+    val u = 1f - f
+    return Offset(u * u * a.x + 2f * u * f * c.x + f * f * b.x, u * u * a.y + 2f * u * f * c.y + f * f * b.y)
 }
 
 // ---------------------------------------------------------------------------------------
@@ -426,7 +525,7 @@ private fun DrawScope.drawSocialRain(seconds: Float, source: RainSourceArt?) {
         val kind = kinds[(hash01(i, round, 4) * kinds.size).toInt().coerceAtMost(kinds.size - 1)]
         val spin0 = hash01(i, round, 5) * 40f - 20f
         // Onde vai bater: qualquer ponto da parte de cima do guarda-sol.
-        val landX = 30f + hash01(i, round, 2) * 355f
+        val landX = 40f + hash01(i, round, 2) * 425f
         val landY = canopyY(landX) ?: 60f
         // De onde sai: um ponto dentro da rosca.
         val spawn = if (source != null) {

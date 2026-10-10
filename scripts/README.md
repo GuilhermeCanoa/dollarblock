@@ -107,10 +107,12 @@ As animações por cima da arte (ventilador, luz, vapor, brilho nos ícones) fic
 ## Arte: `build-onb-lounge.ps1` — primeiro plano da cena de praia (página da Medição)
 
 Também **não é teste e não roda no build**. Regera `app/src/main/res/drawable-nodpi/onb_lounge_fg.png`
-(guarda-sol, personagem, cadeira e cooler recortados, em tons de verde) a partir da ilustração
-original `docs/art/onb_lounge_source.webp`. O céu, o mar, a ilha, o letreiro neon e a chuva de
-ícones são desenhados no app (`OnboardingLoungeScene.kt`).
+(guarda-sol com o letreiro "Dollar Block", personagem, cadeira, cooler e as sombras na areia,
+com fundo transparente) a partir da ilustração `docs/art/onb_lounge_source.webp`, já em verdes.
+O fundo é separado pela cor do céu/mar/areia de cada altura. O céu, o mar, a ilha e a chuva
+de ícones são desenhados no app (`OnboardingLoungeScene.kt`); o script imprime o contorno de
+cima do guarda-sol para atualizar o `CanopyTop` de lá se o recorte mudar.
 
 ```powershell
-powershell -File scripts/build-onb-lounge.ps1
+powershell -ExecutionPolicy Bypass -File scripts/build-onb-lounge.ps1
 ```
