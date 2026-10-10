@@ -219,13 +219,15 @@
     <string name="apps_search_empty">Nenhum app encontrado para %1$s.</string>
     <string name="apps_empty_state">Busque um app acima e coloque na conta.</string>
     <string name="apps_limit_dialog_title">Limite diário · %1$s</string>
-    <string name="apps_limit_dialog_body">Defina quantos minutos por dia este app merece. Passou disso, a fatura chega.</string>
+    <string name="apps_limit_dialog_body">Defina quanto tempo por dia este app merece. Passou disso, a fatura chega.</string>
     <string name="apps_limit_dialog_minutes_label">Minutos por dia</string>
     <string name="apps_limit_dialog_no_limit">Sem limite</string>
     <string name="apps_limit_dialog_save">Salvar</string>
     <string name="apps_limit_dialog_remove">Remover limite</string>
     <string name="apps_limit_dialog_cancel">Cancelar</string>
-    <string name="apps_limit_dialog_invalid">Informe entre 1 e 1440 minutos. O dia só tem 24 horas.</string>
+    <string name="apps_limit_dialog_invalid">Escolha pelo menos 1 minuto. O dia só tem 24 horas.</string>
+    <string name="apps_limit_dialog_hours_unit">h</string>
+    <string name="apps_limit_dialog_minutes_unit">min</string>
     <string name="apps_tap_to_set_limit">Toque para definir um limite</string>
     <string name="apps_overtime_label">+%1$s de excedente · resgate #%2$d</string>
     <string name="apps_over_limit_text">+%1$s acima do limite</string>

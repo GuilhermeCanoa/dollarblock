@@ -573,8 +573,8 @@ private fun AppAvatar(icon: ImageBitmap?, letter: Char, modifier: Modifier = Mod
     }
 }
 
-/** Teto do limite diário: o dia só tem 24 horas. */
-private const val MAX_DAILY_LIMIT_MINUTES = 24 * 60
+/** Valor inicial do seletor quando o app ainda não tem limite. */
+private const val DEFAULT_LIMIT_MINUTES = 30
 
 private fun formatMinutes(total: Int): String {
     val hours = total / 60
@@ -621,12 +621,10 @@ private fun DailyLimitDialog(
     onConfirm: (Int?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var text by remember(row.packageName) {
-        mutableStateOf(row.dailyLimitMinutes?.toString() ?: "")
+    var minutes by remember(row.packageName) {
+        mutableStateOf((row.dailyLimitMinutes ?: DEFAULT_LIMIT_MINUTES).coerceIn(0, MAX_DAILY_LIMIT_MINUTES))
     }
-    val minutes = text.trim().toIntOrNull()
-    val isInvalid = text.isNotBlank() &&
-        (minutes == null || minutes <= 0 || minutes > MAX_DAILY_LIMIT_MINUTES)
+    val isInvalid = minutes <= 0
 
     DollarBlockDialog(
         onDismissRequest = onDismiss,
@@ -645,15 +643,11 @@ private fun DailyLimitDialog(
             { onConfirm(null) }
         } else onDismiss,
     ) {
-        OutlinedTextField(
-            value = text,
-            onValueChange = { input -> text = input.filter { it.isDigit() } },
-            label = { Text(stringResource(R.string.apps_limit_dialog_minutes_label)) },
-            placeholder = { Text(stringResource(R.string.apps_limit_dialog_no_limit)) },
-            singleLine = true,
-            isError = isInvalid,
-            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth(),
+        DurationWheelPicker(
+            totalMinutes = minutes,
+            onTotalMinutesChange = { minutes = it },
+            hoursLabel = stringResource(R.string.apps_limit_dialog_hours_unit),
+            minutesLabel = stringResource(R.string.apps_limit_dialog_minutes_unit),
         )
         if (isInvalid) {
             Spacer(Modifier.height(4.dp))

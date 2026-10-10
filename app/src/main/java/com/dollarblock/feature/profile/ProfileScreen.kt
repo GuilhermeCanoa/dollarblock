@@ -105,7 +105,9 @@ fun ProfileScreen(
     ) { viewModel.refresh() }
 
     fun requestPermission(permission: AppPermission) {
-        if (permission == AppPermission.NOTIFICATIONS &&
+        // Já concedida: o app não consegue revogar sozinho, então leva o usuário às
+        // configurações de notificação do sistema (onde ele desliga). Pendente: pede em runtime.
+        if (permission == AppPermission.NOTIFICATIONS && !permissions.notifications &&
             android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU
         ) {
             notificationsLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)

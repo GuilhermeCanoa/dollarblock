@@ -155,7 +155,7 @@ class ProfileViewModel @Inject constructor(
         AppPermission.USAGE_ACCESS -> permissionsProvider.usageAccessIntent()
         AppPermission.ACCESSIBILITY -> permissionsProvider.accessibilityIntent()
         AppPermission.OVERLAY -> permissionsProvider.overlayIntent()
-        AppPermission.NOTIFICATIONS -> null
+        AppPermission.NOTIFICATIONS -> permissionsProvider.notificationSettingsIntent()
     }
 
     private companion object {

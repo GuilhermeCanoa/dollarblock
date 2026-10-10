@@ -84,6 +84,15 @@ class PermissionsProvider @Inject constructor(
 
     fun accessibilityIntent(): Intent = accessibilitySettingsIntent()
 
+    /**
+     * Tela de notificações do app nas configurações do sistema. O Android não deixa o app
+     * revogar a própria permissão — só o usuário, aqui — e também é a saída quando o diálogo
+     * de runtime já foi negado e não aparece mais.
+     */
+    fun notificationSettingsIntent(): Intent =
+        Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+            .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+
     /** Abre a tela de sobreposição já apontando para o pacote do DollarBlock. */
     fun overlayIntent(): Intent = Intent(
         Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
