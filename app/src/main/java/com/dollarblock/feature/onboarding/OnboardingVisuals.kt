@@ -1,6 +1,22 @@
 package com.dollarblock.feature.onboarding
 
 import android.provider.Settings
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.TextMeasurer
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.coroutineScope
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.foundation.Canvas
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
@@ -182,6 +198,244 @@ fun GrantedStamp(
         fontSize = fontSize,
         borderWidth = borderWidth,
     )
+}
+
+/**
+ * "CONCEDIDA" grande, carimbado de verdade: um carimbo de madeira (pegador de bola, pescoço
+ * torneado, bloco chanfrado com etiqueta) desce projetando sombra, bate (achata, vibra e deixa
+ * a marca) e sobe sumindo, ficando só a marca na página. Sem animações do sistema, aparece
+ * direto a marca. Começa quando a página fica [active].
+ */
+@Composable
+fun RubberStampGranted(active: Boolean, modifier: Modifier = Modifier) {
+    val color = DollarBlockTheme.colors.success
+    val animate = rememberAnimationsEnabled()
+    val haptic = LocalHapticFeedback.current
+    val textMeasurer = rememberTextMeasurer()
+    val toolY = remember { Animatable(if (animate) -1f else 0f) } // -1 = no alto; 0 = no papel
+    val toolAlpha = remember { Animatable(if (animate) 1f else 0f) }
+    val squash = remember { Animatable(1f) }
+    val inkAlpha = remember { Animatable(if (animate) 0f else 1f) }
+    val inkScale = remember { Animatable(if (animate) 1.06f else 1f) }
+    // Só carimba com a página na tela (o pager já compõe a vizinha antes de chegar nela).
+    LaunchedEffect(active) {
+        if (!active || inkAlpha.value == 1f) return@LaunchedEffect
+        delay(250)
+        toolY.animateTo(0f, tween(360, easing = FastOutLinearInEasing))
+        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        coroutineScope {
+            launch { squash.animateTo(0.9f, tween(70)); squash.animateTo(1f, tween(120)) }
+            launch { inkAlpha.animateTo(1f, tween(80)) }
+            launch { inkScale.animateTo(1f, tween(160)) }
+        }
+        delay(140)
+        coroutineScope {
+            launch { toolY.animateTo(-1.3f, tween(420, easing = FastOutSlowInEasing)) }
+            launch { delay(160); toolAlpha.animateTo(0f, tween(260)) }
+        }
+    }
+    val lift = with(LocalDensity.current) { 150.dp.toPx() }
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier.graphicsLayer { rotationZ = -8f },
+    ) {
+        // Sombra do carimbo no papel: mais escura e mais justa conforme ele chega perto.
+        Canvas(Modifier.matchParentSize()) {
+            val near = (1f + toolY.value).coerceIn(0f, 1f) * toolAlpha.value
+            if (near > 0f) {
+                val grow = 1.25f - 0.2f * near
+                drawOval(
+                    brush = Brush.radialGradient(
+                        listOf(Color.Black.copy(alpha = 0.45f * near), Color.Transparent),
+                        center = center,
+                        radius = size.width * 0.6f * grow,
+                    ),
+                    topLeft = Offset(center.x - size.width * 0.6f * grow, center.y - size.height * 0.7f * grow),
+                    size = Size(size.width * 1.2f * grow, size.height * 1.4f * grow),
+                )
+            }
+        }
+        Text(
+            text = stringResource(R.string.perm_status_granted).uppercase(),
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.Black,
+            fontSize = 36.sp,
+            letterSpacing = 3.sp,
+            color = color,
+            maxLines = 1,
+            modifier = Modifier
+                .graphicsLayer {
+                    alpha = inkAlpha.value
+                    scaleX = inkScale.value
+                    scaleY = inkScale.value
+                }
+                .border(4.dp, color, RoundedCornerShape(10.dp))
+                .padding(horizontal = 20.dp, vertical = 6.dp),
+        )
+        // O carimbo em si: cobre a marca quando encosta e sai pelo alto.
+        Canvas(
+            modifier = Modifier
+                .matchParentSize()
+                .graphicsLayer {
+                    translationY = toolY.value * lift
+                    alpha = toolAlpha.value
+                    scaleY = squash.value
+                    transformOrigin = TransformOrigin(0.5f, 1f)
+                },
+        ) { drawWoodenStamp(textMeasurer) }
+    }
+}
+
+// Madeira clara (faia), como os carimbos de escritório de referência.
+private val StampWoodLight = Color(0xFFEBC497)
+private val StampWoodMid = Color(0xFFD9A671)
+private val StampWoodDark = Color(0xFFB57A45)
+private val StampGrain = Color(0xFF8A5528)
+private val StampOutline = Color(0xFF5A3517)
+private val StampLabel = Color(0xFFF7F1E1)
+private val StampRubber = Color(0xFF2A2A2A)
+private val StampFoam = Color(0xFF8D8F86)
+
+/**
+ * Carimbo de madeira em 3/4 (frente chanfrada + face de cima): borracha escura com espuma
+ * cinza embaixo, bloco com veios e etiqueta, pescoço torneado com cintura e pegador de bola
+ * com o pino de metal. A borracha fica na base dos limites do desenho (a marca carimbada).
+ */
+private fun DrawScope.drawWoodenStamp(textMeasurer: TextMeasurer) {
+    val w = size.width
+    val h = size.height
+    val stroke = 1.2.dp.toPx()
+    val rubberTop = h * 0.9f
+    val foamTop = h * 0.84f
+    val frontTop = h * 0.02f
+    val depth = h * 0.3f
+    // Frente chanfrada: mais larga embaixo que em cima.
+    val bottomL = -w * 0.04f
+    val bottomR = w * 1.04f
+    val topL = w * 0.01f
+    val topR = w * 0.99f
+    val inset = w * 0.03f
+
+    // Borracha + espuma cinza.
+    drawRect(StampRubber, Offset(bottomL + w * 0.01f, rubberTop), Size(bottomR - bottomL - w * 0.02f, h - rubberTop))
+    drawRect(StampFoam, Offset(bottomL + w * 0.005f, foamTop), Size(bottomR - bottomL - w * 0.01f, rubberTop - foamTop))
+
+    // Face de cima (mais clara, recuada em perspectiva).
+    val top = Path().apply {
+        moveTo(topL, frontTop)
+        lineTo(topR, frontTop)
+        lineTo(topR - inset, frontTop - depth)
+        lineTo(topL + inset, frontTop - depth)
+        close()
+    }
+    drawPath(top, Brush.verticalGradient(listOf(StampWoodMid, StampWoodLight), startY = frontTop - depth, endY = frontTop))
+    for (k in 1..2) {
+        val y = frontTop - depth * k / 3f
+        drawPath(
+            Path().apply {
+                moveTo(topL + inset * k / 3f + w * 0.06f, y)
+                cubicTo(w * 0.35f, y - depth * 0.12f, w * 0.6f, y + depth * 0.12f, topR - inset * k / 3f - w * 0.06f, y)
+            },
+            StampGrain.copy(alpha = 0.18f),
+            style = Stroke(stroke),
+        )
+    }
+    drawPath(top, StampOutline, style = Stroke(stroke))
+
+    // Frente (trapézio), com veios ondulados e um nó.
+    val front = Path().apply {
+        moveTo(topL, frontTop)
+        lineTo(topR, frontTop)
+        lineTo(bottomR, foamTop)
+        lineTo(bottomL, foamTop)
+        close()
+    }
+    drawPath(front, Brush.verticalGradient(listOf(StampWoodLight, StampWoodDark), startY = frontTop, endY = foamTop))
+    listOf(0.2f, 0.42f, 0.66f, 0.86f).forEachIndexed { i, f ->
+        val y = frontTop + (foamTop - frontTop) * f
+        val sway = (if (i % 2 == 0) 1 else -1) * h * 0.05f
+        val l = topL + (bottomL - topL) * f
+        val r = topR + (bottomR - topR) * f
+        drawPath(
+            Path().apply {
+                moveTo(l, y)
+                cubicTo(w * 0.3f, y + sway, w * 0.7f, y - sway, r, y + sway * 0.4f)
+            },
+            StampGrain.copy(alpha = 0.22f),
+            style = Stroke(stroke),
+        )
+    }
+    drawOval(
+        StampGrain.copy(alpha = 0.2f),
+        Offset(w * 0.8f, frontTop + (foamTop - frontTop) * 0.45f),
+        Size(w * 0.06f, h * 0.12f),
+        style = Stroke(stroke),
+    )
+    // Quinas chanfradas mais escuras nas laterais.
+    drawPath(
+        Path().apply { moveTo(topL, frontTop); lineTo(topL + w * 0.03f, frontTop); lineTo(bottomL + w * 0.03f, foamTop); lineTo(bottomL, foamTop); close() },
+        StampWoodDark.copy(alpha = 0.5f),
+    )
+    drawPath(
+        Path().apply { moveTo(topR, frontTop); lineTo(topR - w * 0.03f, frontTop); lineTo(bottomR - w * 0.03f, foamTop); lineTo(bottomR, foamTop); close() },
+        StampWoodDark.copy(alpha = 0.5f),
+    )
+    drawPath(front, StampOutline, style = Stroke(stroke))
+
+    // Etiqueta de papel colada na frente.
+    val labelW = w * 0.44f
+    val labelH = (foamTop - frontTop) * 0.4f
+    val labelTopLeft = Offset(w / 2 - labelW / 2, frontTop + (foamTop - frontTop) * 0.32f)
+    drawRect(StampLabel, labelTopLeft, Size(labelW, labelH))
+    drawRect(StampOutline.copy(alpha = 0.3f), labelTopLeft, Size(labelW, labelH), style = Stroke(stroke * 0.8f))
+    val label = textMeasurer.measure(
+        "DOLLARBLOCK",
+        TextStyle(
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.Bold,
+            fontSize = (labelH * 0.42f).toSp(),
+            color = StampOutline,
+        ),
+    )
+    drawText(label, topLeft = Offset(w / 2 - label.size.width / 2f, labelTopLeft.y + labelH / 2 - label.size.height / 2f))
+
+    // Cabo: colarinho, pescoço com cintura (abre na base) e pegador de bola.
+    val cx = w / 2
+    val baseY = frontTop - depth / 2
+    val neckTop = baseY - h * 0.7f
+    val wood = Brush.horizontalGradient(
+        listOf(StampWoodDark, StampWoodLight, StampWoodMid, StampWoodDark),
+        startX = cx - w * 0.12f,
+        endX = cx + w * 0.12f,
+    )
+    drawOval(StampWoodDark.copy(alpha = 0.6f), Offset(cx - w * 0.11f, baseY - h * 0.07f), Size(w * 0.22f, h * 0.14f))
+    val neck = Path().apply {
+        moveTo(cx - w * 0.09f, baseY)
+        cubicTo(cx - w * 0.035f, baseY - h * 0.2f, cx - w * 0.04f, neckTop + h * 0.35f, cx - w * 0.055f, neckTop)
+        lineTo(cx + w * 0.055f, neckTop)
+        cubicTo(cx + w * 0.04f, neckTop + h * 0.35f, cx + w * 0.035f, baseY - h * 0.2f, cx + w * 0.09f, baseY)
+        close()
+    }
+    drawPath(neck, wood)
+    drawPath(neck, StampOutline.copy(alpha = 0.6f), style = Stroke(stroke))
+    val r = w * 0.13f
+    val ball = Offset(cx, neckTop - r * 0.82f)
+    drawCircle(
+        brush = Brush.radialGradient(
+            listOf(StampWoodLight, StampWoodMid, StampWoodDark),
+            center = Offset(ball.x - r * 0.35f, ball.y - r * 0.35f),
+            radius = r * 1.5f,
+        ),
+        radius = r,
+        center = ball,
+    )
+    drawCircle(StampOutline.copy(alpha = 0.6f), r, ball, style = Stroke(stroke))
+    // Veios curvos na bola e o reflexo.
+    drawArc(StampGrain.copy(alpha = 0.18f), 200f, 120f, false, Offset(ball.x - r * 0.7f, ball.y - r * 0.5f), Size(r * 1.4f, r * 1.2f), style = Stroke(stroke))
+    drawCircle(Color.White.copy(alpha = 0.35f), r * 0.22f, Offset(ball.x - r * 0.42f, ball.y - r * 0.42f))
+    // Pino de metal (indica o lado de cima da marca).
+    drawCircle(Color(0xFF9EA3A6), r * 0.13f, Offset(ball.x + r * 0.55f, ball.y + r * 0.05f))
+    drawCircle(Color.White.copy(alpha = 0.8f), r * 0.05f, Offset(ball.x + r * 0.52f, ball.y + r * 0.01f))
 }
 
 /** Telas das Configurações do Android que a ilustração de "como ativar" encena. */

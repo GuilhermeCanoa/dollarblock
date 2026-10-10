@@ -53,7 +53,7 @@ private val Context.moneyDataStore by preferencesDataStore(name = "dollarblock_m
 
 /**
  * Persiste o salário líquido mensal informado pelo usuário (base da conta; na
- * ausência, vale a referência de R$ 2.000 — [MoneySettings.DEFAULT_MONTHLY_SALARY])
+ * ausência, vale a referência de R$ 3.000 — [MoneySettings.DEFAULT_MONTHLY_SALARY])
  * e a preferência de moeda de exibição.
  */
 @Singleton

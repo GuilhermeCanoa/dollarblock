@@ -31,8 +31,8 @@ class MoneySettingsTest {
 
     @Test
     fun `perMinuteRate acompanha o salario configurado`() {
-        val default = com.dollarblock.feature.home.HomeMetrics.perMinuteRate(2000.0)
+        val default = com.dollarblock.feature.home.HomeMetrics.perMinuteRate(3000.0)
         assertEquals(com.dollarblock.feature.home.HomeMetrics.REAIS_PER_MINUTE, default, 1e-9)
-        assertEquals(default * 2, com.dollarblock.feature.home.HomeMetrics.perMinuteRate(4000.0), 1e-9)
+        assertEquals(default * 2, com.dollarblock.feature.home.HomeMetrics.perMinuteRate(6000.0), 1e-9)
     }
 }

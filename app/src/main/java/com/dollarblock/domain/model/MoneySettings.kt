@@ -15,7 +15,7 @@ data class MoneySettings(
 ) {
     companion object {
         /** Referência histórica do app quando o usuário não informa o salário. */
-        const val DEFAULT_MONTHLY_SALARY = 2000.0
+        const val DEFAULT_MONTHLY_SALARY = 3000.0
     }
 }
 

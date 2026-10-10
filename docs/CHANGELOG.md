@@ -12,6 +12,26 @@ Descrição funcional.
 
 ---
 
+## [2026-10-10] — Contrato com pena, carimbo animado, cena da praia e salário de referência R$ 3.000
+**Tipo:** feature + regra
+**Épico:** E21 (onboarding) / adhoc (salário)
+
+- **Contrato:** uma pena de escrever escreve as cláusulas letra a letra (~14 s, sem travar o
+  botão de assinar); tinta mais escura e encorpada; "The deal" maior. Cláusula 3 em inglês:
+  "Want out? It's free, anytime. But remember: no amount of money can buy your time back."
+- **Medição — carimbo:** "GRANTED" com o dobro do tamanho, carimbado por um carimbo de
+  madeira (pegador de bola, bloco chanfrado com etiqueta DOLLARBLOCK) que desce, bate (vibra)
+  e sobe. Só começa quando a página aparece na tela.
+- **Medição — cena da praia** (`OnboardingLoungeScene.kt`): o personagem relaxando na cadeira
+  colorida sob o guarda-sol com "Dollar Block" em neon (brilho que respira), numa praia
+  cartoon em tons de verde com ilha de coqueiros, sol e mar animados. Ícones de redes sociais
+  (Instagram, TikTok, Facebook, YouTube, X, Snapchat, Discord) saem do gráfico de rosca,
+  caem e quicam no guarda-sol para trás do personagem. A cena vai até a borda da tela e se
+  funde com o fundo. O primeiro plano é recortado da ilustração original por
+  `scripts/build-onb-lounge.ps1`.
+- **Salário de referência:** de R$ 2.000 para **R$ 3.000/mês** quando o usuário não informou
+  o seu (minuto de tela ≈ R$ 0,069). Textos da Home e do onboarding atualizados.
+
 ## [2026-10-09] — Entrada do onboarding com cena ilustrada animada
 **Tipo:** feature
 **Épico:** E21

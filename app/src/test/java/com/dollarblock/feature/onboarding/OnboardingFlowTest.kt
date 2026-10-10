@@ -88,11 +88,11 @@ class OnboardingFlowTest {
     }
 
     @Test
-    fun `custo do tempo de tela usa a referencia de R$ 2000 por mes`() {
-        // 43.200 min/mês → R$ 2.000 / 43.200 ≈ R$ 0,0463 por minuto.
-        assertEquals(2000.0 / 43_200.0, screenTimeCost(60_000L), 1e-9)
-        // Uma semana de 18 h no feed ≈ R$ 50.
-        assertEquals(50.0, screenTimeCost(18L * 60 * 60_000), 1e-9)
+    fun `custo do tempo de tela usa a referencia de R$ 3000 por mes`() {
+        // 43.200 min/mês → R$ 3.000 / 43.200 ≈ R$ 0,0694 por minuto.
+        assertEquals(3000.0 / 43_200.0, screenTimeCost(60_000L), 1e-9)
+        // Uma semana de 18 h no feed ≈ R$ 75.
+        assertEquals(75.0, screenTimeCost(18L * 60 * 60_000), 1e-9)
         assertEquals(0.0, screenTimeCost(0L), 0.0)
     }
 

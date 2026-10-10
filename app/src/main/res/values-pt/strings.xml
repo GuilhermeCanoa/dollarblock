@@ -24,7 +24,7 @@
     <string name="home_card_info_ok">Entendi</string>
     <string name="home_card_info_open_apps">Ver apps</string>
     <string name="home_info_damage_title">Prejuízo de hoje</string>
-    <string name="home_info_damage_body">Seus minutos de hoje nos apps monitorados, convertidos em dinheiro: seu salário líquido mensal (R$ 2.000 por padrão — adicione o seu no card da Home) dividido pelos 43.200 minutos do mês. Não é multa — é o preço de mercado do seu scroll.</string>
+    <string name="home_info_damage_body">Seus minutos de hoje nos apps monitorados, convertidos em dinheiro: seu salário líquido mensal (R$ 3.000 por padrão — adicione o seu no card da Home) dividido pelos 43.200 minutos do mês. Não é multa — é o preço de mercado do seu scroll.</string>
     <string name="home_info_spent_title">Dinheiro gasto</string>
     <string name="home_info_spent_body">Tudo o que você pagou de verdade em passes do dia, desde o início. Sai direto dos seus recibos de resgate. Dinheiro real — o contrato era esse.</string>
     <string name="home_info_saved_title">Dinheiro economizado</string>
@@ -532,7 +532,7 @@
     <string name="onb_perm_grant">Conceder</string>
     <string name="onb_entry_body">Aviso de tempo de tela a gente ignora. Conta pra pagar, não. O DollarBlock põe preço no tempo que os apps te tomam.</string>
     <string name="onb_entry_meter_label">Desde que você abriu o DollarBlock</string>
-    <string name="onb_entry_meter_note">Cada minuto de tela vale %1$s (referência: salário de R$ 2.000/mês).</string>
+    <string name="onb_entry_meter_note">Cada minuto de tela vale %1$s (referência: salário de R$ 3.000/mês).</string>
     <string name="onb_clause_label">Cláusula %1$d</string>
     <string name="onb_clause_1">Você escolhe os aplicativos que roubam seu tempo e define um limite diário para cada um.</string>
     <string name="onb_clause_2">Passou do limite, o app tranca. Precisa dele? O passe custa R$ 1,99 e vale até meia-noite. É assim que te incentivamos a se libertar.</string>
@@ -542,7 +542,7 @@
     <string name="onb_measure_body">O DollarBlock lê o mesmo tempo de tela que o seu celular já mede. É só isso que ele precisa pra fazer a conta.</string>
     <string name="onb_measure_result_title">Sua última semana custou %1$s</string>
     <string name="onb_measure_result_body">%1$s nos apps que mais te tomaram tempo.</string>
-    <string name="onb_measure_result_note">Na referência de R$ 2.000/mês. Dá pra pôr o seu salário depois, na Home.</string>
+    <string name="onb_measure_result_note">Na referência de R$ 3.000/mês. Dá pra pôr o seu salário depois, na Home.</string>
     <string name="onb_lock_body">Pra trancar o app na hora certa, o DollarBlock precisa saber qual app está aberto. Só isso.</string>
     <string name="onb_lock_privacy">Não lê sua tela, o que você digita nem suas senhas.</string>
     <string name="onb_trust_lock_1">Só vê o nome do app que está aberto. Nunca o conteúdo.</string>

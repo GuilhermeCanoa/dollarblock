@@ -1,6 +1,8 @@
 package com.dollarblock.feature.onboarding
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -37,6 +39,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -46,19 +49,29 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dollarblock.R
@@ -71,6 +84,7 @@ import com.dollarblock.feature.home.HomeMetrics
 import com.dollarblock.feature.home.text
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
+import kotlin.math.sin
 
 /** Quantas páginas de "papelada" (permissões) o onboarding tem — para o "Papelada N de M". */
 private const val PAPERWORK_PAGES = 3
@@ -87,7 +101,7 @@ private val HERO_TEXT_GAP = 31.dp
 
 /**
  * A marca entra, o título sobe, e a conta já começa a correr: o tempo desde que o app
- * abriu, convertido em dinheiro na referência de R$ 2.000/mês (a mesma régua da Home).
+ * abriu, convertido em dinheiro na referência de R$ 3.000/mês (a mesma régua da Home).
  */
 @Composable
 fun EntryPage(active: Boolean, modifier: Modifier = Modifier) {
@@ -235,15 +249,35 @@ private val clauses = listOf(
     R.string.onb_clause_4,
 )
 
+/** Tempo para a caneta escrever as quatro cláusulas inteiras. */
+private const val CONTRACT_WRITE_MS = 14_000
+
 /**
  * "O contrato" — papel/mono do recibo de bloqueio (ver `InvoiceReceipt` em BlockActivity.kt).
- * As cláusulas saem uma a uma, como recibo da maquininha; a 4ª é a saída livre. A
- * assinatura é o botão do rodapé ([SignButton]).
+ * Uma caneta escreve as cláusulas em sequência, letra a letra; o rodapé aparece quando ela
+ * termina. A assinatura é o botão do rodapé ([SignButton]).
  */
 @Composable
 fun ContractPage(active: Boolean, modifier: Modifier = Modifier) {
     val paper = Color(0xFFF7F4EC)
     val ink = Color(0xFF1C2B26)
+
+    // Quantos caracteres já foram escritos, somando as cláusulas na ordem.
+    val clauseTexts = clauses.map { stringResource(it) }
+    val total = clauseTexts.sumOf { it.length }.toFloat()
+    val animate = rememberAnimationsEnabled()
+    val written = remember { Animatable(if (animate) 0f else total) }
+    LaunchedEffect(active) {
+        if (active && written.value < total) {
+            delay(350)
+            written.animateTo(total, tween(CONTRACT_WRITE_MS, easing = LinearEasing))
+        }
+    }
+    val footerAlpha by animateFloatAsState(
+        targetValue = if (written.value >= total) 1f else 0f,
+        animationSpec = tween(420),
+        label = "contractFooter",
+    )
 
     Column(
         modifier = modifier
@@ -271,34 +305,35 @@ fun ContractPage(active: Boolean, modifier: Modifier = Modifier) {
                 text = stringResource(R.string.onb_penalty_title),
                 fontFamily = FontFamily.Monospace,
                 fontWeight = FontWeight.Bold,
-                fontSize = 22.sp,
+                fontSize = 28.sp,
                 color = ink,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(top = 10.dp, bottom = 14.dp),
             )
             ContractDivider(ink.copy(alpha = 0.35f))
-            clauses.forEachIndexed { index, clauseRes ->
-                Reveal(active, order = index + 1, stepMs = 380L, fromTop = true) {
-                    Column(modifier = Modifier.padding(top = 14.dp)) {
-                        Text(
-                            text = stringResource(R.string.onb_clause_label, index + 1).uppercase(),
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 11.sp,
-                            letterSpacing = 1.5.sp,
-                            color = ink.copy(alpha = 0.5f),
-                        )
-                        Text(
-                            text = stringResource(clauseRes),
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 14.sp,
-                            lineHeight = 20.sp,
-                            color = ink.copy(alpha = 0.9f),
-                            modifier = Modifier.padding(top = 2.dp),
-                        )
-                    }
+            var start = 0
+            clauseTexts.forEachIndexed { index, text ->
+                val visible = (written.value - start).toInt().coerceIn(0, text.length)
+                start += text.length
+                Column(modifier = Modifier.padding(top = 14.dp)) {
+                    Text(
+                        text = stringResource(R.string.onb_clause_label, index + 1).uppercase(),
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 11.sp,
+                        letterSpacing = 1.5.sp,
+                        color = ink.copy(alpha = 0.5f),
+                        modifier = Modifier.graphicsLayer { alpha = (visible / 6f).coerceIn(0f, 1f) },
+                    )
+                    HandwrittenText(
+                        text = text,
+                        visible = visible,
+                        ink = Color(0xFF111C18), // tinta um tom mais escura que o resto do papel
+                        penWobble = written.value,
+                        modifier = Modifier.padding(top = 2.dp),
+                    )
                 }
             }
-            Reveal(active, order = clauses.size + 1, stepMs = 380L) {
+            Box(modifier = Modifier.graphicsLayer { alpha = footerAlpha }) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Spacer(Modifier.height(16.dp))
                     ContractDivider(ink.copy(alpha = 0.35f))
@@ -330,6 +365,117 @@ private fun ContractDivider(color: Color, modifier: Modifier = Modifier) {
             strokeWidth = 2f,
             pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f)),
         )
+    }
+}
+
+/**
+ * Texto sendo escrito: os primeiros [visible] caracteres em tinta, o resto já diagramado mas
+ * transparente (nada pula de lugar enquanto escreve). Enquanto não termina, a pena fica
+ * com a ponta no fim do que já foi escrito, balançando com [penWobble].
+ */
+@Composable
+private fun HandwrittenText(
+    text: String,
+    visible: Int,
+    ink: Color,
+    penWobble: Float,
+    modifier: Modifier = Modifier,
+) {
+    var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
+    val writing = visible in 1 until text.length
+    Box(modifier = modifier) {
+        Text(
+            text = buildAnnotatedString {
+                append(text.substring(0, visible))
+                withStyle(SpanStyle(color = Color.Transparent)) { append(text.substring(visible)) }
+            },
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.Medium, // tinta de pena: um pouco mais encorpada
+            fontSize = 14.sp,
+            lineHeight = 20.sp,
+            color = ink,
+            onTextLayout = { layout = it },
+        )
+        val cursor = layout?.takeIf { writing }?.getCursorRect(visible)
+        if (cursor != null) {
+            QuillPen(
+                modifier = Modifier
+                    .offset { IntOffset(cursor.left.roundToInt(), cursor.bottom.roundToInt()) }
+                    .graphicsLayer {
+                        // Ponta da pena no canto inferior esquerdo; sobe/desce e gira de leve.
+                        translationY = -size.height + sin(penWobble * 1.7f) * 2.dp.toPx()
+                        rotationZ = sin(penWobble * 0.9f) * 6f
+                        transformOrigin = TransformOrigin(0f, 1f)
+                    },
+            )
+        }
+    }
+}
+
+/**
+ * Pena de escrever inclinada, com a ponta no canto inferior esquerdo do desenho: haste fina,
+ * ponta molhada de tinta e as duas metades da pena (uma mais larga), com nervuras e entalhes.
+ */
+@Composable
+private fun QuillPen(modifier: Modifier = Modifier) {
+    val vaneDark = Color(0xFF1F4D3C)
+    val vaneLight = Color(0xFF2F7358)
+    val barb = Color(0xFF9CC9A8)
+    val shaft = Color(0xFFE9E2C9)
+    val inkTip = Color(0xFF101A16)
+    Canvas(modifier = modifier.size(40.dp)) {
+        val s = size.width
+        val tip = Offset(0f, s)
+        val len = s * 1.3f                       // comprimento total da pena (em pé)
+        fun at(along: Float, across: Float) = Offset(tip.x + across, tip.y - along)
+        // Desenhada em pé (ponta embaixo) e girada 40° em torno da ponta.
+        rotate(degrees = 40f, pivot = tip) {
+            val vaneStart = len * 0.28f
+            val vaneEnd = len
+            // Metade larga (esquerda) e metade estreita (direita), em curvas de folha.
+            val wide = Path().apply {
+                moveTo(at(vaneStart, 0f).x, at(vaneStart, 0f).y)
+                val c1 = at(len * 0.45f, -s * 0.24f)
+                val p1 = at(len * 0.8f, -s * 0.2f)
+                quadraticTo(c1.x, c1.y, p1.x, p1.y)
+                val c2 = at(len * 0.97f, -s * 0.12f)
+                val p2 = at(vaneEnd, 0f)
+                quadraticTo(c2.x, c2.y, p2.x, p2.y)
+                close()
+            }
+            val narrow = Path().apply {
+                moveTo(at(vaneStart + len * 0.06f, 0f).x, at(vaneStart + len * 0.06f, 0f).y)
+                val c1 = at(len * 0.55f, s * 0.13f)
+                val p1 = at(len * 0.86f, s * 0.1f)
+                quadraticTo(c1.x, c1.y, p1.x, p1.y)
+                val c2 = at(len * 0.97f, s * 0.05f)
+                val p2 = at(vaneEnd, 0f)
+                quadraticTo(c2.x, c2.y, p2.x, p2.y)
+                close()
+            }
+            drawPath(wide, vaneDark)
+            drawPath(narrow, vaneLight)
+            // Nervuras: riscos finos saindo da haste para cima e para fora.
+            for (k in 1..7) {
+                val a = vaneStart + (vaneEnd - vaneStart) * k / 8.5f
+                val reach = 0.75f - 0.35f * ((k - 4).let { it * it } / 16f)
+                drawLine(barb.copy(alpha = 0.55f), at(a, 0f), at(a + len * 0.07f, -s * 0.2f * reach), strokeWidth = s * 0.012f)
+                drawLine(barb.copy(alpha = 0.4f), at(a, 0f), at(a + len * 0.06f, s * 0.1f * reach), strokeWidth = s * 0.01f)
+            }
+            // Entalhes nas bordas da pena (a "pluma" separando).
+            drawLine(Color(0xFFF7F4EC), at(len * 0.52f, -s * 0.23f), at(len * 0.58f, -s * 0.15f), strokeWidth = s * 0.02f)
+            drawLine(Color(0xFFF7F4EC), at(len * 0.7f, s * 0.12f), at(len * 0.74f, s * 0.07f), strokeWidth = s * 0.018f)
+            // Haste: do fim da pena até a ponta, afinando.
+            drawLine(shaft, at(len * 1.02f, 0f), at(len * 0.08f, 0f), strokeWidth = s * 0.035f, cap = StrokeCap.Round)
+            // Ponta cortada, molhada de tinta.
+            val nib = Path().apply {
+                moveTo(tip.x, tip.y)
+                lineTo(at(len * 0.12f, -s * 0.03f).x, at(len * 0.12f, -s * 0.03f).y)
+                lineTo(at(len * 0.12f, s * 0.03f).x, at(len * 0.12f, s * 0.03f).y)
+                close()
+            }
+            drawPath(nib, inkTip)
+        }
     }
 }
 
@@ -442,8 +588,22 @@ fun MeasurementPage(
                 )
             }
         } else {
-            GrantedStamp(modifier = Modifier.padding(top = 20.dp))
-            WeeklyBill(summary = summary, modifier = Modifier.padding(top = 20.dp))
+            RubberStampGranted(active, modifier = Modifier.padding(top = 52.dp, bottom = 4.dp)) // espaço para o cabo do carimbo caber na batida
+            // A rosca do gráfico é de onde sai a chuva de ícones da cena de baixo.
+            var rainSource by remember { mutableStateOf<RainSource?>(null) }
+            WeeklyBill(
+                summary = summary,
+                onDonutPositioned = { rainSource = it },
+                modifier = Modifier.padding(top = 20.dp),
+            )
+            // Fecho da página: sob o guarda-sol do DollarBlock, as redes sociais quicam para longe.
+            LoungeScene(
+                rainSource = rainSource,
+                modifier = Modifier
+                    .padding(top = 4.dp)
+                    .fillMaxWidth()
+                    .height(160.dp),
+            )
         }
     }
 }
@@ -457,7 +617,11 @@ private val summaryPalette = listOf(
 )
 
 @Composable
-private fun WeeklyBill(summary: QuickSummaryState, modifier: Modifier = Modifier) {
+private fun WeeklyBill(
+    summary: QuickSummaryState,
+    onDonutPositioned: (RainSource) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     when {
         summary.isLoading -> CircularProgressIndicator(modifier = modifier.padding(32.dp))
         summary.topApps.isEmpty() -> Column(
@@ -467,12 +631,16 @@ private fun WeeklyBill(summary: QuickSummaryState, modifier: Modifier = Modifier
             PageTitle(stringResource(R.string.onb_summary_no_usage_title))
             PageBody(stringResource(R.string.onb_summary_no_usage_body), Modifier.padding(top = 12.dp))
         }
-        else -> WeeklyBillContent(summary, modifier)
+        else -> WeeklyBillContent(summary, onDonutPositioned, modifier)
     }
 }
 
 @Composable
-private fun WeeklyBillContent(summary: QuickSummaryState, modifier: Modifier = Modifier) {
+private fun WeeklyBillContent(
+    summary: QuickSummaryState,
+    onDonutPositioned: (RainSource) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val animate = rememberAnimationsEnabled()
     // O valor sobe do zero, como a conta da Home; o donut se desenha no mesmo ritmo.
     val progress = remember { Animatable(if (animate) 0f else 1f) }
@@ -513,7 +681,14 @@ private fun WeeklyBillContent(summary: QuickSummaryState, modifier: Modifier = M
                 .fillMaxWidth()
                 .padding(top = 20.dp),
         ) {
-            Canvas(modifier = Modifier.size(112.dp)) {
+            Canvas(
+                modifier = Modifier
+                    .size(100.dp)
+                    .onGloballyPositioned { coords ->
+                        val bounds = coords.boundsInRoot()
+                        onDonutPositioned(RainSource(bounds.center, bounds.width / 2f))
+                    },
+            ) {
                 val sw = 18.dp.toPx()
                 val radius = (size.minDimension - sw) / 2f
                 val topLeft = Offset((size.width - radius * 2) / 2f, (size.height - radius * 2) / 2f)

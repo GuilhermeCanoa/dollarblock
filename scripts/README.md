@@ -103,3 +103,14 @@ powershell -File scripts/build-onb-hero.ps1
 
 As animações por cima da arte (ventilador, luz, vapor, brilho nos ícones) ficam em
 `OnboardingHero.kt`; se mudar posição ou tamanho de algo aqui, confira as coordenadas de lá.
+
+## Arte: `build-onb-lounge.ps1` — primeiro plano da cena de praia (página da Medição)
+
+Também **não é teste e não roda no build**. Regera `app/src/main/res/drawable-nodpi/onb_lounge_fg.png`
+(guarda-sol, personagem, cadeira e cooler recortados, em tons de verde) a partir da ilustração
+original `docs/art/onb_lounge_source.webp`. O céu, o mar, a ilha, o letreiro neon e a chuva de
+ícones são desenhados no app (`OnboardingLoungeScene.kt`).
+
+```powershell
+powershell -File scripts/build-onb-lounge.ps1
+```

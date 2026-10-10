@@ -191,7 +191,7 @@ fun HomeScreen(
 
 /**
  * Card "adicione seu salário": calibra a conta com o valor real do usuário no lugar
- * da referência de R$ 2.000/mês. Depois de configurado, vira um resumo tocável.
+ * da referência de R$ 3.000/mês. Depois de configurado, vira um resumo tocável.
  */
 @Composable
 private fun SalaryCard(
