@@ -10,6 +10,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -570,28 +572,50 @@ fun MeasurementPage(
         PaperworkHeader(step = 1, required = true)
         if (!granted) {
             Reveal(active, order = 1) {
-                PageTitle(stringResource(R.string.onb_perm_usage_title), Modifier.padding(top = 24.dp))
+                PageTitle(stringResource(R.string.onb_perm_usage_title), Modifier.padding(top = 4.dp))
             }
-            Reveal(active, order = 2) {
-                PageBody(stringResource(R.string.onb_measure_body), Modifier.padding(top = 12.dp))
+            // O texto à esquerda, encostado no celular; à direita, o feed rolando e o cronômetro
+            // contando o tempo de tela.
+            // Coluna estreita (~3 palavras por linha): o texto acompanha, o celular é o foco.
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    // Desloca o bloco para a esquerda: o cronômetro à direita pesava o conjunto.
+                    .padding(top = 4.dp, end = 62.dp),
+            ) {
+                Reveal(active, order = 3) {
+                    Text(
+                        text = stringResource(R.string.onb_measure_body),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.End,
+                        modifier = Modifier
+                            .width(124.dp)
+                            .padding(end = 12.dp),
+                    )
+                }
+                Reveal(active, order = 2) {
+                    ScreenTimeScene(
+                        Modifier
+                            .height(210.dp)
+                            .aspectRatio(SCREEN_TIME_ASPECT),
+                    )
+                }
             }
-            Reveal(active, order = 3) {
-                TrustCard(
-                    titleRes = R.string.onb_trust_measure_title,
-                    pointsRes = listOf(
-                        R.string.onb_trust_measure_1,
-                        R.string.onb_trust_measure_2,
-                        R.string.onb_trust_measure_3,
+            // O mesmo cofre de segurança da Tranca, com as mesmas garantias.
+            Reveal(active, order = 4) {
+                SecurityVault(
+                    active = active,
+                    titleRes = R.string.onb_lock_privacy,
+                    points = listOf(
+                        SecurityPoint(Icons.Filled.VisibilityOff, R.string.onb_trust_lock_1),
+                        SecurityPoint(Icons.Filled.PhonelinkLock, R.string.onb_trust_lock_2),
+                        SecurityPoint(Icons.Filled.PowerSettingsNew, R.string.onb_trust_lock_3),
                     ),
-                    modifier = Modifier.padding(top = 20.dp),
-                )
-            }
-            Reveal(active, order = 5) {
-                PermissionHowTo(
-                    screenTitle = stringResource(R.string.perm_usage),
-                    steps = listOf(HowToStep.LIST, HowToStep.TOGGLE),
-                    description = stringResource(R.string.onb_howto_usage_description),
-                    modifier = Modifier.padding(top = 20.dp),
+                    firstOrder = 4,
+                    modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
                 )
             }
         } else {
@@ -844,71 +868,6 @@ fun LockPage(active: Boolean, granted: Boolean, modifier: Modifier = Modifier) {
         } else {
             Reveal(active, order = 7) {
                 AccessibilityTutorialThumbnail(modifier = Modifier.padding(top = 16.dp, bottom = 8.dp))
-            }
-        }
-    }
-}
-
-/**
- * Cartão de confiança das páginas de papelada: a garantia de privacidade em destaque
- * (título com cadeado) e três garantias curtas com ✓. Mesmo vocabulário do "Sigilo
- * bancário" do Perfil (E19) — tudo o que ele afirma precisa continuar verdade no app.
- */
-@Composable
-private fun TrustCard(
-    titleRes: Int,
-    pointsRes: List<Int>,
-    modifier: Modifier = Modifier,
-) {
-    val success = DollarBlockTheme.colors.success
-    val shape = RoundedCornerShape(16.dp)
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(shape)
-            .background(success.copy(alpha = 0.10f))
-            .border(1.dp, success.copy(alpha = 0.35f), shape)
-            .padding(16.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(success.copy(alpha = 0.18f)),
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Lock,
-                    contentDescription = null,
-                    tint = success,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
-            Text(
-                text = stringResource(titleRes),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(start = 12.dp),
-            )
-        }
-        pointsRes.forEach { pointRes ->
-            Row(modifier = Modifier.padding(top = 10.dp)) {
-                Icon(
-                    imageVector = Icons.Filled.Check,
-                    contentDescription = null,
-                    tint = success,
-                    modifier = Modifier
-                        .padding(start = 8.dp, top = 2.dp)
-                        .size(18.dp),
-                )
-                Text(
-                    text = stringResource(pointRes),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(start = 18.dp),
-                )
             }
         }
     }

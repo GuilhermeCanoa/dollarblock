@@ -12,6 +12,29 @@ Descrição funcional.
 
 ---
 
+## [2026-10-10] — Medição: cena do tempo de tela (feed e cronômetro) e cofre de segurança
+**Tipo:** feature
+**Épico:** E21 (onboarding)
+
+- **"First, count the time" / "Primeiro, contar o tempo"** (estado antes de conceder o Acesso
+  de uso) ganhou cena própria (`OnboardingScreenTimeScene.kt`), logo abaixo do título: um
+  celular grande com o feed das redes sociais (Instagram, TikTok, YouTube, Facebook, X,
+  Snapchat, Discord — os mesmos ícones da praia) rolando sem fim e, ao lado, um cronômetro
+  contando o tempo de tela até 2h30 e zerando (~54 s). O feed é interativo: dá para arrastar
+  para cima ou para baixo, com inércia, e a rolagem automática segue por baixo (relógio próprio,
+  que fecha a volta no fim da lista, sem salto). O assunto é o tempo de tela — uma
+  primeira versão com ampulheta e moedas foi descartada por parecer app financeiro, e a
+  etiqueta de preço pendurada no celular saiu na revisão. Sem animações do sistema, fica parada
+  em 1h 24m.
+- Texto mais curto, numa coluna estreita (~3 palavras por linha) à esquerda do celular, alinhado
+  à direita e encostado nele; o bloco fica um pouco à esquerda do centro. O cofre vem logo
+  abaixo da cena — a página cabe sem rolar: ("The same screen time your phone already tracks. That's all the tab
+  needs." / "O mesmo tempo de tela que o seu celular já mede. É só disso que a conta precisa.").
+- O cartão de privacidade da página virou o mesmo `SecurityVault` da Tranca, com as mesmas
+  garantias; o `TrustCard` e as strings `onb_trust_measure_*` saíram. O passo a passo animado
+  da permissão (`PermissionHowTo`) também saiu desta página (`onb_howto_usage_description`
+  removida).
+
 ## [2026-10-10] — Tranca com tutorial do Guilherme e cofre de segurança; praia de dia
 **Tipo:** feature
 **Épico:** E21 (onboarding)

@@ -539,7 +539,7 @@
     <string name="onb_clause_3">Quer sair? É de graça e a qualquer momento. Mas lembre-se: o tempo perdido dinheiro nenhum pode comprar.</string>
     <string name="onb_clause_4">Agora é com você! Ao assinar, você mostra sua determinação em recuperar a moeda mais valiosa e escassa: o seu tempo. Estamos aqui para comprar essa batalha ao seu lado.</string>
     <string name="onb_sign">Assinar o contrato</string>
-    <string name="onb_measure_body">O DollarBlock lê o mesmo tempo de tela que o seu celular já mede. É só isso que ele precisa pra fazer a conta.</string>
+    <string name="onb_measure_body">O mesmo tempo de tela que o seu celular já mede. É só disso que a conta precisa.</string>
     <string name="onb_measure_result_title">Sua última semana custou %1$s</string>
     <string name="onb_measure_result_body">%1$s nos apps que mais te tomaram tempo.</string>
     <string name="onb_measure_result_note">Na referência de R$ 3.000/mês. Dá pra pôr o seu salário depois, na Home.</string>
@@ -551,10 +551,6 @@
     <string name="onb_trust_lock_1">Só vê o nome do app que está aberto. Nunca o conteúdo.</string>
     <string name="onb_trust_lock_2">Nada disso sai do seu celular.</string>
     <string name="onb_trust_lock_3">Dá pra desligar quando quiser, nas Configurações do Android.</string>
-    <string name="onb_trust_measure_title">Sigilo bancário: nada sai do seu celular.</string>
-    <string name="onb_trust_measure_1">Sem servidor, sem conta, sem login.</string>
-    <string name="onb_trust_measure_2">O seu tempo de uso fica guardado só aqui, no aparelho.</string>
-    <string name="onb_trust_measure_3">Nem o backup do Google leva esses dados.</string>
     <string name="onb_final_title">Últimos ajustes.</string>
     <string name="onb_final_body">Mais um toque e a conta está aberta.</string>
     <string name="onb_overlay_card_body">Faz a tranca aparecer por cima do app. Sem ela, em muitos celulares, o bloqueio nem aparece.</string>
@@ -564,7 +560,6 @@
     <string name="onb_stamp_open">CONTA ABERTA</string>
     <string name="onb_howto_dollarblock">DollarBlock</string>
     <string name="onb_howto_allow">Permitir</string>
-    <string name="onb_howto_usage_description">Passo a passo: na lista, toque em DollarBlock e ligue a chave.</string>
     <string name="onb_howto_accessibility_description">Passo a passo: em Acessibilidade, toque em DollarBlock, ligue a chave e toque em Permitir.</string>
     <string name="onb_howto_overlay_description">Passo a passo: ligue a chave do DollarBlock.</string>
 </resources>

@@ -517,7 +517,7 @@
     <string name="onb_clause_3">Want out? It\'s free, anytime. But remember: no amount of money can buy your time back.</string>
     <string name="onb_clause_4">Now it\'s on you! By signing, you show your determination to win back the most valuable and scarce currency there is: your time. We\'re here to fight this battle by your side.</string>
     <string name="onb_sign">Sign the deal</string>
-    <string name="onb_measure_body">DollarBlock reads the same screen time your phone already tracks. That\'s all it needs to run the tab.</string>
+    <string name="onb_measure_body">The same screen time your phone already tracks. That\'s all the tab needs.</string>
     <string name="onb_measure_result_title">Your last week cost %1$s</string>
     <string name="onb_measure_result_body">%1$s on the apps that took the most of your time.</string>
     <string name="onb_measure_result_note">At a R$ 3,000/month reference. You can enter your own salary later, on Home.</string>
@@ -529,10 +529,6 @@
     <string name="onb_trust_lock_1">It only sees the name of the open app. Never what\'s on it.</string>
     <string name="onb_trust_lock_2">None of it leaves your phone.</string>
     <string name="onb_trust_lock_3">You can turn it off anytime in Android Settings.</string>
-    <string name="onb_trust_measure_title">Bank secrecy: nothing leaves your phone.</string>
-    <string name="onb_trust_measure_1">No server, no account, no login.</string>
-    <string name="onb_trust_measure_2">Your usage time is stored only here, on the device.</string>
-    <string name="onb_trust_measure_3">Not even Google backup takes this data.</string>
     <string name="onb_final_title">Final touches.</string>
     <string name="onb_final_body">One more tap and your tab is open.</string>
     <string name="onb_overlay_card_body">Makes the lock show up over the app. Without it, on many phones, the block never appears.</string>
@@ -542,7 +538,6 @@
     <string name="onb_stamp_open">TAB OPEN</string>
     <string name="onb_howto_dollarblock">DollarBlock</string>
     <string name="onb_howto_allow">Allow</string>
-    <string name="onb_howto_usage_description">Step by step: in the list, tap DollarBlock and turn on the switch.</string>
     <string name="onb_howto_accessibility_description">Step by step: in Accessibility, tap DollarBlock, turn on the switch and tap Allow.</string>
     <string name="onb_howto_overlay_description">Step by step: turn on DollarBlock\'s switch.</string>
 </resources>

@@ -119,7 +119,7 @@ private val SCENE_BLEED: Dp = 24.dp
 /** Quanto o céu sobe acima da arte, por trás do conteúdo de cima, clareando aos poucos. */
 private val SCENE_TOP_GLOW: Dp = 72.dp
 
-private enum class SocialIcon { INSTAGRAM, TIKTOK, FACEBOOK, YOUTUBE, X, SNAPCHAT, DISCORD }
+internal enum class SocialIcon { INSTAGRAM, TIKTOK, FACEBOOK, YOUTUBE, X, SNAPCHAT, DISCORD }
 
 /** De onde a chuva de ícones sai — o gráfico de rosca —, em coordenadas da raiz. */
 class RainSource(val center: Offset, val radius: Float)
@@ -582,7 +582,7 @@ private fun DrawScope.drawSocialRain(seconds: Float, source: RainSourceArt?) {
 }
 
 /** Ícone simplificado da rede social, centrado em [c], lado [s]. */
-private fun DrawScope.drawSocialIcon(kind: SocialIcon, c: Offset, s: Float, alpha: Float) {
+internal fun DrawScope.drawSocialIcon(kind: SocialIcon, c: Offset, s: Float, alpha: Float) {
     val tl = Offset(c.x - s / 2, c.y - s / 2)
     val corner = CornerRadius(s * 0.24f)
     val white = Color.White.copy(alpha = alpha)
