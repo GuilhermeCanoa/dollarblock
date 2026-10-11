@@ -1,5 +1,16 @@
 package com.dollarblock.feature.onboarding
 
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.zIndex
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.animation.core.spring
+import kotlinx.coroutines.launch
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -39,7 +50,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -51,6 +64,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -846,21 +860,64 @@ fun LockPage(active: Boolean, granted: Boolean, modifier: Modifier = Modifier) {
                 fontSize = 28.sp,
             )
         }
+        // O segurança da porta: deixa a fila entrar até o limite e aí fecha a corda.
         Reveal(active, order = 2) {
-            PageBody(stringResource(R.string.onb_lock_body), Modifier.padding(top = 10.dp))
+            BouncerScene(
+                Modifier
+                    .padding(top = 12.dp)
+                    .fillMaxWidth()
+                    .aspectRatio(BOUNCER_ASPECT),
+            )
         }
         Reveal(active, order = 3) {
-            SecurityVault(
-                active = active,
-                titleRes = R.string.onb_lock_privacy,
-                points = listOf(
-                    SecurityPoint(Icons.Filled.VisibilityOff, R.string.onb_trust_lock_1),
-                    SecurityPoint(Icons.Filled.PhonelinkLock, R.string.onb_trust_lock_2),
-                    SecurityPoint(Icons.Filled.PowerSettingsNew, R.string.onb_trust_lock_3),
-                ),
-                firstOrder = 3,
-                modifier = Modifier.padding(top = 22.dp),
+            // Um pouco menor que o PageBody, para caber em 2 linhas e o tutorial subir.
+            Text(
+                text = stringResource(R.string.onb_lock_body),
+                style = MaterialTheme.typography.bodyLarge,
+                fontSize = 15.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp),
             )
+        }
+        // Uma linha só de privacidade (o cofre completo fica na Medição).
+        var privacySize by remember { mutableStateOf(12.sp) }
+        var privacyFits by remember { mutableStateOf(false) }
+        Reveal(active, order = 4) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = 12.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.VisibilityOff,
+                    contentDescription = null,
+                    tint = DollarBlockTheme.colors.success,
+                    modifier = Modifier.size(18.dp),
+                )
+                Text(
+                    text = stringResource(R.string.onb_trust_lock_1),
+                    style = MaterialTheme.typography.bodyMedium,
+                    // Numa linha só: encolhe até caber (a fonte do sistema pode estar maior)
+                    // e só aparece depois de caber, para não piscar cortada.
+                    fontSize = privacySize,
+                    maxLines = 1,
+                    softWrap = false,
+                    onTextLayout = { layout ->
+                        if (layout.hasVisualOverflow && privacySize.value > 8f) {
+                            privacySize *= 0.94f
+                        } else {
+                            privacyFits = true
+                        }
+                    },
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier
+                        .padding(start = 8.dp)
+                        .drawWithContent { if (privacyFits) drawContent() },
+                )
+            }
         }
         if (granted) {
             // Mesmo carimbo de madeira da Medição, no mesmo tamanho (espaço para o cabo na batida).
@@ -877,6 +934,25 @@ fun LockPage(active: Boolean, granted: Boolean, modifier: Modifier = Modifier) {
 // 5. Últimos ajustes (Sobreposição + Notificações)
 // ---------------------------------------------------------------------------------------
 
+// Espaço entre as notificações e a altura reservada ao segurança, embaixo.
+private val NOTE_GAP = 12.dp
+private val PULLER_ROOM = 168.dp
+// Cada unidade da arte do segurança, em dp, e onde ficam os pés dele (da direita/de baixo).
+private const val PULLER_UNIT_DP = 1.25f
+private val PULLER_END = 64.dp
+private val PULLER_BOTTOM = 6.dp
+private val CordColor = Color(0xFFE3D3AE)
+private val RingColor = Color(0xFFD9A94E)
+// O cesto das notificações barradas, no canto de baixo à esquerda.
+private val BIN_WIDTH = 78.dp
+private val BIN_CENTER_X = 45.dp
+
+/**
+ * A página inteira chega como notificações, uma embaixo da outra: o título, a frase e um
+ * cartão por permissão. Embaixo, o segurança da Tranca segura uma cordinha presa na última
+ * notificação; a cada puxão, desce a próxima (saindo de trás da anterior, com mola). Sem
+ * animações do sistema, tudo já aparece no lugar e ele fica parado.
+ */
 @Composable
 fun FinalSettingsPage(
     active: Boolean,
@@ -885,30 +961,181 @@ fun FinalSettingsPage(
     onRequest: (AppPermission) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
+    val pagePermissions = permissionsOn(page)
+    val count = 2 + pagePermissions.size
+    val animate = rememberAnimationsEnabled()
+    val drops = remember { List(count) { Animatable(if (animate) 0f else 1f) } }
+    val pull = remember { Animatable(0f) }
+    LaunchedEffect(active) {
+        if (!active) return@LaunchedEffect
+        delay(350)
+        drops.forEach { drop ->
+            if (drop.value >= 1f) return@forEach
+            // A notificação desce junto com o puxão; o braço volta enquanto ela ainda quica.
+            launch { drop.animateTo(1f, spring(dampingRatio = 0.55f, stiffness = 320f)) }
+            pull.animateTo(1f, tween(170, easing = FastOutSlowInEasing))
+            pull.animateTo(0f, tween(360, easing = FastOutSlowInEasing))
+            delay(90)
+        }
+    }
+    var time by remember { mutableFloatStateOf(0f) }
+    LaunchedEffect(active, animate) {
+        if (!active || !animate) return@LaunchedEffect
+        val start = withFrameNanos { it }
+        while (true) withFrameNanos { time = (it - start) / 1e9f }
+    }
+
+    // Onde cada notificação está (sem o deslocamento da descida), relativo à página.
+    val density = LocalDensity.current
+    var pageTop by remember { mutableFloatStateOf(0f) }
+    val noteTops = remember { mutableStateListOf(*Array(count) { 0f }) }
+    val noteHeights = remember { mutableStateListOf(*Array(count) { 0f }) }
+    val gapPx = with(density) { NOTE_GAP.toPx() }
+
+    // O segurança no canto de baixo à direita; o cesto das penetras no canto da esquerda.
+    var pageSize by remember { mutableStateOf(IntSize.Zero) }
+    val unit = PULLER_UNIT_DP * density.density
+    val foot = with(density) {
+        Offset(pageSize.width - PULLER_END.toPx(), pageSize.height - PULLER_BOTTOM.toPx())
+    }
+    val binWidth = with(density) { BIN_WIDTH.toPx() }
+    val binBottom = with(density) { Offset(BIN_CENTER_X.toPx(), pageSize.height - PULLER_BOTTOM.toPx()) }
+    val binMouth = binBottom - Offset(0f, binWidth * 0.7f)
+    // As penetras só começam depois que a última notificação da página desceu.
+    val allDown = drops.last().value >= 1f
+    val spam = rememberSpamState(running = active && animate && allDown)
+
+    @Composable
+    fun Note(index: Int, content: @Composable () -> Unit) {
+        Box(
+            Modifier
+                .padding(top = NOTE_GAP)
+                .zIndex((count - index).toFloat())
+                .onGloballyPositioned {
+                    noteTops[index] = it.positionInRoot().y
+                    noteHeights[index] = it.size.height.toFloat()
+                }
+                .graphicsLayer {
+                    val p = drops[index].value
+                    // Sai de trás da notificação de cima.
+                    translationY = -(1f - p) * (size.height + gapPx)
+                    alpha = (p * 4f).coerceAtMost(1f)
+                },
+        ) { content() }
+    }
+
+    Box(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(top = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+            .onGloballyPositioned {
+                pageTop = it.positionInRoot().y
+                pageSize = it.size
+            },
     ) {
-        PaperworkHeader(step = 3, required = null)
-        Reveal(active, order = 1) {
-            PageTitle(stringResource(R.string.onb_final_title), Modifier.padding(top = 24.dp))
-        }
-        Reveal(active, order = 2) {
-            PageBody(stringResource(R.string.onb_final_body), Modifier.padding(top = 12.dp))
-        }
-        permissionsOn(page).forEachIndexed { index, permission ->
-            Reveal(active, order = 3 + index) {
-                SettingCard(
-                    permission = permission,
-                    granted = permissions.isGranted(permission),
-                    onRequest = { onRequest(permission) },
-                    modifier = Modifier.padding(top = 16.dp),
-                )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(top = 16.dp, bottom = PULLER_ROOM),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            PaperworkHeader(step = 3, required = null, modifier = Modifier.padding(bottom = 4.dp))
+            Note(0) {
+                NoteCard {
+                    // O nome da página: centralizado, sem ponto final.
+                    Text(
+                        text = stringResource(R.string.onb_final_title),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            }
+            Note(1) {
+                NoteCard {
+                    Text(
+                        text = stringResource(R.string.onb_final_body),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            pagePermissions.forEachIndexed { index, permission ->
+                Note(2 + index) {
+                    SettingCard(
+                        permission = permission,
+                        granted = permissions.isGranted(permission),
+                        onRequest = { onRequest(permission) },
+                    )
+                }
             }
         }
+
+        // O cesto, o segurança e a cordinha, por cima (não pegam toque).
+        Canvas(Modifier.matchParentSize()) {
+            drawSpamBin(binBottom, binWidth, spam.wobble.value)
+            val hand = drawCordPuller(foot, unit, pull.value, spam.swat.value, time)
+            // A cordinha sai da base da última notificação que desceu (ou da primeira, no começo).
+            val last = drops.indexOfLast { it.value > 0f }
+            val anchorY = if (last < 0) {
+                noteTops[0] - pageTop
+            } else {
+                noteTops[last] - pageTop + noteHeights[last] - (1f - drops[last].value) * (noteHeights[last] + gapPx)
+            }
+            val anchor = Offset(hand.x, anchorY)
+            val slack = (1f - pull.value) * 6.dp.toPx()
+            val cord = Path().apply {
+                moveTo(anchor.x, anchor.y)
+                quadraticTo((anchor.x + hand.x) / 2f + slack, (anchor.y + hand.y) / 2f, hand.x, hand.y)
+            }
+            drawPath(cord, CordColor, style = Stroke(1.6.dp.toPx(), cap = StrokeCap.Round))
+            drawCircle(RingColor, 4.dp.toPx(), anchor)
+            drawCircle(RingColor, 5.dp.toPx(), hand, style = Stroke(2.dp.toPx()))
+        }
+
+        // A notificação penetra que leva o peteleco (só com animações).
+        if (animate && pageSize != IntSize.Zero) {
+            SpamIntruder(spam, swatPoint = cordPullerSwatPoint(foot, unit), binMouth = binMouth)
+        }
+    }
+}
+
+/** A cara de notificação: cartão opaco (passa por trás do de cima), escudo, "DollarBlock · agora". */
+@Composable
+private fun NoteCard(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    val shape = RoundedCornerShape(22.dp)
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .shadow(10.dp, shape)
+            .background(MaterialTheme.colorScheme.surfaceVariant, shape)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f), shape)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 6.dp)) {
+            Image(
+                painter = painterResource(R.drawable.db_logo),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(18.dp)
+                    .clip(RoundedCornerShape(5.dp)),
+            )
+            Text(
+                text = stringResource(R.string.app_name),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(start = 8.dp),
+            )
+            Text(
+                text = " · " + stringResource(R.string.onb_final_note_when),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        content()
     }
 }
 
@@ -931,20 +1158,12 @@ private fun SettingCard(
     modifier: Modifier = Modifier,
 ) {
     val copy = settingCopy(permission)
-    val shape = RoundedCornerShape(16.dp)
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(shape)
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))
-            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), shape)
-            .padding(16.dp),
-    ) {
+    NoteCard(modifier) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(36.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.primaryContainer),
             ) {
@@ -952,7 +1171,7 @@ private fun SettingCard(
                     imageVector = copy.icon,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(18.dp),
                 )
             }
             Column(
@@ -971,29 +1190,49 @@ private fun SettingCard(
             if (granted) {
                 GrantedStamp(fontSize = 12.sp, borderWidth = 1.5.dp)
             } else {
-                TextButton(onClick = onRequest) {
-                    Text(stringResource(R.string.onb_turn_on), fontWeight = FontWeight.Bold)
-                }
+                TurnOnButton(onClick = onRequest)
             }
         }
         Text(
             text = stringResource(copy.bodyRes),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 10.dp),
+            modifier = Modifier.padding(top = 8.dp),
         )
-        if (!granted && permission == AppPermission.OVERLAY) {
-            PermissionHowTo(
-                screenTitle = stringResource(R.string.perm_overlay),
-                steps = listOf(HowToStep.TOGGLE),
-                description = stringResource(R.string.onb_howto_overlay_description),
-                height = 150.dp,
-                modifier = Modifier.padding(top = 12.dp),
-            )
-        }
     }
 }
 
+
+/** "Ativar" com cara de botão: pílula no mesmo gradiente do botão principal, com seta. */
+@Composable
+private fun TurnOnButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val shape = RoundedCornerShape(50)
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .clip(shape)
+            .background(
+                Brush.horizontalGradient(listOf(MaterialTheme.colorScheme.primary, DollarBlockTheme.colors.glow)),
+            )
+            .clickable(onClick = onClick)
+            .padding(start = 16.dp, end = 12.dp, top = 9.dp, bottom = 9.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.onb_turn_on),
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onPrimary,
+        )
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onPrimary,
+            modifier = Modifier
+                .padding(start = 4.dp)
+                .size(16.dp),
+        )
+    }
+}
 
 /** "R$ 20,59" sem quebra entre o símbolo e o número. */
 private fun String.unbreakable(): String = replace(' ', ' ')

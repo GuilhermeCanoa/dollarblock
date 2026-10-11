@@ -553,8 +553,15 @@
     <string name="onb_trust_lock_1">Só vê o nome do app que está aberto. Nunca o conteúdo.</string>
     <string name="onb_trust_lock_2">Nada disso sai do seu celular.</string>
     <string name="onb_trust_lock_3">Dá pra desligar quando quiser, nas Configurações do Android.</string>
-    <string name="onb_final_title">Últimos ajustes.</string>
+    <string name="onb_final_title">Últimos ajustes</string>
     <string name="onb_final_body">Mais um toque e a conta está aberta.</string>
+    <string name="onb_final_note_when">agora</string>
+    <string name="onb_final_spam_instagram">Sentimos sua falta.</string>
+    <string name="onb_final_spam_tiktok">12 vídeos novos esperando por você.</string>
+    <string name="onb_final_spam_youtube">Só mais um vídeo?</string>
+    <string name="onb_final_spam_facebook">Você tem 9 notificações novas.</string>
+    <string name="onb_final_spam_x">Assuntos do momento para você.</string>
+    <string name="onb_final_spam_description">Notificação do %1$s, toque para jogar no lixo</string>
     <string name="onb_overlay_card_body">Faz a tranca aparecer por cima do app. Sem ela, em muitos celulares, o bloqueio nem aparece.</string>
     <string name="onb_notifications_card_body">Um aviso antes do limite acabar. Sem propaganda, sem \"sentimos sua falta\".</string>
     <string name="onb_turn_on">Ativar</string>
