@@ -552,8 +552,18 @@ private fun DrawScope.drawArm(shoulder: Offset, degrees: Float) {
 /**
  * O escudo do DollarBlock de segurança: óculos escuros, terno, gravata verde, ponto no
  * ouvido. [headDx] balança a cabeça ("não") quando o usuário tenta rolar com a tela trancada.
+ * [frontArmDegrees] fixa o braço da frente nesse ângulo (e dispensa a placa); [backArmDegrees]
+ * gira o de trás (o peteleco nas notificações penetras).
  */
-private fun DrawScope.drawBouncer(cx: Float, g: Float, raise: Float, t: Float, headDx: Float) {
+private fun DrawScope.drawBouncer(
+    cx: Float,
+    g: Float,
+    raise: Float,
+    t: Float,
+    headDx: Float,
+    frontArmDegrees: Float? = null,
+    backArmDegrees: Float = 10f,
+) {
     drawOval(Color.Black.copy(alpha = 0.3f), Offset(cx - 24f, g - 4f), Size(48f, 7f))
     // Pernas e sapatos.
     drawRect(Color(0xFF14201B), Offset(cx - 11f, g - 32f), Size(9f, 28f))
@@ -563,7 +573,7 @@ private fun DrawScope.drawBouncer(cx: Float, g: Float, raise: Float, t: Float, h
 
     val shoulderY = g - 76f
     // Braço de trás (lado da porta), parado.
-    drawArm(Offset(cx - 20f, shoulderY + 3f), 10f)
+    drawArm(Offset(cx - 20f, shoulderY + 3f), backArmDegrees)
 
     // Paletó.
     val jacket = Path().apply {
@@ -600,7 +610,7 @@ private fun DrawScope.drawBouncer(cx: Float, g: Float, raise: Float, t: Float, h
 
     // Braço da frente: levanta a mão de "pare" quando fecha.
     val frontShoulder = Offset(cx + 20f, shoulderY + 3f)
-    val armAngle = -10f - 95f * raise
+    val armAngle = frontArmDegrees ?: (-10f - 95f * raise)
     drawArm(frontShoulder, armAngle)
 
     // Cabeça um pouco menor que o corpo pede, encolhida a partir do pescoço.
@@ -620,9 +630,90 @@ private fun DrawScope.drawBouncer(cx: Float, g: Float, raise: Float, t: Float, h
     }
 
     // A placa "DOOMSCROLL" com o X vermelho, erguida na mão de "pare".
-    if (raise > 0.05f) {
+    if (frontArmDegrees == null && raise > 0.05f) {
         val hand = rotateAround(frontShoulder + Offset(0f, 32f), frontShoulder, armAngle)
         drawDoomscrollSign(hand, raise)
+    }
+}
+
+// O braço da frente esticado para cima (em repouso) e depois do puxão.
+private const val CORD_ARM_REST = 196f
+private const val CORD_ARM_PULLED = 232f
+private const val CORD_DIP = 8f
+
+/**
+ * O segurança puxando a cordinha dos Últimos ajustes: em pé com os pés em [foot] (px), cada
+ * unidade da arte valendo [unit] px. [pull] (0..1) baixa o braço e dobra os joelhos; [swat]
+ * (0..1) abre o braço livre num peteleco para a esquerda. Devolve onde está a mão da
+ * cordinha (px), para a cordinha sair dali.
+ */
+internal fun DrawScope.drawCordPuller(foot: Offset, unit: Float, pull: Float, swat: Float, t: Float): Offset {
+    val degrees = CORD_ARM_REST + (CORD_ARM_PULLED - CORD_ARM_REST) * pull
+    val dip = CORD_DIP * pull
+    withTransform({
+        translate(foot.x, foot.y)
+        scale(unit, unit, pivot = Offset.Zero)
+    }) {
+        drawBouncer(
+            0f, dip, raise = max(pull * 0.6f, swat), t = t, headDx = 0f,
+            frontArmDegrees = degrees,
+            backArmDegrees = SWAT_REST + (SWAT_OUT - SWAT_REST) * swat,
+        )
+    }
+    val shoulder = Offset(20f, dip - 73f)
+    return foot + rotateAround(shoulder + Offset(0f, 32f), shoulder, degrees) * unit
+}
+
+// O braço livre: parado junto ao corpo e aberto no peteleco (na horizontal, para a esquerda).
+private const val SWAT_REST = 10f
+private const val SWAT_OUT = 100f
+
+/** Onde a mão livre chega no peteleco (px) — é ali que a notificação penetra leva o tapa. */
+internal fun cordPullerSwatPoint(foot: Offset, unit: Float): Offset {
+    val shoulder = Offset(-20f, -73f)
+    return foot + rotateAround(shoulder + Offset(0f, 32f), shoulder, SWAT_OUT) * unit
+}
+
+private val BinBody = Color(0xFF1F4A3A)
+private val BinBodyDark = Color(0xFF143328)
+private val BinRim = Color(0xFF2E6B4E)
+private val BinRimLight = Color(0xFF4F8A75)
+private val BinTrash = listOf(SocialIcon.INSTAGRAM, SocialIcon.TIKTOK, SocialIcon.FACEBOOK)
+
+/**
+ * O cesto das notificações barradas, como o da ilustração da entrada: balde verde com
+ * frisos, três ícones de rede social jogados dentro. [wobble] (1 → 0) balança o cesto quando
+ * cai mais uma. [bottomCenter] e [width] em px.
+ */
+internal fun DrawScope.drawSpamBin(bottomCenter: Offset, width: Float, wobble: Float) {
+    val h = width * 0.8f
+    val top = bottomCenter.y - h
+    val angle = sin(wobble * PI.toFloat() * 4f) * 7f * wobble
+    rotate(angle, pivot = bottomCenter) {
+        drawOval(Color.Black.copy(alpha = 0.3f), Offset(bottomCenter.x - width * 0.55f, bottomCenter.y - width * 0.06f), Size(width * 1.1f, width * 0.12f))
+        // O que já está no lixo, saindo pela boca do cesto, cada um num ângulo.
+        BinTrash.forEachIndexed { i, kind ->
+            val c = Offset(bottomCenter.x + (i - 1) * width * 0.26f, top + width * 0.02f - (if (i == 1) width * 0.1f else 0f))
+            rotate((i - 1) * 24f, pivot = c) { drawSocialIcon(kind, c, width * 0.3f, 1f) }
+        }
+        val body = Path().apply {
+            moveTo(bottomCenter.x - width / 2f, top + width * 0.06f)
+            lineTo(bottomCenter.x + width / 2f, top + width * 0.06f)
+            lineTo(bottomCenter.x + width * 0.38f, bottomCenter.y)
+            lineTo(bottomCenter.x - width * 0.38f, bottomCenter.y)
+            close()
+        }
+        drawPath(body, Brush.horizontalGradient(listOf(BinBody, BinBodyDark), startX = bottomCenter.x - width / 2f, endX = bottomCenter.x + width / 2f))
+        drawPath(body, Color.Black.copy(alpha = 0.35f), style = Stroke(width * 0.02f))
+        // Frisos verticais.
+        for (k in -2..2) {
+            val xTop = bottomCenter.x + k * width * 0.17f
+            val xBottom = bottomCenter.x + k * width * 0.13f
+            drawLine(BinBodyDark, Offset(xTop, top + width * 0.16f), Offset(xBottom, bottomCenter.y - width * 0.08f), strokeWidth = width * 0.025f, cap = StrokeCap.Round)
+        }
+        // A borda.
+        drawRoundRect(BinRim, Offset(bottomCenter.x - width * 0.54f, top), Size(width * 1.08f, width * 0.12f), CornerRadius(width * 0.06f))
+        drawLine(BinRimLight, Offset(bottomCenter.x - width * 0.46f, top + width * 0.035f), Offset(bottomCenter.x + width * 0.3f, top + width * 0.035f), strokeWidth = width * 0.015f, cap = StrokeCap.Round)
     }
 }
 

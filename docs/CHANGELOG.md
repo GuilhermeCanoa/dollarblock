@@ -12,6 +12,26 @@ Descrição funcional.
 
 ---
 
+## [2026-10-10] — Últimos ajustes: a página chega como notificações, puxadas pelo segurança
+**Tipo:** feature
+**Épico:** E21 (onboarding)
+
+- **"Final touches" / "Últimos ajustes"** (`FinalSettingsPage`) virou uma pilha de
+  notificações do DollarBlock ("DollarBlock · agora"): o nome da página (centralizado, sem
+  ponto final), a frase "Mais um toque e a conta está aberta." e um cartão por permissão
+  (Sobreposição; Notificações só no Android 13+). Cada uma desce saindo de trás da de cima,
+  com mola.
+- Embaixo, à direita, o segurança da Tranca segura uma cordinha presa na base da última
+  notificação; a cada puxão (braço baixa, joelhos dobram) desce a próxima.
+- O "Ativar" dos cartões virou botão de verdade: pílula no gradiente do botão principal, com
+  seta. Saíram o tutorial do interruptor da Sobreposição e o cartão antigo.
+- **Notificações penetras** (`OnboardingSpamIntruder.kt`): depois que a página desce, a cada
+  ~5 s uma notificação de rede social ("Instagram: Sentimos sua falta.", "TikTok: 12 vídeos
+  novos esperando por você."…) entra pela esquerda até a mão livre do segurança, leva um
+  peteleco e voa girando até um balde no canto esquerdo (o mesmo dos ícones da entrada), que
+  balança. Tocar nela antecipa o tapa.
+- Sem animações do sistema: tudo aparece no lugar, o segurança fica parado e não há penetras.
+
 ## [2026-10-10] — Tranca: o segurança da porta, com feed interativo e a tela de bloqueio em miniatura
 **Tipo:** feature
 **Épico:** E21 (onboarding)
