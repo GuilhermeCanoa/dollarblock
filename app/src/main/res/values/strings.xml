@@ -531,8 +531,15 @@
     <string name="onb_trust_lock_1">It only sees the name of the open app. Never what\'s on it.</string>
     <string name="onb_trust_lock_2">None of it leaves your phone.</string>
     <string name="onb_trust_lock_3">You can turn it off anytime in Android Settings.</string>
-    <string name="onb_final_title">Final touches.</string>
+    <string name="onb_final_title">Final touches</string>
     <string name="onb_final_body">One more tap and your tab is open.</string>
+    <string name="onb_final_note_when">now</string>
+    <string name="onb_final_spam_instagram">We miss you.</string>
+    <string name="onb_final_spam_tiktok">12 new videos waiting for you.</string>
+    <string name="onb_final_spam_youtube">Just one more video?</string>
+    <string name="onb_final_spam_facebook">You have 9 new notifications.</string>
+    <string name="onb_final_spam_x">Trending for you.</string>
+    <string name="onb_final_spam_description">Notification from %1$s, tap to throw it in the trash</string>
     <string name="onb_overlay_card_body">Makes the lock show up over the app. Without it, on many phones, the block never appears.</string>
     <string name="onb_notifications_card_body">A heads-up before your limit runs out. No marketing, no \"we miss you\".</string>
     <string name="onb_turn_on">Turn on</string>

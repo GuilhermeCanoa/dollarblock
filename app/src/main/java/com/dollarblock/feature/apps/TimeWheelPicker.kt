@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -99,10 +100,18 @@ private fun Wheel(
         }
     }
 
+    // O efeito abaixo vive enquanto a roda existir: sem isso ele guardaria o `onSelected` da
+    // 1ª composição, que fecha sobre as horas daquele momento — mexer nos minutos depois
+    // gravava as horas antigas (ex.: voltava para 0).
+    val currentSelected by rememberUpdatedState(selected)
+    val currentOnSelected by rememberUpdatedState(onSelected)
+
     // Roda → estado externo, só quando o rolo assenta (evita brigar com o gesto).
     LaunchedEffect(state, count) {
         androidx.compose.runtime.snapshotFlow { state.isScrollInProgress to centered }
-            .collect { (scrolling, value) -> if (!scrolling && value != selected) onSelected(value) }
+            .collect { (scrolling, value) ->
+                if (!scrolling && value != currentSelected) currentOnSelected(value)
+            }
     }
     // Estado externo → roda (ex.: horas viraram 24 e os minutos precisam voltar a 0).
     LaunchedEffect(selected, count) {
