@@ -106,6 +106,7 @@ import com.dollarblock.feature.home.text
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 import kotlin.math.sin
+import kotlin.random.Random
 
 /** Quantas páginas de "papelada" (permissões) o onboarding tem — para o "Papelada N de M". */
 private const val PAPERWORK_PAGES = 3
@@ -695,7 +696,12 @@ private fun WeeklyBillContent(
     }
     val cost = screenTimeCost(summary.topMillis)
     val shownCost = MoneyFormat.format(cost * progress.value, AppCurrency.BRL).unbreakable()
-    val equivalence = remember(cost) { HomeMetrics.equivalence(cost, AppCurrency.BRL, seed = 0) }
+    // Sorteia o item comparado, como a Home: com seed fixo saía sempre o primeiro candidato
+    // do catálogo — a passagem de ônibus, o mais barato, cabe em quase qualquer valor.
+    val equivalenceSeed = rememberSaveable { Random.nextInt() }
+    val equivalence = remember(cost, equivalenceSeed) {
+        HomeMetrics.equivalence(cost, AppCurrency.BRL, equivalenceSeed)
+    }
     val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
     val track = MaterialTheme.colorScheme.surfaceVariant
 
