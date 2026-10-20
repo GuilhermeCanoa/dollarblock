@@ -12,6 +12,23 @@ Descrição funcional.
 
 ---
 
+## [2026-10-20] — Tela de bloqueio: o guardião entrega o recibo
+**Tipo:** feature
+**Épico:** adhoc
+
+- A tela de bloqueio ganhou ilustração de fundo (`block_handover.jpg`): o guardião do cofre,
+  atrás da mesa do banco, estende um recibo em branco. O recibo de verdade (`InvoiceReceipt`)
+  nasce em cima do papel da mão e vem para a frente da tela, cobrindo a mão; a arte recua e
+  escurece um pouco. Depois o carimbo "BLOQUEADO" cai, como antes.
+- A frase de reflexão saiu do topo e virou o **último elemento**: depois do carimbo a cena
+  escurece e a frase aparece devagar no vão entre o título e o recibo, como a frase da tela
+  preta depois de perder num jogo. Se a tela for baixa demais para caber, a frase não aparece.
+- Os botões aparecem quando o recibo está chegando. Com as animações do sistema desligadas,
+  a tela abre direto no estado final.
+- Só no debug: `BlockActivity` é exportada para abrir a tela pelo adb, sem estourar um limite
+  (comando em `DebugSetupReceiver.kt`).
+- Arte e ficha da animação: `scripts/build-block-handover.ps1` e `scripts/README.md`.
+
 ## [2026-10-10] — Medição: cena do tempo de tela (feed e cronômetro) e cofre de segurança
 **Tipo:** feature
 **Épico:** E21 (onboarding)

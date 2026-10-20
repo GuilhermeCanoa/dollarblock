@@ -22,6 +22,13 @@ import javax.inject.Inject
  * adb shell am broadcast -a com.dollarblock.DEBUG_SET_LIMIT \
  *     --es pkg com.android.chrome --ei limit 1 -p com.dollarblock
  * ```
+ *
+ * Também só no debug, `BlockActivity` é exportada (`src/debug/AndroidManifest.xml`) para
+ * abrir a tela de bloqueio direto, sem estourar um limite de verdade:
+ * ```
+ * adb shell am start -n com.dollarblock/.feature.blocking.BlockActivity \
+ *     --es extra_label Instagram --es extra_package com.instagram.android
+ * ```
  */
 @AndroidEntryPoint
 class DebugSetupReceiver : BroadcastReceiver() {
