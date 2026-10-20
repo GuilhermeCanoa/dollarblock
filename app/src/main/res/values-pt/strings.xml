@@ -468,6 +468,7 @@
     <string name="block_stamp">BLOQUEADO</string>
     <string name="block_receipt_header">DOLLARBLOCK · FATURA</string>
     <string name="block_receipt_caption">passe do dia · vale até a meia-noite</string>
+    <string name="block_receipt_meta">Nº %1$s · %2$s</string>
     <string name="block_screen_home">Ficar com meu dinheiro</string>
     <string name="block_screen_open_app">Abrir o DollarBlock</string>
     <string name="block_understand_link">Entenda o bloqueio de tela</string>

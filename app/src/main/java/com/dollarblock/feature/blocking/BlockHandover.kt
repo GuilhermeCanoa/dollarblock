@@ -43,6 +43,11 @@ internal val ArtReceipt = Rect(left = 382f, top = 724f, right = 561f, bottom = 9
 /** Cor da base da arte (piso escuro); é o fundo da tela abaixo dela. */
 internal val BlockArtBackground = Color(0xFF01120E)
 
+/** Largura máxima do recibo: estreito como papel de maquininha, para parecer seguro na mão. */
+internal val RECEIPT_MAX_WIDTH = 248.dp
+/** Inclinação que o recibo mantém ao chegar (papel na mão, não cartão de interface). */
+private const val RECEIPT_REST_TILT = -1.5f
+
 /** Quanto a arte encolhe enquanto o recibo vem para a frente (dá a ideia de profundidade). */
 private const val ART_RECEDE_SCALE = 0.96f
 /** Escurecimento da arte ao fim da entrega e, somado, ao fim do epílogo (máx. 1). */
@@ -68,8 +73,8 @@ internal fun Modifier.receiptHandover(progress: Float, from: Rect?, to: Rect?): 
         scaleY = scale
         translationX = lerp(from.center.x - to.center.x, 0f, progress)
         translationY = lerp(from.center.y - to.center.y, 0f, progress)
-        // O papel da arte está levemente torto; endireita no caminho.
-        rotationZ = lerp(-3f, 0f, progress)
+        // O papel da arte está levemente torto; endireita quase todo no caminho.
+        rotationZ = lerp(-3f, RECEIPT_REST_TILT, progress)
         alpha = (progress / 0.3f).coerceIn(0f, 1f)
         transformOrigin = TransformOrigin.Center
     }
@@ -164,7 +169,7 @@ internal fun BlockHandoverLayout(
             t.placeRelative((w - t.width) / 2, topPad)
             s.placeRelative((w - s.width) / 2, stackY)
             f.placeRelative((w - f.width) / 2, h - f.height)
-            if (q.height <= quoteRoom - 2 * gap) {
+            if (q.height <= quoteRoom - gap) {
                 q.placeRelative((w - q.width) / 2, titleBottom + (quoteRoom - q.height) / 2)
             }
         }

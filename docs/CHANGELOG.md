@@ -28,6 +28,11 @@ Descrição funcional.
 - Só no debug: `BlockActivity` é exportada para abrir a tela pelo adb, sem estourar um limite
   (comando em `DebugSetupReceiver.kt`).
 - Arte e ficha da animação: `scripts/build-block-handover.ps1` e `scripts/README.md`.
+- O recibo virou papel térmico (`BlockReceipt.kt`, layout de `docs/art/block_receipt_reference.webp`): mais
+  estreito (máx. 248 dp), alinhado à mão do guardião e levemente torto; bordas serrilhadas,
+  grão de papel, escudo no topo, nº e data/hora de emissão, nome do app com o carimbo ao lado
+  (tinta vermelha mais fechada) e código de barras decorativo. Tudo em código — o conteúdo
+  muda a cada bloqueio.
 
 ## [2026-10-10] — Medição: cena do tempo de tela (feed e cronômetro) e cofre de segurança
 **Tipo:** feature

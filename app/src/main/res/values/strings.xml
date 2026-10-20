@@ -447,6 +447,7 @@
     <string name="block_stamp">BLOCKED</string>
     <string name="block_receipt_header">DOLLARBLOCK · INVOICE</string>
     <string name="block_receipt_caption">day pass · valid until midnight</string>
+    <string name="block_receipt_meta">No. %1$s · %2$s</string>
     <string name="block_screen_home">Keep my money</string>
     <string name="block_screen_open_app">Open DollarBlock</string>
     <string name="block_understand_link">Understand the screen block</string>
