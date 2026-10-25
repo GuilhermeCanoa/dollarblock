@@ -125,14 +125,14 @@ fun HomeScreen(
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             MetricCard(
                 title = stringResource(R.string.home_money_spent),
-                value = uiState.moneySpentTotal?.let(::formatReais) ?: "—",
+                value = uiState.moneySpentTotal?.let { MoneyFormat.format(it, uiState.moneySettings.currency) } ?: "—",
                 icon = Icons.Filled.Paid,
                 modifier = Modifier.weight(1f),
                 onClick = { infoCard = HomeCardInfo.SPENT },
             )
             MetricCard(
                 title = stringResource(R.string.home_money_saved),
-                value = uiState.moneySavedTotal?.let(::formatReais) ?: "—",
+                value = uiState.moneySavedTotal?.let { MoneyFormat.format(it, uiState.moneySettings.currency) } ?: "—",
                 icon = Icons.Filled.Savings,
                 modifier = Modifier.weight(1f),
                 onClick = { infoCard = HomeCardInfo.SAVED },
@@ -167,6 +167,11 @@ fun HomeScreen(
     infoCard?.let { card ->
         HomeCardInfoDialog(
             card = card,
+            referenceSalary = MoneyFormat.format(
+                uiState.moneySettings.referenceMonthlySalary,
+                uiState.moneySettings.currency,
+                cents = false,
+            ),
             onDismiss = { infoCard = null },
             onOpenApps = if (card == HomeCardInfo.BLOCKED_NOW) {
                 {
@@ -191,7 +196,7 @@ fun HomeScreen(
 
 /**
  * Card "adicione seu salário": calibra a conta com o valor real do usuário no lugar
- * da referência de R$ 3.000/mês. Depois de configurado, vira um resumo tocável.
+ * da referência da moeda (R$ 3.000 / $4,000 por mês). Depois de configurado, vira um resumo tocável.
  */
 @Composable
 private fun SalaryCard(
@@ -245,7 +250,7 @@ private fun SalaryCard(
                     } else {
                         stringResource(
                             R.string.home_salary_card_subtitle,
-                            MoneyFormat.format(MoneySettings.DEFAULT_MONTHLY_SALARY, settings.currency),
+                            MoneyFormat.format(settings.referenceMonthlySalary, settings.currency),
                         )
                     },
                     style = MaterialTheme.typography.bodyMedium,
@@ -357,6 +362,8 @@ private enum class HomeCardInfo { DAMAGE, SPENT, SAVED, BLOCKED_NOW, ADDICTION }
 @Composable
 private fun HomeCardInfoDialog(
     card: HomeCardInfo,
+    /** Salário de referência já formatado — o corpo de [HomeCardInfo.DAMAGE] o cita. */
+    referenceSalary: String,
     onDismiss: () -> Unit,
     onOpenApps: (() -> Unit)?,
 ) {
@@ -370,7 +377,11 @@ private fun HomeCardInfoDialog(
     DollarBlockDialog(
         onDismissRequest = onDismiss,
         title = stringResource(titleRes),
-        body = stringResource(bodyRes),
+        body = if (card == HomeCardInfo.DAMAGE) {
+            stringResource(bodyRes, referenceSalary)
+        } else {
+            stringResource(bodyRes)
+        },
         confirmText = stringResource(R.string.home_card_info_ok),
         onConfirm = onDismiss,
         dismissText = onOpenApps?.let { stringResource(R.string.home_card_info_open_apps) },
@@ -405,13 +416,14 @@ private fun MoneyLostHero(
     // conta "sente" o próprio custo subindo.
     val animatedValue = remember { Animatable(0f) }
     val haptic = LocalHapticFeedback.current
+    val coffeePrice = ComparisonItem.COFFEE.priceIn(currency) ?: HomeMetrics.COFFEE_PRICE
     LaunchedEffect(moneyLost) {
         var lastReported = 0.0
         animatedValue.animateTo(
             targetValue = (moneyLost ?: 0.0).toFloat(),
             animationSpec = tween(durationMillis = 1400, easing = FastOutSlowInEasing),
         ) {
-            if (HomeMetrics.crossedCoffeeMultiple(lastReported, value.toDouble())) {
+            if (HomeMetrics.crossedCoffeeMultiple(lastReported, value.toDouble(), coffeePrice)) {
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             }
             lastReported = value.toDouble()
@@ -506,12 +518,6 @@ private fun PickAppsChip() {
     }
 }
 
-private fun formatReais(value: Double): String {
-    // Locale.US fixa "1,234.56"; o swap converte para o formato brasileiro "1.234,56".
-    // Sem locale explícito, um device pt-BR já formata com vírgula e o swap inverte errado.
-    return "R$ %,.2f".format(java.util.Locale.US, value)
-        .replace(',', 'X').replace('.', ',').replace('X', '.')
-}
 
 @Composable
 private fun RecentEventsCard(
@@ -575,7 +581,11 @@ private fun RecentEventRow(event: RecentEvent) {
                     else -> stringResource(R.string.pay_method_simulated)
                 }
                 Text(
-                    text = stringResource(R.string.home_event_unlock_detail, event.amount, method),
+                    text = stringResource(
+                        R.string.home_event_unlock_detail,
+                        MoneyFormat.formatStored(event.amount, event.currency),
+                        method,
+                    ),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

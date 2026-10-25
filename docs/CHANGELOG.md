@@ -12,6 +12,69 @@ Descrição funcional.
 
 ---
 
+## [2026-10-25] — Índia em rupia
+**Tipo:** regra
+**Épico:** adhoc
+
+- `AppCurrency.INR`: aparelho na Índia (`DeviceRegion` = IN) vê tudo em rupia — passe
+  `₹45.00` (igual ao `day_pass` da Índia no Play Console), salário de referência `₹30,000`,
+  formato indiano com agrupamento em lakh (`₹1,23,456.78`).
+- Os textos continuam no idioma do usuário (hindi por padrão na Índia, ou inglês/português
+  se escolhido); só o valor/moeda é dinâmico, via os placeholders da entrada abaixo.
+- `ComparisonItem` ganhou `priceInr`; itens sem sentido na Índia (Big Mac, gasolina em
+  galão, ações americanas, itens brasileiros) ficam de fora do sorteio.
+
+## [2026-10-25] — EUA em dólar: passe a US$ 0,99
+**Tipo:** regra
+**Épico:** adhoc
+
+- A moeda passa a seguir o **país do aparelho** (`DeviceRegion`: chip → rede celular →
+  região do idioma). **EUA → USD**; o resto do mundo, Brasil e Índia inclusos, segue em BRL.
+  O chip vem antes do idioma porque muito brasileiro usa o celular em en-US.
+- `AppCurrency` agora carrega a tabela por moeda: preço do passe (`BRL 1.99` / `USD 0.99`) e
+  salário de referência (`R$ 3.000` / `$4,000`). Conta, extrato, onboarding, contrato
+  (cláusula 2), Home (incl. haptic do café) e Histórico usam a moeda do país.
+- Textos com "R$" fixo viraram placeholders (en/pt/hi). O extrato formata cada desbloqueio
+  na moeda em que foi cobrado (`MoneyFormat.formatStored`).
+- USD agora sai no formato americano `$1,234.56` (sem espaço).
+- **Ação manual:** o valor cobrado é o do produto `day_pass` no Play Console — definir
+  Estados Unidos = USD 0,99 lá; o app só exibe o fallback.
+
+## [2026-10-24] — Idioma hindi, padrão na Índia
+**Tipo:** feature
+**Épico:** adhoc
+
+- Novo `values-hi/strings.xml` com todas as strings traduzidas para hindi (mesmo tom de
+  "gerente do banco de tempo"); `hi` adicionado ao `locales_config.xml` e opção "हिन्दी" no
+  seletor de idioma do Perfil (`AppLanguage.HINDI`).
+- Com o idioma em "Padrão do sistema" e a **região do celular = Índia (IN)**, o app abre em
+  hindi mesmo que o sistema esteja em inglês (`LocaleManager.resolveLanguageTag`). Escolher
+  English/Português explicitamente no Perfil continua valendo na Índia.
+- Valores seguem em R$ (lançamento BRL-only) e itens de equivalência brasileiros (coxinha,
+  pão de queijo…) foram só transliterados.
+
+## [2026-10-20] — Tela de bloqueio: o guardião entrega o recibo
+**Tipo:** feature
+**Épico:** adhoc
+
+- A tela de bloqueio ganhou ilustração de fundo (`block_handover.jpg`): o guardião do cofre,
+  atrás da mesa do banco, estende um recibo em branco. O recibo de verdade (`InvoiceReceipt`)
+  nasce em cima do papel da mão e vem para a frente da tela, cobrindo a mão; a arte recua e
+  escurece um pouco. Depois o carimbo "BLOQUEADO" cai, como antes.
+- A frase de reflexão saiu do topo e virou o **último elemento**: depois do carimbo a cena
+  escurece e a frase aparece devagar no vão entre o título e o recibo, como a frase da tela
+  preta depois de perder num jogo. Se a tela for baixa demais para caber, a frase não aparece.
+- Os botões aparecem quando o recibo está chegando. Com as animações do sistema desligadas,
+  a tela abre direto no estado final.
+- Só no debug: `BlockActivity` é exportada para abrir a tela pelo adb, sem estourar um limite
+  (comando em `DebugSetupReceiver.kt`).
+- Arte e ficha da animação: `scripts/build-block-handover.ps1` e `scripts/README.md`.
+- O recibo virou papel térmico (`BlockReceipt.kt`, layout de `docs/art/block_receipt_reference.webp`): mais
+  estreito (máx. 248 dp), alinhado à mão do guardião e levemente torto; bordas serrilhadas,
+  grão de papel, escudo no topo, nº e data/hora de emissão, nome do app com o carimbo ao lado
+  (tinta vermelha mais fechada) e código de barras decorativo. Tudo em código — o conteúdo
+  muda a cada bloqueio.
+
 ## [2026-10-10] — Últimos ajustes: a página chega como notificações, puxadas pelo segurança
 **Tipo:** feature
 **Épico:** E21 (onboarding)

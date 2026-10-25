@@ -81,6 +81,7 @@ import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
@@ -97,6 +98,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.TextUnit
 import com.dollarblock.R
 import com.dollarblock.core.designsystem.DollarBlockTheme
+import com.dollarblock.data.local.prefs.deviceCurrency
 import com.dollarblock.data.permissions.AppPermission
 import com.dollarblock.data.permissions.PermissionsState
 import com.dollarblock.domain.model.AppCurrency
@@ -208,8 +210,11 @@ private fun RunningTabMeter(modifier: Modifier = Modifier) {
     val elapsed = (now - openedAt).coerceAtLeast(0L)
     val seconds = elapsed / 1_000L
     val clock = "%d:%02d".format(seconds / 60, seconds % 60)
-    val money = MoneyFormat.format(screenTimeCost(elapsed), AppCurrency.BRL).unbreakable()
-    val perMinute = MoneyFormat.format(screenTimeCost(60_000L), AppCurrency.BRL).unbreakable()
+    val currency = rememberDeviceCurrency()
+    val salary = currency.referenceMonthlySalary
+    val money = MoneyFormat.format(screenTimeCost(elapsed, salary), currency).unbreakable()
+    val perMinute = MoneyFormat.format(screenTimeCost(60_000L, salary), currency).unbreakable()
+    val salaryText = MoneyFormat.format(salary, currency, cents = false).unbreakable()
     val penalty = DollarBlockTheme.colors.penalty
 
     Column(
@@ -251,7 +256,7 @@ private fun RunningTabMeter(modifier: Modifier = Modifier) {
             )
         }
         Text(
-            text = stringResource(R.string.onb_entry_meter_note, perMinute),
+            text = stringResource(R.string.onb_entry_meter_note, perMinute, salaryText),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -285,7 +290,12 @@ fun ContractPage(active: Boolean, modifier: Modifier = Modifier) {
     val ink = Color(0xFF1C2B26)
 
     // Quantos caracteres já foram escritos, somando as cláusulas na ordem.
-    val clauseTexts = clauses.map { stringResource(it) }
+    // A cláusula 2 cita o preço do passe na moeda do país.
+    val currency = rememberDeviceCurrency()
+    val passPrice = MoneyFormat.format(currency.dayPassPrice.toDouble(), currency).unbreakable()
+    val clauseTexts = clauses.map {
+        if (it == R.string.onb_clause_2) stringResource(it, passPrice) else stringResource(it)
+    }
     val total = clauseTexts.sumOf { it.length }.toFloat()
     val animate = rememberAnimationsEnabled()
     val written = remember { Animatable(if (animate) 0f else total) }
@@ -694,13 +704,14 @@ private fun WeeklyBillContent(
     LaunchedEffect(Unit) {
         if (progress.value < 1f) progress.animateTo(1f, tween(1_400, easing = FastOutSlowInEasing))
     }
-    val cost = screenTimeCost(summary.topMillis)
-    val shownCost = MoneyFormat.format(cost * progress.value, AppCurrency.BRL).unbreakable()
+    val currency = rememberDeviceCurrency()
+    val cost = screenTimeCost(summary.topMillis, currency.referenceMonthlySalary)
+    val shownCost = MoneyFormat.format(cost * progress.value, currency).unbreakable()
     // Sorteia o item comparado, como a Home: com seed fixo saía sempre o primeiro candidato
     // do catálogo — a passagem de ônibus, o mais barato, cabe em quase qualquer valor.
     val equivalenceSeed = rememberSaveable { Random.nextInt() }
-    val equivalence = remember(cost, equivalenceSeed) {
-        HomeMetrics.equivalence(cost, AppCurrency.BRL, equivalenceSeed)
+    val equivalence = remember(cost, currency, equivalenceSeed) {
+        HomeMetrics.equivalence(cost, currency, equivalenceSeed)
     }
     val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
     val track = MaterialTheme.colorScheme.surfaceVariant
@@ -773,7 +784,10 @@ private fun WeeklyBillContent(
             }
         }
         Text(
-            text = stringResource(R.string.onb_measure_result_note),
+            text = stringResource(
+                R.string.onb_measure_result_note,
+                MoneyFormat.format(currency.referenceMonthlySalary, currency, cents = false).unbreakable(),
+            ),
             style = MaterialTheme.typography.labelSmall,
             color = onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -1238,6 +1252,13 @@ private fun TurnOnButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
                 .size(16.dp),
         )
     }
+}
+
+/** Moeda do país do aparelho (EUA → dólar; Índia → rupia; resto → real), lida uma vez por composição. */
+@Composable
+private fun rememberDeviceCurrency(): AppCurrency {
+    val context = LocalContext.current
+    return remember(context) { context.deviceCurrency() }
 }
 
 /** "R$ 20,59" sem quebra entre o símbolo e o número. */

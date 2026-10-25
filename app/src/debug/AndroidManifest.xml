@@ -1,7 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <application>
+        <!-- Apenas debug: abre a tela de bloqueio direto pelo adb, para revisar arte e
+             animacao sem estourar um limite de verdade (comando em
+             app/src/debug/java/com/dollarblock/debug/DebugSetupReceiver.kt). -->
+        <activity
+            android:name="com.dollarblock.feature.blocking.BlockActivity"
+            android:exported="true"
+            tools:replace="android:exported" />
+
         <!-- Receiver de teste (apenas debug): usado por scripts/smoke-test.ps1 para
              montar cenarios de bloqueio via adb. Nao existe no build de release. -->
         <receiver

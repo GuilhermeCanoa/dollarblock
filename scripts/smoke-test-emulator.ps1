@@ -126,17 +126,40 @@ if ($row) {
 }
 Check "App na régua" ((UiText) -match "on the tab|na conta") "não apareceu a seção de apps monitorados"
 
-# Abre o diálogo de limite e salva 1 minuto. O teclado empurra o diálogo para cima,
-# então as coordenadas do Save são lidas do dump DEPOIS de digitar.
+# Abre o diálogo de limite e salva 1 minuto.
 if (TapText "YouTube") { Start-Sleep -Seconds 3 }
 & $adb shell uiautomator dump /sdcard/ui.xml | Out-Null; & $adb pull /sdcard/ui.xml "$out\ui.xml" *>$adbLog
-$edit = ([xml](Get-Content "$out\ui.xml")).SelectNodes("//node") | Where-Object { $_.'class' -eq 'android.widget.EditText' } | Select-Object -First 1
-if ($edit) {
-    $b = $edit.bounds -replace '[\[\]]', ' ' -split '[, ]+' | Where-Object { $_ }
-    & $adb shell input tap ([int](([int]$b[0] + [int]$b[2]) / 2)) ([int](([int]$b[1] + [int]$b[3]) / 2))
-    Start-Sleep -Seconds 2
-    & $adb shell input text "1"
-    Start-Sleep -Seconds 2
+function MinuteWheel {
+    & $adb shell uiautomator dump /sdcard/ui.xml | Out-Null; & $adb pull /sdcard/ui.xml "$out\ui.xml" *>$adbLog
+    $nodes = ([xml](Get-Content "$out\ui.xml")).SelectNodes("//node") | Where-Object { $_.text -match '^\d+$' }
+    $items = foreach ($n in $nodes) {
+        $c = $n.bounds -replace '[\[\]]', ' ' -split '[, ]+' | Where-Object { $_ }
+        [pscustomobject]@{ V = [int]$n.text; X = ([int]$c[0] + [int]$c[2]) / 2; Y = ([int]$c[1] + [int]$c[3]) / 2; H = [int]$c[3] - [int]$c[1] }
+    }
+    if (-not $items) { return $null }
+    # Roda de minutos = a mais à direita; o item central é o de maior altura (fonte maior).
+    $maxX = ($items | Measure-Object X -Maximum).Maximum
+    $mid = $items | Where-Object { [math]::Abs($_.X - $maxX) -lt 120 } | Sort-Object H -Descending | Select-Object -First 1
+    [pscustomobject]@{ Value = $mid.V; X = [int]$mid.X; Y = [int]$mid.Y }
+}
+# O diálogo de limite usa rodas de horas/minutos (padrão 30 min). Laço fechado: lê o valor
+# central da roda de minutos e ajusta até assentar em 1 (arrasto rápido = ~1,5 item; lento e
+# curto = 1 item). O arrasto precisa começar dentro da roda, por isso vem do dump.
+$wheel = MinuteWheel
+if ($wheel) {
+    for ($i = 0; $i -lt 40 -and $wheel -and $wheel.Value -ne 1; $i++) {
+        $x = $wheel.X; $y = $wheel.Y
+        if ($wheel.Value -gt 6) {
+            & $adb shell input touchscreen swipe $x ($y - 130) $x ($y + 130) 100
+        } elseif ($wheel.Value -gt 1) {
+            & $adb shell input touchscreen swipe $x ($y + 60) $x ($y + 175) 700
+        } else {
+            & $adb shell input touchscreen swipe $x ($y + 60) $x ($y - 55) 700
+        }
+        Start-Sleep -Milliseconds 1200
+        $wheel = MinuteWheel
+    }
+    Write-Host "  roda de minutos em: $(if ($wheel) { $wheel.Value } else { '?' })"
     [void](TapText "^Save$|^Salvar$")
     Start-Sleep -Seconds 3
 }

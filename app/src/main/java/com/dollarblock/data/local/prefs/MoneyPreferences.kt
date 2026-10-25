@@ -6,59 +6,58 @@ import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.dollarblock.core.locale.DeviceRegion
 import com.dollarblock.domain.model.AppCurrency
 import com.dollarblock.domain.model.MoneySettings
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
-import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
  * Preferência de moeda de exibição.
  *
- * - [SYSTEM]: segue o país do celular — Brasil (ou idioma pt) usa Real, o resto do
- *   mundo usa Dólar (mesmo critério do idioma em [AppLanguage]).
+ * - [SYSTEM]: segue o país do aparelho ([DeviceRegion]) — EUA usa Dólar, Índia usa
+ *   Rupia, o resto do mundo (Brasil incluso) usa Real.
  * - [BRL] / [USD]: força a moeda independentemente do celular.
  *
- * Só afeta **exibição** dos valores derivados do salário (conta/extrato); a
- * cobrança real do passe do dia continua em BRL no backend.
+ * A moeda decide a exibição (conta/extrato), o salário de referência e o preço de
+ * fallback do passe; o valor cobrado de fato é o do Play Console para o país da conta.
  */
 enum class CurrencyPreference { SYSTEM, BRL, USD }
 
 /**
- * Lançamento inicial é BRL-only: a troca de moeda fica desabilitada (UI removida do Perfil)
- * e a moeda efetiva é sempre Real. Reative quando houver suporte a outras moedas.
+ * A troca manual de moeda fica desabilitada (UI removida do Perfil): a moeda efetiva é
+ * sempre a do país do aparelho. Reative para deixar o usuário forçar uma moeda.
  */
 const val CURRENCY_SELECTION_ENABLED = false
 
-/** Resolve a preferência em moeda efetiva; SYSTEM decide pelo locale (BR/pt → Real). */
+/** Resolve a preferência em moeda efetiva; SYSTEM (e a seleção desligada) decide por [region]. */
 fun resolveCurrency(
     preference: CurrencyPreference,
-    locale: Locale = Locale.getDefault(),
-): AppCurrency = if (!CURRENCY_SELECTION_ENABLED) AppCurrency.BRL else when (preference) {
+    region: String,
+): AppCurrency = if (!CURRENCY_SELECTION_ENABLED) AppCurrency.forRegion(region) else when (preference) {
     CurrencyPreference.BRL -> AppCurrency.BRL
     CurrencyPreference.USD -> AppCurrency.USD
-    CurrencyPreference.SYSTEM ->
-        if (locale.country.equals("BR", ignoreCase = true) || locale.language == "pt") {
-            AppCurrency.BRL
-        } else {
-            AppCurrency.USD
-        }
+    CurrencyPreference.SYSTEM -> AppCurrency.forRegion(region)
 }
+
+/** Moeda efetiva do aparelho, para telas sem acesso a [MoneyPreferences] (onboarding, bloqueio). */
+fun Context.deviceCurrency(): AppCurrency =
+    resolveCurrency(CurrencyPreference.SYSTEM, DeviceRegion.current(this))
 
 private val Context.moneyDataStore by preferencesDataStore(name = "dollarblock_money")
 
 /**
  * Persiste o salário líquido mensal informado pelo usuário (base da conta; na
- * ausência, vale a referência de R$ 3.000 — [MoneySettings.DEFAULT_MONTHLY_SALARY])
+ * ausência, vale a referência da moeda — [AppCurrency.referenceMonthlySalary])
  * e a preferência de moeda de exibição.
  */
 @Singleton
 class MoneyPreferences @Inject constructor(
-    @ApplicationContext context: Context,
+    @ApplicationContext private val context: Context,
 ) {
     private val dataStore = context.moneyDataStore
     private val salaryKey = doublePreferencesKey("monthly_salary")
@@ -78,10 +77,11 @@ class MoneyPreferences @Inject constructor(
 
     /** Configuração consolidada pronta para consumo nas telas (salário efetivo + moeda). */
     val settings: Flow<MoneySettings> = combine(monthlySalary, currencyPreference) { salary, pref ->
+        val currency = resolveCurrency(pref, DeviceRegion.current(context))
         MoneySettings(
-            monthlySalary = salary ?: MoneySettings.DEFAULT_MONTHLY_SALARY,
+            monthlySalary = salary ?: currency.referenceMonthlySalary,
             salaryConfigured = salary != null,
-            currency = resolveCurrency(pref),
+            currency = currency,
         )
     }
 

@@ -45,6 +45,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dollarblock.R
 import com.dollarblock.core.designsystem.DollarBlockTheme
 import com.dollarblock.core.designsystem.TabularNumerals
+import com.dollarblock.domain.model.MoneyFormat
 import com.dollarblock.domain.model.PaymentMethod
 import com.dollarblock.domain.model.RecentEvent
 import java.time.Instant
@@ -196,7 +197,7 @@ private fun HistoryEventRow(event: RecentEvent) {
         }
         Spacer(Modifier.size(8.dp))
         Text(
-            text = if (event is RecentEvent.Unlocked) "R$ ${event.amount}" else "—",
+            text = if (event is RecentEvent.Unlocked) MoneyFormat.formatStored(event.amount, event.currency) else "—",
             style = TabularNumerals.copy(fontSize = 16.sp),
             color = accent,
             textAlign = TextAlign.End,

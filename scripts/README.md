@@ -101,6 +101,10 @@ tamanho da luminária, paisagem da janela…). Mude o número no script e rode:
 powershell -File scripts/build-onb-hero.ps1
 ```
 
+Para reaproveitar o desenho em outras telas sem a tela em volta, use `docs/art/onb_hero_scene.webp`
+(recorte limpo e sem edições do mockup, 941×632); o `onb_hero.jpg` é uma versão editada e atrelada
+aos números de `OnboardingHero.kt`.
+
 As animações por cima da arte (ventilador, luz, vapor, brilho nos ícones) ficam em
 `OnboardingHero.kt`; se mudar posição ou tamanho de algo aqui, confira as coordenadas de lá.
 
@@ -116,3 +120,26 @@ cima do guarda-sol para atualizar o `CanopyTop` de lá se o recorte mudar.
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/build-onb-lounge.ps1
 ```
+
+## Arte: `build-block-handover.ps1` — guardião entregando o recibo (tela de bloqueio)
+
+Também **não é teste e não roda no build**. Regera `app/src/main/res/drawable-nodpi/block_handover.jpg`
+(1024×1536) a partir de `docs/art/block_handover_source.webp` — hoje só converte para JPEG, sem
+recorte. O recibo que o guardião segura é **em branco**: o recibo de verdade (app, mensagem,
+preço, carimbo) é o `InvoiceReceipt` do app, que nasce em cima dele e vem para a frente.
+
+```powershell
+powershell -File scripts/build-block-handover.ps1
+```
+
+Ficha da animação (`feature/blocking/BlockHandover.kt` + `BlockScreen` em `BlockActivity.kt`):
+
+| Elemento | Técnica | Coordenadas (px da arte) | Tempo | Pose parada |
+|---|---|---|---|---|
+| Recibo sai da mão e vem para a frente | `graphicsLayer` (escala, translação, giro −3°→0) | `ArtReceipt` = 382,724 – 561,981 | 350 ms de espera + 800 ms | recibo no lugar |
+| Arte recua e escurece | `graphicsLayer` (1→0,96, origem na mão) + véu | origem = centro de `ArtReceipt` | junto com o recibo | recuada, véu 25% |
+| Carimbo "BLOQUEADO" | escala 2,4→1 com mola + haptic | — | +150 ms | carimbado |
+| Epílogo: cena escurece, frase aparece | véu +45% e alpha da frase | — | +1,1 s, 2,4 s linear | frase visível |
+
+Dependências: se a arte mudar de tamanho ou o recibo mudar de lugar, atualize `ART_W`/`ART_H` e
+`ArtReceipt` em `BlockHandover.kt` (o script avisa se o tamanho não for 1024×1536).

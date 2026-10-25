@@ -44,7 +44,7 @@ object HomeMetrics {
     /** Preço do minuto de scroll dado o salário líquido mensal configurado. */
     fun perMinuteRate(monthlySalary: Double): Double = monthlySalary / MINUTES_PER_MONTH
 
-    /** Preço do café (BRL) — unidade do haptic do count-up da conta. */
+    /** Preço do café (BRL) — unidade padrão do haptic do count-up da conta. */
     const val COFFEE_PRICE = 6.0
 
     /** Acima disso a comparação vira "37 cafés" — número grande demais pra sentir. */
@@ -93,10 +93,14 @@ object HomeMetrics {
      * true quando o count-up cruzou um múltiplo inteiro de café (para disparar haptic
      * na conta da Home). Compara o inteiro de cafés antes e depois do frame.
      */
-    fun crossedCoffeeMultiple(previousLost: Double, newLost: Double): Boolean {
+    fun crossedCoffeeMultiple(
+        previousLost: Double,
+        newLost: Double,
+        coffeePrice: Double = COFFEE_PRICE,
+    ): Boolean {
         if (newLost <= previousLost) return false
-        val before = (previousLost / COFFEE_PRICE).toInt()
-        val after = (newLost / COFFEE_PRICE).toInt()
+        val before = (previousLost / coffeePrice).toInt()
+        val after = (newLost / coffeePrice).toInt()
         return after > before
     }
 
