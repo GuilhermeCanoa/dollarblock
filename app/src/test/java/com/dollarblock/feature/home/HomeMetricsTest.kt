@@ -200,4 +200,11 @@ class HomeMetricsTest {
         )
         assertEquals(60 * HomeMetrics.perMinuteRate(4000.0), metrics.moneyLostToday!!, 1e-9)
     }
+
+    @Test
+    fun `haptic do cafe usa o preco do cafe na moeda`() {
+        val usdCoffee = requireNotNull(ComparisonItem.COFFEE.priceIn(AppCurrency.USD))
+        assertEquals(true, HomeMetrics.crossedCoffeeMultiple(3.0, 4.0, usdCoffee))
+        assertEquals(false, HomeMetrics.crossedCoffeeMultiple(3.0, 4.0))
+    }
 }

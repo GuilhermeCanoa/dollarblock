@@ -2,11 +2,13 @@ package com.dollarblock.data.repository
 
 import com.dollarblock.data.local.db.dao.EventDao
 import com.dollarblock.data.local.db.dao.EventStamp
+import com.dollarblock.data.local.prefs.MoneyPreferences
 import com.dollarblock.domain.model.AppDay
 import com.dollarblock.domain.model.MoneyReport
 import com.dollarblock.domain.repository.MoneySummaryRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import java.time.Instant
@@ -16,6 +18,7 @@ import javax.inject.Inject
 class MoneySummaryRepositoryImpl @Inject constructor(
     private val eventDao: EventDao,
     private val pricingRepository: PricingRepository,
+    private val moneyPreferences: MoneyPreferences,
 ) : MoneySummaryRepository {
 
     override fun observeTotalSpent(): Flow<Double> =
@@ -24,8 +27,10 @@ class MoneySummaryRepositoryImpl @Inject constructor(
     override fun observeTotalSaved(): Flow<Double> {
         // Preço resolvido uma vez por coleta (rede → cache → default), o mesmo da tela de
         // bloqueio. Dias antigos usam o preço atual — o histórico de preço não é armazenado.
+        // Na moeda do país (a mesma em que a Home exibe o total).
         val dayPassPrice = flow {
-            emit(pricingRepository.getDayPassPrice().replace(',', '.').toDoubleOrNull() ?: 0.0)
+            val currency = moneyPreferences.settings.first().currency
+            emit(pricingRepository.getDayPassPrice(currency.code).replace(',', '.').toDoubleOrNull() ?: 0.0)
         }
         return combine(
             eventDao.observeBlockStamps(),

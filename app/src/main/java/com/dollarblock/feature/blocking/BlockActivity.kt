@@ -77,7 +77,10 @@ import kotlinx.coroutines.delay
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.dollarblock.data.local.prefs.BlockPreferences
+import com.dollarblock.data.local.prefs.deviceCurrency
 import com.dollarblock.data.repository.PricingRepository
+import com.dollarblock.domain.model.AppCurrency
+import com.dollarblock.domain.model.MoneyFormat
 import com.dollarblock.domain.model.PaymentMethod
 import com.dollarblock.domain.repository.EventsRepository
 import com.dollarblock.feature.blocking.payment.GooglePayConfig
@@ -122,6 +125,14 @@ class BlockActivity : AppCompatActivity() {
 
     // Caminho Google Play Billing (E16) — provider ativo.
     private var billingManager: PlayBillingManager? = null
+
+    /**
+     * Moeda do fallback de preço (antes do Play responder) e do registro no extrato: a do
+     * país no Play Billing; o caminho Stripe (desabilitado) só cobra em BRL.
+     */
+    private val fallbackCurrency: AppCurrency by lazy {
+        if (PaymentConfig.PROVIDER == PaymentProvider.PLAY_BILLING) deviceCurrency() else AppCurrency.BRL
+    }
 
     private var targetPackage: String = ""
     private var appLabel: String = ""
@@ -171,6 +182,7 @@ class BlockActivity : AppCompatActivity() {
 
         targetPackage = intent.getStringExtra(EXTRA_PACKAGE).orEmpty()
         appLabel = intent.getStringExtra(EXTRA_LABEL) ?: getString(R.string.app_name)
+        dayPassPrice.value = fallbackCurrency.dayPassPrice
         when (PaymentConfig.PROVIDER) {
             PaymentProvider.PLAY_BILLING -> {
                 val manager = PlayBillingManager(this, billingListener)
@@ -217,8 +229,8 @@ class BlockActivity : AppCompatActivity() {
                     appLabel = appLabel,
                     unlocksPaidToday = paidToday,
                     // Preço final exibido no recibo: o localizado do Play quando disponível,
-                    // senão o fallback/pricing formatado em BRL.
-                    priceText = playPrice ?: ("R$ " + price.replace('.', ',')),
+                    // senão o fallback/pricing na moeda do país.
+                    priceText = playPrice ?: MoneyFormat.formatStored(price, fallbackCurrency.code),
                     provider = PaymentConfig.PROVIDER,
                     paymentReady = payment.ready,
                     paymentInProgress = payment.inProgress,
@@ -380,7 +392,7 @@ class BlockActivity : AppCompatActivity() {
                     packageName = targetPackage,
                     appLabel = appLabel,
                     amount = COURTESY_AMOUNT,
-                    currency = billingManager?.priceCurrency ?: GooglePayConfig.CURRENCY_CODE,
+                    currency = billingManager?.priceCurrency ?: fallbackCurrency.code,
                     method = PaymentMethod.COURTESY,
                 )
             }
@@ -394,9 +406,9 @@ class BlockActivity : AppCompatActivity() {
         if (targetPackage.isNotEmpty()) {
             blockPreferences.grantUnlockForToday(targetPackage)
             // No Play Billing o valor/moeda reais são os do produto no Play Console;
-            // nos demais caminhos, o preço resolvido via pricing/fallback em BRL.
+            // nos demais caminhos, o preço resolvido via pricing/fallback na moeda do país.
             val amount = billingManager?.priceAmount ?: dayPassPrice.value
-            val currency = billingManager?.priceCurrency ?: GooglePayConfig.CURRENCY_CODE
+            val currency = billingManager?.priceCurrency ?: fallbackCurrency.code
             lifecycleScope.launch {
                 eventsRepository.recordUnlock(
                     packageName = targetPackage,

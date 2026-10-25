@@ -720,6 +720,7 @@ private fun languageLabelRes(language: AppLanguage): Int = when (language) {
     AppLanguage.SYSTEM -> R.string.pref_language_system
     AppLanguage.ENGLISH -> R.string.pref_language_en
     AppLanguage.PORTUGUESE -> R.string.pref_language_pt
+    AppLanguage.HINDI -> R.string.pref_language_hi
 }
 
 @Composable
@@ -737,6 +738,7 @@ private fun LanguagePickerDialog(
             AppLanguage.SYSTEM,
             AppLanguage.ENGLISH,
             AppLanguage.PORTUGUESE,
+            AppLanguage.HINDI,
         ).forEach { option ->
             PickerOptionRow(
                 label = stringResource(languageLabelRes(option)),

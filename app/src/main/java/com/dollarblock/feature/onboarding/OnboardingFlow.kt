@@ -55,8 +55,8 @@ fun pendingRequiredOn(page: OnboardingPage, state: PermissionsState): AppPermiss
     permissionsOn(page).firstOrNull { it.required && !state.isGranted(it) }
 
 /**
- * Quanto custa [millis] de tela no salário de referência ([HomeMetrics.DEFAULT_MONTHLY_SALARY]),
- * em reais. Usado no contador da entrada e no resumo da semana — a mesma régua da Home.
+ * Quanto custa [millis] de tela no salário [monthlySalary] (padrão: a referência em reais,
+ * [HomeMetrics.DEFAULT_MONTHLY_SALARY]; as telas passam a referência da moeda do país). Usado no contador da entrada e no resumo da semana — a mesma régua da Home.
  */
 fun screenTimeCost(millis: Long, monthlySalary: Double = HomeMetrics.DEFAULT_MONTHLY_SALARY): Double =
     millis / 60_000.0 * HomeMetrics.perMinuteRate(monthlySalary)

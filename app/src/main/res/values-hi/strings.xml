@@ -1,0 +1,547 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">DollarBlock</string>
+    <string name="app_slogan">जो कहो, उस पर पैसा लगाओ।</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">होम</string>
+    <string name="nav_apps">ऐप्स</string>
+    <string name="nav_statistics">स्टेटमेंट</string>
+    <string name="nav_profile">प्रोफ़ाइल</string>
+
+    <!-- Home -->
+    <string name="home_title">होम</string>
+    <string name="home_money_lost_today">आज का नुकसान</string>
+    <string name="home_money_lost_subtitle">बिग टेक को दान, बिल्कुल मुफ़्त</string>
+    <string name="home_money_lost_no_data">ऐप्स की निगरानी शुरू करें और जानें कि आपकी स्क्रॉलिंग की कीमत क्या है।</string>
+    <string name="home_money_lost_cta">अपने ऐप्स चुनें</string>
+    <string name="home_active_limits">सक्रिय सीमाएँ</string>
+    <string name="home_currently_blocked">अभी ब्लॉक</string>
+    <string name="home_addiction_tracker">लत ट्रैकर</string>
+    <string name="home_recent_events">लेन-देन</string>
+    <string name="home_money_spent">खर्च हुआ पैसा</string>
+    <string name="home_money_saved">बचा हुआ पैसा</string>
+    <string name="home_card_info_ok">समझ गया</string>
+    <string name="home_card_info_open_apps">ऐप्स देखें</string>
+    <string name="home_info_damage_title">आज का नुकसान</string>
+    <string name="home_info_damage_body">आज निगरानी वाले ऐप्स में बिताए आपके मिनट, पैसों में बदले हुए: आपकी मासिक शुद्ध सैलरी (डिफ़ॉल्ट %1$s — होम कार्ड पर अपनी डालें) महीने के 43,200 मिनटों में बाँटी गई। यह जुर्माना नहीं — आपकी स्क्रॉलिंग का बाज़ार भाव है।</string>
+    <string name="home_info_spent_title">खर्च हुआ पैसा</string>
+    <string name="home_info_spent_body">पहले दिन से अब तक डे पास पर आपने जो सचमुच चुकाया, सब कुछ। सीधे आपकी अनलॉक रसीदों से। असली पैसा — यही सौदा था।</string>
+    <string name="home_info_saved_title">बचा हुआ पैसा</string>
+    <string name="home_info_saved_body">हर वह दिन जब किसी ऐप ने अपनी सीमा छुई और आप बिना चुकाए ब्लॉक स्क्रीन से निकल गए, आज के रेट पर एक न खरीदा गया डे पास गिना जाता है। जिन दिनों आपने चुकाया, वे नहीं गिने जाते। टिके रहना ही हमारी इकलौती छूट है।</string>
+    <string name="home_info_blocked_title">अभी ब्लॉक</string>
+    <string name="home_info_blocked_body">निगरानी वाले वे ऐप्स जिन्होंने अपनी रोज़ की सीमा छू ली और अभी लॉक हैं। खाता बंद; बिल मेज़ पर है।</string>
+    <string name="home_info_addiction_title">लत ट्रैकर</string>
+    <string name="home_info_addiction_body">आज आपने कितनी बार किसी ब्लॉक ऐप को खोलने की कोशिश की। हर कोशिश दर्ज होती है। हम जज नहीं करते — हम गिनते हैं।</string>
+    <string name="home_no_events">आज कोई ब्लॉक नहीं। बाज़ार प्रभावित है।</string>
+    <string name="home_event_blocked">%1$s ब्लॉक हुआ</string>
+    <string name="home_event_unlocked">%1$s की ज़मानत</string>
+    <string name="home_event_unlock_detail">%1$s · %2$s</string>
+    <plurals name="home_equiv_bus_fare">
+        <item quantity="one">= %d बस किराया</item>
+        <item quantity="other">= %d बस किराए</item>
+    </plurals>
+    <string name="home_equiv_bus_fare_fraction">= एक बस किराए का %1$d%%</string>
+    <plurals name="home_equiv_pao_de_queijo">
+        <item quantity="one">= %d पाओ दी केजो</item>
+        <item quantity="other">= %d पाओ दी केजो</item>
+    </plurals>
+    <string name="home_equiv_pao_de_queijo_fraction">= एक पाओ दी केजो का %1$d%%</string>
+    <plurals name="home_equiv_coffee">
+        <item quantity="one">= %d कॉफ़ी</item>
+        <item quantity="other">= %d कॉफ़ी</item>
+    </plurals>
+    <string name="home_equiv_coffee_fraction">= एक कॉफ़ी का %1$d%%</string>
+    <plurals name="home_equiv_gas">
+        <item quantity="one">= %d गैलन पेट्रोल</item>
+        <item quantity="other">= %d गैलन पेट्रोल</item>
+    </plurals>
+    <string name="home_equiv_gas_fraction">= एक गैलन पेट्रोल का %1$d%%</string>
+    <plurals name="home_equiv_coxinha">
+        <item quantity="one">= %d कोशिन्या</item>
+        <item quantity="other">= %d कोशिन्या</item>
+    </plurals>
+    <string name="home_equiv_coxinha_fraction">= एक कोशिन्या का %1$d%%</string>
+    <plurals name="home_equiv_eggs_dozen">
+        <item quantity="one">= %d दर्जन अंडे</item>
+        <item quantity="other">= %d दर्जन अंडे</item>
+    </plurals>
+    <string name="home_equiv_eggs_dozen_fraction">= एक दर्जन अंडों का %1$d%%</string>
+    <plurals name="home_equiv_draft_beer">
+        <item quantity="one">= %d ड्राफ़्ट बियर</item>
+        <item quantity="other">= %d ड्राफ़्ट बियर</item>
+    </plurals>
+    <string name="home_equiv_draft_beer_fraction">= एक ड्राफ़्ट बियर का %1$d%%</string>
+    <plurals name="home_equiv_acai">
+        <item quantity="one">= %d अकाई बाउल</item>
+        <item quantity="other">= %d अकाई बाउल</item>
+    </plurals>
+    <string name="home_equiv_acai_fraction">= एक अकाई बाउल का %1$d%%</string>
+    <plurals name="home_equiv_big_mac">
+        <item quantity="one">= %d Big Mac</item>
+        <item quantity="other">= %d Big Mac</item>
+    </plurals>
+    <string name="home_equiv_big_mac_fraction">= एक Big Mac का %1$d%%</string>
+    <plurals name="home_equiv_spotify_month">
+        <item quantity="one">= %d महीना Spotify Premium</item>
+        <item quantity="other">= %d महीने Spotify Premium</item>
+    </plurals>
+    <string name="home_equiv_spotify_month_fraction">= Spotify Premium के एक महीने का %1$d%%</string>
+    <plurals name="home_equiv_uber_ride">
+        <item quantity="one">= %d Uber राइड</item>
+        <item quantity="other">= %d Uber राइड</item>
+    </plurals>
+    <string name="home_equiv_uber_ride_fraction">= एक Uber राइड का %1$d%%</string>
+    <plurals name="home_equiv_petrobras_share">
+        <item quantity="one">= %d Petrobras शेयर</item>
+        <item quantity="other">= %d Petrobras शेयर</item>
+    </plurals>
+    <string name="home_equiv_petrobras_share_fraction">= एक Petrobras शेयर का %1$d%%</string>
+    <plurals name="home_equiv_movie_ticket">
+        <item quantity="one">= %d मूवी टिकट</item>
+        <item quantity="other">= %d मूवी टिकट</item>
+    </plurals>
+    <string name="home_equiv_movie_ticket_fraction">= एक मूवी टिकट का %1$d%%</string>
+    <plurals name="home_equiv_pizza">
+        <item quantity="one">= %d पूरा पिज़्ज़ा</item>
+        <item quantity="other">= %d पूरे पिज़्ज़ा</item>
+    </plurals>
+    <string name="home_equiv_pizza_fraction">= एक पिज़्ज़ा का %1$d%%</string>
+    <plurals name="home_equiv_netflix_month">
+        <item quantity="one">= %d महीना Netflix</item>
+        <item quantity="other">= %d महीने Netflix</item>
+    </plurals>
+    <string name="home_equiv_netflix_month_fraction">= Netflix के एक महीने का %1$d%%</string>
+    <plurals name="home_equiv_book">
+        <item quantity="one">= %d किताब</item>
+        <item quantity="other">= %d किताबें</item>
+    </plurals>
+    <string name="home_equiv_book_fraction">= एक किताब का %1$d%%</string>
+    <plurals name="home_equiv_coca_cola_share">
+        <item quantity="one">= %d Coca-Cola शेयर</item>
+        <item quantity="other">= %d Coca-Cola शेयर</item>
+    </plurals>
+    <string name="home_equiv_coca_cola_share_fraction">= एक Coca-Cola शेयर का %1$d%%</string>
+    <plurals name="home_equiv_picanha_kg">
+        <item quantity="one">= %d किलो पिकान्या</item>
+        <item quantity="other">= %d किलो पिकान्या</item>
+    </plurals>
+    <string name="home_equiv_picanha_kg_fraction">= एक किलो पिकान्या का %1$d%%</string>
+    <plurals name="home_equiv_gym_month">
+        <item quantity="one">= %d महीना जिम</item>
+        <item quantity="other">= %d महीने जिम</item>
+    </plurals>
+    <string name="home_equiv_gym_month_fraction">= जिम के एक महीने का %1$d%%</string>
+    <plurals name="home_equiv_nvidia_share">
+        <item quantity="one">= %d NVIDIA शेयर</item>
+        <item quantity="other">= %d NVIDIA शेयर</item>
+    </plurals>
+    <string name="home_equiv_nvidia_share_fraction">= एक NVIDIA शेयर का %1$d%%</string>
+    <plurals name="home_equiv_apple_share">
+        <item quantity="one">= %d Apple शेयर</item>
+        <item quantity="other">= %d Apple शेयर</item>
+    </plurals>
+    <string name="home_equiv_apple_share_fraction">= एक Apple शेयर का %1$d%%</string>
+    <plurals name="home_equiv_ps5">
+        <item quantity="one">= %d PlayStation 5</item>
+        <item quantity="other">= %d PlayStation 5</item>
+    </plurals>
+    <string name="home_equiv_ps5_fraction">= एक PlayStation 5 का %1$d%%</string>
+    <plurals name="home_equiv_iphone">
+        <item quantity="one">= %d नया iPhone</item>
+        <item quantity="other">= %d नए iPhone</item>
+    </plurals>
+    <string name="home_equiv_iphone_fraction">= एक नए iPhone का %1$d%%</string>
+    <string-array name="home_quotes">
+        <item>समय ही पैसा है। आप इसे साबित करने के लिए भुगतान कर रहे हैं।</item>
+        <item>आपने एक घंटा खोया नहीं। आपने एक घंटा कुछ नहीं का, एडवांस में खरीदा।</item>
+        <item>47 मिनट की स्क्रॉलिंग। इनमें से एक भी आपके रिज़्यूमे में नहीं जाएगा।</item>
+        <item>TikTok आपके दान के लिए धन्यवाद कहता है।</item>
+        <item>उनके पास इंजीनियर हैं जिन्हें आपको स्क्रॉल करवाते रहने की तनख़्वाह मिलती है। आपके पास एक डे पास और आत्मसम्मान है। अब मुक़ाबला बराबर है।</item>
+        <item>फ़ीड अनंत है। आपका दिन नहीं।</item>
+        <item>मरते वक़्त किसी ने नहीं माँगा कि Reels के कुछ मिनट और मिल जाएँ।</item>
+        <item>आज आपके अंगूठे ने कई मीटर फ़ीड स्क्रॉल की। कहीं नहीं पहुँचने के लिए।</item>
+        <item>एल्गोरिदम जानता है कि आप क्या देखना चाहते हैं। हम जानते हैं कि उसकी कीमत क्या थी।</item>
+        <item>स्क्रॉल करना आराम नहीं है। यह बिना वेतन का ओवरटाइम है।</item>
+        <item>ध्यान ही वह इकलौती पूँजी है जिसे आप वापस नहीं खरीद सकते।</item>
+        <item>हर 15 सेकंड का वीडियो आपके खाते में जुड़ गया।</item>
+        <item>आपने सेवा की शर्तें मान ली थीं। यह रहा स्टेटमेंट।</item>
+        <item>चक्रवृद्धि ब्याज समय पर भी लगता है। ऊपर या नीचे।</item>
+        <item>प्लेटफ़ॉर्म आपके समय का बिल बनाते हैं। यहाँ कम से कम रसीद तो मिलती है।</item>
+        <item>“आख़िरी वीडियो,” आपने कहा था। चालीस मिनट पहले।</item>
+        <item>आपके स्क्रीन टाइम में ज़्यादातर इंटर्नशिप से ज़्यादा घंटे हैं।</item>
+        <item>यहाँ कोई भी नोटिफ़िकेशन ज़रूरी नहीं है। सिर्फ़ बिल।</item>
+        <item>ऐप मुफ़्त है। प्रोडक्ट आप हैं।</item>
+        <item>बोर होना मुफ़्त है। हम इसकी सलाह देते हैं।</item>
+        <item>स्क्रीन बंद करना भी एक विकल्प है। कोई सर्विस फ़ीस नहीं।</item>
+        <item>बाज़ार बंद हो गया। आप भी हो सकते हैं।</item>
+    </string-array>
+    <string name="pay_method_google">Google Pay</string>
+    <string name="pay_method_play">Google Play</string>
+    <string name="pay_method_simulated">सिम्युलेटेड भुगतान</string>
+    <string name="pay_method_courtesy">सौजन्य (भुगतान विफल)</string>
+
+    <!-- Tone of voice -->
+    <string name="msg_goal_met">लक्ष्य पूरा। कोई शुल्क नहीं।</string>
+    <string name="msg_limit_reached">सीमा पूरी। खाता यहीं बंद होता है।</string>
+    <string name="msg_unlock_needed">बिल बाक़ी है।</string>
+    <string name="msg_on_track">बजट में। फ़िलहाल।</string>
+    <string name="msg_time_saved_today">आज आपने %1$d मिनट बचाए। बिल: R$ 0।</string>
+
+    <!-- Apps -->
+    <string name="apps_title">ऐप्स</string>
+    <string name="apps_subtitle">अपने पैसे के गड्ढे चुनें और रोज़ की सीमा तय करें।</string>
+    <string name="apps_search_placeholder">ऐप खोजें…</string>
+    <string name="apps_search_clear">खोज साफ़ करें</string>
+    <string name="apps_search_empty">%1$s के लिए कोई ऐप नहीं मिला।</string>
+    <string name="apps_empty_state">ऊपर कोई ऐप खोजें और उसे खाते में डालें।</string>
+    <string name="apps_limit_dialog_title">रोज़ की सीमा · %1$s</string>
+    <string name="apps_limit_dialog_body">तय करें कि इस ऐप को रोज़ कितना समय मिलेगा। उसके बाद, बिल आता है।</string>
+    <string name="apps_limit_dialog_minutes_label">मिनट प्रति दिन</string>
+    <string name="apps_limit_dialog_no_limit">कोई सीमा नहीं</string>
+    <string name="apps_limit_dialog_save">सेव करें</string>
+    <string name="apps_limit_dialog_remove">सीमा हटाएँ</string>
+    <string name="apps_limit_dialog_cancel">रद्द करें</string>
+    <string name="apps_limit_dialog_invalid">कम से कम 1 मिनट चुनें। दिन में ज़्यादा से ज़्यादा 24 घंटे होते हैं।</string>
+    <string name="apps_limit_dialog_hours_unit">घं</string>
+    <string name="apps_limit_dialog_minutes_unit">मि</string>
+    <string name="apps_tap_to_set_limit">सीमा तय करने के लिए टैप करें</string>
+    <string name="apps_overtime_label">+%1$s ओवरटाइम · ज़मानत #%2$d</string>
+    <string name="apps_over_limit_text">सीमा से +%1$s ज़्यादा</string>
+    <string name="apps_overtime_bar_label">ओवरटाइम · %1$s</string>
+    <string name="apps_unlocked_today_badge">डे पास सक्रिय</string>
+    <string name="apps_deactivated_count">%1$d निष्क्रिय</string>
+    <string name="apps_deactivated_delete">हमेशा के लिए हटाएँ</string>
+    <string name="apps_deactivated_delete_confirm_title">%1$s हटाएँ?</string>
+    <string name="apps_deactivated_delete_confirm_body">इससे ऐप आपके रिकॉर्ड से मिट जाएगा। इसे बाद में फिर जोड़ा जा सकता है, पर इसका इतिहास साथ नहीं आएगा।</string>
+    <string name="apps_deactivated_delete_confirm_action">हटाएँ</string>
+    <string name="apps_deactivated_delete_confirm_cancel">रद्द करें</string>
+    <string name="apps_suggested_header">जाने-पहचाने संदिग्ध</string>
+    <string name="apps_limit_increased_title">सीमा बढ़ाई गई</string>
+    <string name="apps_limit_increased_body">रोज़ %1$s से %2$s। बजट में रहने का आसान तरीका: बजट ही खिसका दो। खाता तो चलता ही रहेगा — बस पैसा बिना पता चले जाएगा। पक्का यही प्लान है?</string>
+    <string name="apps_limit_decreased_title">सीमा घटाई गई</string>
+    <string name="apps_limit_decreased_body">रोज़ %1$s से %2$s। नोट किया: समय ही पैसा है, और आप अपना बचाना चाहते हैं। खाता आपका आभारी है।</string>
+    <string name="apps_limit_notice_ok">नोट किया</string>
+    <string name="apps_sabotage_warning_title">वाह, क्या चाल है</string>
+    <string name="apps_sabotage_warning_body">आप %1$s के बजट से ऊपर हैं, और बिल चुकाने के बजाय खाता ही फाड़ रहे हैं। बहुत चालाक। धोखा सिर्फ़ ख़ुद को दे रहे हैं — घड़ी को किसी बात से फ़र्क नहीं पड़ता।</string>
+    <string name="apps_sabotage_warning_confirm">फिर भी बंद करें</string>
+    <string name="apps_sabotage_warning_cancel">खाते में रहने दें</string>
+
+    <!-- Statistics -->
+    <string name="statistics_title">स्टेटमेंट</string>
+    <string name="statistics_subtitle">आपके समय का खर्च, एक-एक मद में। रोज़, हफ़्ते और महीने का।</string>
+
+    <!-- Profile -->
+    <string name="profile_title">प्रोफ़ाइल</string>
+    <string name="profile_subtitle">अनुमतियाँ, प्राथमिकताएँ और आपका रिकॉर्ड।</string>
+
+    <!-- Apps (monitored list) -->
+    <string name="apps_monitored_count">खाते में %1$d ऐप्स</string>
+    <string name="apps_limit_label">रोज़ की सीमा</string>
+    <string name="apps_used_of_limit">%2$s में से %1$s</string>
+    <string name="apps_used_no_limit">आज %1$s · कोई सीमा तय नहीं</string>
+    <string name="apps_monitoring_on">निगरानी चालू</string>
+    <string name="apps_monitoring_off">रुका हुआ</string>
+
+    <!-- Statistics -->
+    <string name="stat_period_daily">रोज़</string>
+    <string name="stat_period_weekly">हफ़्ता</string>
+    <string name="stat_period_monthly">महीना</string>
+    <string name="stat_time_spent_daily">आज बिताया समय</string>
+    <string name="stat_time_spent_weekly">हफ़्ते में बिताया समय</string>
+    <string name="stat_time_spent_monthly">महीने में बिताया समय</string>
+    <string name="stat_money_lost_week">इस हफ़्ते का नुकसान</string>
+    <string name="stat_money_lost_month">इस महीने का नुकसान</string>
+    <string name="stat_most_used">सबसे ज़्यादा इस्तेमाल</string>
+    <string name="stat_usage_overview">इस्तेमाल का सार</string>
+    <string name="stat_statement_title">स्टेटमेंट</string>
+    <string name="stat_best_day">सबसे अच्छा दिन</string>
+    <string name="stat_worst_day">सबसे बुरा दिन</string>
+    <string name="stat_best_day_caption">सबसे कम बिल</string>
+    <string name="stat_worst_day_caption">सबसे ज़्यादा बिल</string>
+    <string name="stat_no_data">अभी इस्तेमाल का कोई डेटा नहीं।\nनिगरानी वाले ऐप्स खोलिए और खाता चलने लगेगा।</string>
+    <string name="stat_period_total">कुल</string>
+    <string name="stat_time_spent_total">कुल बिताया समय</string>
+    <string name="stat_money_lost_total">कुल नुकसान</string>
+    <string name="stat_info_ok">समझ गया</string>
+    <string name="stat_info_top_apps_title">टॉप ऐप्स</string>
+    <string name="stat_info_top_apps_body">इस अवधि में आपका समय कहाँ गया। हर हिस्सा एक ऐप का वह भाग है जो Android ने हर दिन आधी रात से मापे गए कुल समय में से दर्ज किया। बीच में कुल योग दिखता है।</string>
+    <string name="stat_info_overview_title">इस्तेमाल का सार</string>
+    <string name="stat_info_overview_body">अवधि भर में निगरानी वाले हर ऐप का स्क्रीन टाइम: हफ़्ते के लिए दिन-ब-दिन, महीने और कुल के लिए हफ़्ते-दर-हफ़्ते। फ़ोन ने जैसा मापा, वैसा ही समय — आपके पक्ष में कोई राउंडिंग नहीं। लाइन नीचे जाए, तो खाता भी नीचे जाता है।</string>
+    <string name="stat_info_statement_title">स्टेटमेंट</string>
+    <string name="stat_info_statement_body">हर दिन का बिल: निगरानी वाले ऐप्स पर बिताया समय, आपकी सैलरी के रेट पर पैसों में (मासिक सैलरी ÷ 43,200 मिनट)। सबसे अच्छा दिन सबसे कम बिल वाला है, सबसे बुरा सबसे ज़्यादा वाला।</string>
+    <string name="stat_info_money_lost_title">नुकसान</string>
+    <string name="stat_info_money_lost_body">इस अवधि के हर दिन के बिल का जोड़। निगरानी वाले ऐप्स पर मिनट × आपका प्रति मिनट रेट (मासिक सैलरी ÷ महीने के 43,200 मिनट)।</string>
+    <string name="stat_info_time_spent_title">बिताया समय</string>
+    <string name="stat_info_time_spent_body">इस अवधि में निगरानी वाले ऐप्स पर कुल समय, ठीक वैसा जैसा Android ने मापा। खाता आपके पक्ष में राउंड नहीं करता।</string>
+    <string name="stat_info_most_used_title">सबसे ज़्यादा इस्तेमाल</string>
+    <string name="stat_info_most_used_body">इस अवधि में सबसे ज़्यादा जमा समय वाला ऐप। बिल में किसी को तो सबसे ऊपर रहना है।</string>
+    <string name="stat_day_no_usage">कोई लेन-देन नहीं</string>
+
+    <!-- Profile -->
+    <string name="profile_user_name">आप</string>
+    <string name="profile_user_tagline">नया प्रबंधन: आप।</string>
+    <string name="profile_streak">लगातार</string>
+    <string name="profile_saved">बचत</string>
+    <string name="profile_goals">लक्ष्य</string>
+    <string name="profile_permissions">अनुमतियाँ</string>
+    <string name="profile_preferences">प्राथमिकताएँ</string>
+
+    <!-- Banking secrecy: data never leaves the device (no server, account or tracker) -->
+    <string name="privacy_title">बैंकिंग गोपनीयता</string>
+    <string name="privacy_row_desc">आपका डेटा कभी आपके फ़ोन से बाहर नहीं जाता</string>
+    <string name="privacy_dialog_title">आपका स्टेटमेंट यहीं रहता है</string>
+    <string name="privacy_dialog_body">DollarBlock के पास आपका डेटा रखने के लिए कोई सर्वर नहीं है। न अकाउंट, न लॉगिन, न नाम, ईमेल या फ़ोन नंबर, और न कोई विज्ञापन या एनालिटिक्स ट्रैकर।\n\nसब कुछ आपके फ़ोन पर रहता है: आप हर ऐप कितनी देर चलाते हैं, आपकी तय की गई सीमाएँ और हर ब्लॉक व अनलॉक की रसीदें। Google बैकअप भी यह डेटा नहीं लेता।\n\nडे पास का शुल्क Google Play लेता है। DollarBlock आपका कार्ड कभी नहीं देखता — उसे सिर्फ़ एक \"भुगतान हो गया\" मिलता है।\n\nसब कुछ मिटाने के लिए ऐप अनइंस्टॉल करें या Android सेटिंग्स में उसका डेटा साफ़ करें। हमारी कोई कॉपी कहीं नहीं बचती, क्योंकि कभी थी ही नहीं।</string>
+    <string name="privacy_payment_note">शुल्क Google Play लेता है। DollarBlock आपका कार्ड कभी नहीं देखता।</string>
+
+    <string name="perm_usage">इस्तेमाल की पहुँच</string>
+    <string name="perm_usage_desc">मापें कि हर ऐप कितनी देर चलता है</string>
+    <string name="perm_accessibility">सुलभता</string>
+    <string name="perm_accessibility_desc">सामने खुले ऐप को पहचानें और ब्लॉक करें</string>
+    <string name="perm_overlay">ओवरले</string>
+    <string name="perm_overlay_desc">ऐप के ऊपर ब्लॉक स्क्रीन दिखाएँ</string>
+    <string name="perm_notifications">नोटिफ़िकेशन</string>
+    <string name="perm_notifications_desc">चेतावनियाँ और निगरानी सेवा</string>
+    <string name="perm_status_granted">दी गई</string>
+    <string name="perm_status_pending">बाक़ी</string>
+    <string name="pref_theme">थीम</string>
+    <string name="pref_theme_dark">डार्क</string>
+    <string name="pref_theme_light">लाइट</string>
+    <string name="pref_theme_system">सिस्टम</string>
+    <string name="pref_language">भाषा</string>
+    <string name="pref_language_system">सिस्टम डिफ़ॉल्ट</string>
+    <string name="pref_language_en">English</string>
+    <string name="pref_language_pt">Português</string>
+    <string name="pref_language_hi">हिन्दी</string>
+    <string name="pref_notifications">सीमा की चेतावनियाँ</string>
+    <string name="pref_notifications_desc">जब कोई ऐप अपनी सीमा के क़रीब हो, सूचना पाएँ</string>
+    <string name="pref_history">रसीदें</string>
+    <string name="pref_history_value">हर ब्लॉक और हर ज़मानत</string>
+    <string name="pref_about">DollarBlock के बारे में</string>
+    <string name="about_body">DollarBlock उस समय पर कीमत लगाता है जिसे आपने कहा था कि आप खोना नहीं चाहते। ऐप्स आप चुनते हैं, सीमाएँ आप तय करते हैं, और सीमा पार होते ही ऐप लॉक हो जाता है — आज उसे अनलॉक करने का खर्च एक डे पास है। यहाँ कुछ भी छिपा नहीं है: यह ऐप वायरस नहीं है, आपके फ़ोन पर कब्ज़ा नहीं करता, और कभी भुगतान के लिए मजबूर नहीं करता। आप हमेशा भुगतान न करना चुन सकते हैं, और ऐप्स टैब में किसी भी ऐप की निगरानी जब चाहें बंद कर सकते हैं। हम बस वह सौदा लागू करते हैं जो आपने ख़ुद से किया था।</string>
+    <string name="pref_currency">मुद्रा</string>
+    <string name="pref_currency_body">सिर्फ़ दिखाने के लिए — डे पास का शुल्क अब भी BRL में लगता है।</string>
+    <string name="pref_currency_system">स्वचालित (देश के अनुसार)</string>
+    <string name="pref_currency_brl">रियाल (R$)</string>
+    <string name="pref_currency_usd">डॉलर ($)</string>
+
+    <!-- Salary (basis of the tab) -->
+    <string name="home_salary_card_title">अपनी सैलरी जोड़ें</string>
+    <string name="home_salary_card_title_set">आपके एक मिनट की कीमत</string>
+    <string name="home_salary_card_subtitle">खाता %1$s/महीना के संदर्भ पर चल रहा है। आपकी सैलरी शायद अलग है।</string>
+    <string name="home_salary_card_subtitle_set">%1$s/महीना पर आधारित खाता · बदलने के लिए टैप करें</string>
+    <string name="home_salary_dialog_title">आपके समय की कीमत क्या है?</string>
+    <string name="home_salary_dialog_body">अपनी मासिक शुद्ध सैलरी डालें ताकि हम बेहतर अंदाज़ा लगा सकें कि आपका समय कितना कीमती है — और इसलिए, सोशल मीडिया पर आप कितना पैसा गँवाते हैं। आप देखेंगे कि जो सबक मिलने वाला है, उसके आगे यह ऐप सस्ता सौदा है।</string>
+    <string name="home_salary_dialog_provoke">अपनी मासिक शुद्ध सैलरी नहीं पता? पता करने का वक़्त आ गया। बड़े हो जाओ, दोस्त।</string>
+    <string name="home_salary_dialog_label">मासिक शुद्ध सैलरी</string>
+    <string name="home_salary_dialog_save">हिसाब दोबारा लगाएँ</string>
+    <string name="home_salary_dialog_remove">डिफ़ॉल्ट पर लौटें</string>
+    <string name="home_salary_tip_body">अपनी सैलरी जोड़ें और जानें कि स्क्रॉल करते हुए आप ठीक कितना पैसा गँवाते हैं।</string>
+
+    <!-- Daily permission warning -->
+    <string name="perm_nag_title">खाता अंधेरे में चल रहा है</string>
+    <string name="perm_nag_body">इन अनुमतियों के बिना DollarBlock न माप सकता है, न ब्लॉक कर सकता है, न बिल बना सकता है — अभी यह बस सजावट है। काग़ज़ी काम पूरा करें:</string>
+    <string name="perm_nag_fix">काग़ज़ी काम पूरा करें</string>
+    <string name="perm_nag_later">अंधेरे में ही चलने दें</string>
+
+    <!-- Profile — real stats (E8) -->
+    <string name="profile_blocks_today">आज के ब्लॉक</string>
+    <string name="profile_active_limits">सक्रिय सीमाएँ</string>
+    <string name="profile_stat_score">स्कोर</string>
+
+    <!-- History (E8) -->
+    <string name="history_title">रसीदें</string>
+    <string name="history_empty">अभी कोई रसीद नहीं।\nहर ब्लॉक और हर ज़मानत यहाँ दर्ज होती है।</string>
+    <string name="history_back">वापस</string>
+    <string name="history_entry_paid">चुकाया</string>
+    <string name="history_entry_locked">लॉक, कोई शुल्क नहीं</string>
+
+    <!-- Block service strings (used in AccessibilityService declaration) -->
+    <string name="block_section_title">ऐप ब्लॉकिंग</string>
+    <string name="block_section_subtitle">एक ऐप चुनें और यहाँ उसकी पहुँच ब्लॉक करें।</string>
+    <string name="block_select_label">ऐप</string>
+    <string name="block_select_placeholder">एक ऐप चुनें</string>
+    <string name="block_loading_apps">ऐप्स लोड हो रहे हैं…</string>
+    <string name="block_enable_button">पहुँच ब्लॉक करें</string>
+    <string name="block_disable_button">पहुँच अनब्लॉक करें</string>
+    <string name="block_blocked_list_title">ब्लॉक ऐप्स (%1$d)</string>
+    <string name="block_unblock_action">अनब्लॉक करें</string>
+
+    <!-- Accessibility service status -->
+    <string name="block_a11y_needed_title">ब्लॉकिंग सेवा चालू करें</string>
+    <string name="block_a11y_needed_desc">ऐप्स ब्लॉक करने के लिए DollarBlock को सुलभता सेवा चाहिए। इसे सेटिंग्स &gt; सुलभता &gt; DollarBlock में चालू करें।</string>
+    <string name="block_a11y_button">सेटिंग्स में चालू करें</string>
+    <string name="block_a11y_active">ब्लॉकिंग सेवा सक्रिय।</string>
+
+    <!-- Accessibility service declaration -->
+    <string name="accessibility_service_label">DollarBlock — ऐप ब्लॉकिंग</string>
+    <string name="accessibility_service_description">पहचानता है कि कौन-सा ऐप सामने खुला है, ताकि सीमा पूरी होने पर ब्लॉक लगाया जा सके। यह आपकी स्क्रीन की सामग्री या आपका टाइप किया हुआ नहीं पढ़ता।</string>
+
+    <!-- Block screen -->
+    <string name="block_screen_title">आपका बिल आ गया है</string>
+    <string-array name="block_screen_messages_first">
+        <item>रोज़ की सीमा पूरी। आज इस्तेमाल जारी रखने के लिए खाता चुकाएँ — पहुँच आधी रात तक खुली रहेगी।</item>
+        <item>आपकी ख़ुद तय की गई सीमा ख़त्म। आज आगे चलाना है तो डे पास — आधी रात तक मान्य।</item>
+        <item>तय समय ख़त्म। जारी रखना है? खाता चुकाएँ और आधी रात तक पहुँच खुली।</item>
+        <item>आज की सीमा का अंत। ऐप कल मुफ़्त लौटेगा, या अभी डे पास के साथ आधी रात तक।</item>
+        <item>आपकी रोज़ की सीमा बंद। चुकाने से ऐप आधी रात तक खुलता है; न चुकाने से आपका दिन।</item>
+        <item>सीमा पूरी। यहाँ से आगे सिर्फ़ डे पास — आधी रात तक मान्य।</item>
+        <item>आज का कोटा बंद। अब से पहुँच पेड है और आधी रात तक चलेगी।</item>
+        <item>आज का मुफ़्त समय ख़त्म। डे पास ऐप को आधी रात तक अनलॉक करता है।</item>
+        <item>आपने ख़ुद से तय की गई सीमा छू ली। जारी रखने के लिए खाता चुकाएँ — आधी रात तक खुला।</item>
+        <item>रोज़ की सीमा पूरी। यह कल रीसेट होगी। इंतज़ार नहीं कर सकते, तो पास आधी रात तक मान्य है।</item>
+        <item>आज का समय पूरा। ऐप कल यहीं होगा — या अभी, आधी रात तक के डे पास के साथ।</item>
+        <item>आज का खाता सीमा पर बंद हुआ। फिर खोलने के लिए डे पास; पहुँच आधी रात तक।</item>
+        <item>सीमा टूट गई। आधी रात ऐप मुफ़्त लौटाती है; पास अभी लौटा देता है।</item>
+        <item>खाता बंद करने का समय। आज इस्तेमाल जारी रखना है तो पास आधी रात तक अनलॉक करता है।</item>
+        <item>यही सौदा था। चुकाने से ऐप आधी रात तक खुलता है। जाना मुफ़्त है।</item>
+        <item>इस ऐप पर आपका रोज़ का समय ख़त्म। आज जारी रखने का खर्च एक पास है, आधी रात तक मान्य।</item>
+        <item>सीमा पूरी। यहाँ से आगे पहुँच की एक कीमत है; पास आधी रात तक मान्य है।</item>
+        <item>इस ऐप पर शिफ़्ट ख़त्म। ओवरटाइम पेड है: डे पास, आधी रात तक।</item>
+        <item>आज का समय पूरा खर्च हो गया। अब भी चाहिए, तो डे पास आधी रात तक अनलॉक करता है।</item>
+        <item>रोज़ की सीमा पूरी। फ़ैसला आपका: पैसा रखें, या आधी रात तक फ़ीड।</item>
+    </string-array>
+    <string-array name="block_screen_messages_repeat">
+        <item>आज का दूसरा बिल। कोई बात नहीं — पैसा आपका है।</item>
+        <item>आज दूसरा बिल। दुकान आपकी वफ़ादारी के लिए धन्यवाद कहती है।</item>
+        <item>आज आप एक खाता चुका चुके हैं। यह दूसरा होगा।</item>
+        <item>आज काउंटर का दूसरा चक्कर। आपका स्टेटमेंट दिलचस्प होता जा रहा है।</item>
+        <item>एक और बिल। कोई गिन नहीं रहा। मज़ाक था, हम गिन रहे हैं।</item>
+        <item>आज की दूसरी ज़मानत, अगर आप चाहें। सावधानी से दर्ज।</item>
+        <item>एक और सीमा पूरी। कीमत वही जो सुबह थी।</item>
+        <item>बिल नंबर दो। इस महीने का स्टेटमेंट आपका आभारी है।</item>
+        <item>आप लौट आए। हमने लाइन में आपकी जगह बचाकर रखी थी।</item>
+        <item>दूसरा राउंड। काउंटर अब भी खुला है।</item>
+        <item>दोबारा आना दर्ज हुआ। कोई जुर्माना नहीं — बस वही फ़ीस।</item>
+        <item>यही सौदा था। आप मन बदल सकते हैं; रसीद नहीं बदलती।</item>
+        <item>दूसरा बिल। छुट्टे बचाने का अब भी वक़्त है।</item>
+        <item>काउंटर से दूसरी बार। आपकी वफ़ादारी नोट कर ली गई है।</item>
+        <item>फिर आ गए। कीमत नहीं बढ़ी। महीने का कुल बढ़ गया।</item>
+        <item>आज दूसरी बार। हम जज नहीं करते, बस जोड़ते हैं।</item>
+        <item>सीमा हमेशा जैसी ही है। लौटकर आप आए हैं।</item>
+        <item>आज का बिल नंबर दो। दिन का कुल अच्छा-ख़ासा बन रहा है।</item>
+        <item>आज एक ज़मानत पहले ही हो चुकी है। दूसरी की कीमत भी वही है।</item>
+        <item>एक और सीमा। आज का पहला बिल आपको सलाम भेजता है।</item>
+    </string-array>
+    <string-array name="block_screen_messages_many">
+        <item>एक और बिल। अब तो सब्सक्रिप्शन सस्ता पड़ता।</item>
+        <item>तीसरा बिल या उससे ज़्यादा। अब आप ख़ास ग्राहक हैं।</item>
+        <item>अब तक हमें आपका ऑर्डर ज़ुबानी याद है।</item>
+        <item>नियमित ग्राहक पहचाना गया। अफ़सोस, हमारे पास कोई रिवॉर्ड प्रोग्राम नहीं है।</item>
+        <item>कैशियर अब आपको नाम से जानता है।</item>
+        <item>एक और। आज के स्टेटमेंट को दूसरा पन्ना चाहिए होगा।</item>
+        <item>DollarBlock को लगभग अकेले आप ही चला रहे हैं। दिल से धन्यवाद।</item>
+        <item>आज कई बिल बन चुके हैं। यह पैड पर बस एक और है।</item>
+        <item>अगर यह जिम होता, तो आप सबसे समर्पित सदस्य होते।</item>
+        <item>एक और बिल। फ़ीड अब भी वहीं है। आपका पैसा, कम होता जा रहा।</item>
+        <item>इस रफ़्तार से, दिन का अंत महीने के अंत जैसा लगेगा।</item>
+        <item>चुकाया, स्क्रॉल किया, ब्लॉक हुआ। यह गाना हमें याद है।</item>
+        <item>एक और पास। आज की रसीद आपकी फ़ीड से भी लंबी हो चुकी है।</item>
+        <item>आप बार-बार आते हैं। बिल्कुल नोटिफ़िकेशन की तरह।</item>
+        <item>एक और बिल। कोई जजमेंट नहीं, बस एक थका हुआ कैलकुलेटर।</item>
+        <item>आज के औसत से ऊपर। काफ़ी ऊपर।</item>
+        <item>आधी रात आ रही है। आपके बटुए के लिए, उतनी जल्दी नहीं।</item>
+        <item>एक और अनलॉक। एल्गोरिदम चुपचाप जश्न मना रहा है।</item>
+        <item>कुछ दिन ऐसे ही होते हैं। आज शायद उनमें से एक है।</item>
+        <item>एक और खाता। कुल को नज़रअंदाज़ करना मुश्किल होता जा रहा है।</item>
+    </string-array>
+    <string name="block_stamp">ब्लॉक</string>
+    <string name="block_receipt_header">DOLLARBLOCK · बिल</string>
+    <string name="block_receipt_caption">डे पास · आधी रात तक मान्य</string>
+    <string name="block_receipt_meta">क्र. %1$s · %2$s</string>
+    <string name="block_screen_home">मेरा पैसा रखें</string>
+    <string name="block_screen_open_app">DollarBlock खोलें</string>
+    <string name="block_understand_link">स्क्रीन ब्लॉक को समझें</string>
+    <string name="block_understand_title">सौदा तो सौदा है</string>
+    <string name="block_understand_body">यह ब्लॉक कोई कब्ज़ा नहीं — यह आपका किया हुआ समझौता है। DollarBlock वायरस नहीं है, आपका फ़ोन लॉक नहीं करता और कभी भुगतान के लिए मजबूर नहीं करता: भुगतान बस आज यह ऐप वापस पाने का शॉर्टकट है। आप यह स्क्रीन बंद करके अपने दिन में लौट सकते हैं, और ऐप्स टैब में कभी भी इस ऐप की निगरानी बंद कर सकते हैं। हम सिर्फ़ वही लेते हैं जो तय हुआ था — इसके अलावा कुछ नहीं।</string>
+
+    <!-- Payment / unlock -->
+    <string name="pay_with_google">Google Pay से भुगतान करें</string>
+    <string name="pay_day_pass">डे पास का भुगतान करें</string>
+    <string name="pay_billing_unavailable">Google Play स्टोर ने जवाब नहीं दिया। डे पास अभी उपलब्ध नहीं है।</string>
+    <string name="pay_simulate">भुगतान सिम्युलेट करें (टेस्ट)</string>
+    <string name="pay_processing">प्रोसेस हो रहा है…</string>
+    <string name="pay_unavailable">इस डिवाइस पर Google Pay उपलब्ध नहीं है।</string>
+    <string name="pay_error">भुगतान पूरा नहीं हो सका।</string>
+    <string name="pay_cancelled">भुगतान रद्द। समझदारी।</string>
+    <string name="pay_unlocked">चुका दिया। आधी रात तक मुफ़्त।</string>
+    <string name="pay_failed_title">गल्ला ख़राब हो गया</string>
+    <string name="pay_failed_body">हमारी तरफ़ कुछ गड़बड़ हुई और हम आपका पैसा नहीं ले सके। आपकी किस्मत: आज का पास हमारी तरफ़ से — बिना एक पैसा चुकाए ऐप खोलें।</string>
+    <string name="pay_failed_action">%1$s मुफ़्त में खोलें</string>
+    <string name="pay_failed_retry">फिर से भुगतान करें</string>
+    <string name="pay_courtesy_granted">हमारी तरफ़ से। आधी रात तक मुफ़्त।</string>
+
+    <!-- Common -->
+    <string name="unlock">अनलॉक</string>
+    <string name="coming_soon">जल्द आ रहा है।</string>
+    <string name="preview_sample_data">प्रीव्यू — नमूना डेटा।</string>
+
+    <!-- Onboarding (E2 — first run) -->
+    <string name="onb_welcome_title">समय ही पैसा है। आपका रिस रहा है।</string>
+    <string name="onb_penalty_title">सौदा</string>
+    <string name="onb_contract_header">DOLLARBLOCK · समझौता</string>
+    <string name="onb_contract_footer">हस्ताक्षर करके, आप अपने ही बहानों का बिल भरने के लिए राज़ी होते हैं।</string>
+    <string name="onb_summary_no_usage_title">माप चालू है</string>
+    <string name="onb_summary_no_usage_body">इस हफ़्ते अभी कोई इस्तेमाल दर्ज नहीं। जैसे-जैसे आप फ़ोन चलाएँगे, आपके टॉप ऐप्स यहाँ दिखेंगे।</string>
+    <string name="onb_a11y_disclosure_title">DollarBlock सुलभता का इस्तेमाल कैसे करता है</string>
+    <string name="onb_a11y_disclosure_body">DollarBlock सुलभता अनुमति सिर्फ़ एक मक़सद से माँगता है: यह पहचानना कि सामने कौन-सा ऐप खुला है, ताकि आपकी ख़ुद की रोज़ की सीमा पूरी होने पर उसके ऊपर ब्लॉक स्क्रीन दिखा सके।\n\nइस अनुमति से ऐप आपकी स्क्रीन की सामग्री नहीं पढ़ता, आपका टाइप किया टेक्स्ट नहीं पकड़ता, पासवर्ड इकट्ठा नहीं करता, और कोई डेटा आपके डिवाइस से बाहर नहीं भेजता। यह सिर्फ़ देखता है कि अभी सामने कौन-सा ऐप है।\n\nआप यह अनुमति कभी भी Android सेटिंग्स में वापस ले सकते हैं।</string>
+    <string name="onb_a11y_disclosure_allow">अनुमति दें</string>
+    <string name="onb_a11y_disclosure_deny">अभी नहीं</string>
+    <string name="notif_channel_name">सीमा की चेतावनियाँ</string>
+    <plurals name="notif_limit_warning_title">
+        <item quantity="one">%2$s का 1 मिनट बाक़ी</item>
+        <item quantity="other">%2$s के %1$d मिनट बाक़ी</item>
+    </plurals>
+    <string name="notif_limit_warning_body">कार्ड तैयार रखें, या अपनी इज़्ज़त।</string>
+    <string name="onb_perm_required">ज़रूरी</string>
+    <string name="onb_continue">जारी रखें</string>
+    <!-- E18/E21: permissões no onboarding -->
+    <string name="onb_perm_step">काग़ज़ी काम %2$d में से %1$d</string>
+    <string name="onb_perm_optional">वैकल्पिक</string>
+    <string name="onb_perm_not_now">अभी नहीं</string>
+    <string name="onb_perm_usage_title">पहले, समय गिनें।</string>
+    <string name="onb_perm_usage_without">माप नहीं तो न सीमा, न लॉक। DollarBlock बस सजावट बन जाता है।</string>
+    <string name="onb_perm_accessibility_title">अब, ताला।</string>
+    <string name="onb_perm_accessibility_without">DollarBlock मापता तो रहेगा, पर कभी कुछ लॉक नहीं करेगा। आपकी सीमा बस एक सुझाव बन जाएगी — और आप जानते हैं वे कैसे ख़त्म होते हैं।</string>
+    <string name="onb_perm_overlay_without">ब्लॉक स्क्रीन देर से दिख सकती है — या बिल्कुल नहीं। आप सीमा तोड़ते हैं और ऐप खुला रहता है, जैसे कुछ हुआ ही नहीं।</string>
+    <string name="onb_skip_required_title">%1$s के बिना आगे बढ़ें?</string>
+    <string name="onb_skip_required_body">%1$s\n\nआप इसे बाद में प्रोफ़ाइल में दे सकते हैं।</string>
+    <string name="onb_skip_required_grant">अभी दें</string>
+    <string name="onb_skip_required_proceed">फिर भी आगे बढ़ें</string>
+    <string name="onb_finish_missing_hint">बाक़ी काग़ज़ी काम: %1$s। DollarBlock आधा ही काम करेगा — प्रोफ़ाइल में कभी भी पूरा करें।</string>
+    <!-- E21: onboarding animado em 5 páginas -->
+    <string name="onb_progress_description">चरण %2$d में से %1$d</string>
+    <string name="onb_perm_grant">दें</string>
+    <string name="onb_entry_body">स्क्रीन टाइम की याद दिलाने वाले संदेश आसानी से नज़रअंदाज़ हो जाते हैं। बिल नहीं। DollarBlock उस समय पर कीमत लगाता है जो ऐप्स आपसे ले लेते हैं।</string>
+    <string name="onb_entry_meter_label">जब से आपने DollarBlock खोला</string>
+    <string name="onb_entry_meter_note">स्क्रीन का हर मिनट %1$s का है (संदर्भ: %2$s/महीना सैलरी)।</string>
+    <string name="onb_clause_label">धारा %1$d</string>
+    <string name="onb_clause_1">आप वे ऐप्स चुनते हैं जो आपका समय चुराते हैं और हर एक के लिए रोज़ की सीमा तय करते हैं।</string>
+    <string name="onb_clause_2">सीमा पार होते ही ऐप लॉक हो जाता है। वापस चाहिए? एक पास %1$s का है और आधी रात तक चलता है। इसी तरह हम आपको आज़ाद होने के लिए धकेलते हैं।</string>
+    <string name="onb_clause_3">निकलना है? मुफ़्त है, कभी भी। पर याद रखें: कोई भी रकम आपका समय वापस नहीं खरीद सकती।</string>
+    <string name="onb_clause_4">अब बारी आपकी है! हस्ताक्षर करके आप दिखाते हैं कि आप सबसे कीमती और दुर्लभ मुद्रा वापस जीतने के लिए दृढ़ हैं: आपका समय। यह लड़ाई लड़ने के लिए हम आपके साथ हैं।</string>
+    <string name="onb_sign">सौदे पर हस्ताक्षर करें</string>
+    <string name="onb_measure_body">वही स्क्रीन टाइम जो आपका फ़ोन पहले से ट्रैक करता है। खाते को बस इतना ही चाहिए।</string>
+    <string name="onb_measure_result_title">आपके पिछले हफ़्ते की कीमत %1$s रही</string>
+    <string name="onb_measure_result_body">उन ऐप्स पर %1$s जिन्होंने आपका सबसे ज़्यादा समय लिया।</string>
+    <string name="onb_measure_result_note">%1$s/महीना के संदर्भ पर। अपनी सैलरी आप बाद में होम पर डाल सकते हैं।</string>
+    <string name="onb_lock_body">सही समय पर ऐप लॉक करने के लिए, DollarBlock को जानना होता है कि कौन-सा ऐप खुला है।</string>
+    <string name="onb_lock_privacy">यह आपकी स्क्रीन, आपका टाइप किया या आपके पासवर्ड नहीं पढ़ता।</string>
+    <string name="onb_a11y_tutorial_description">चरण: सुलभता में DollarBlock पर टैप करें, स्विच चालू करें और अनुमति दें पर टैप करें</string>
+    <string name="onb_a11y_tutorial_open">देखें कैसे चालू करें</string>
+    <string name="onb_a11y_tutorial_close">बंद करें</string>
+    <string name="onb_trust_lock_1">यह सिर्फ़ खुले ऐप का नाम देखता है। उसके अंदर क्या है, कभी नहीं।</string>
+    <string name="onb_trust_lock_2">इसमें से कुछ भी आपके फ़ोन से बाहर नहीं जाता।</string>
+    <string name="onb_trust_lock_3">आप इसे कभी भी Android सेटिंग्स में बंद कर सकते हैं।</string>
+    <string name="onb_final_title">आख़िरी टच।</string>
+    <string name="onb_final_body">बस एक टैप और आपका खाता खुल जाएगा।</string>
+    <string name="onb_overlay_card_body">लॉक को ऐप के ऊपर दिखाता है। इसके बिना, कई फ़ोन पर ब्लॉक कभी दिखता ही नहीं।</string>
+    <string name="onb_notifications_card_body">सीमा ख़त्म होने से पहले एक चेतावनी। कोई मार्केटिंग नहीं, कोई \"हमें आपकी याद आती है\" नहीं।</string>
+    <string name="onb_turn_on">चालू करें</string>
+    <string name="onb_open_tab">खाता खोलें</string>
+    <string name="onb_stamp_open">खाता खुला</string>
+    <string name="onb_howto_dollarblock">DollarBlock</string>
+    <string name="onb_howto_allow">अनुमति दें</string>
+    <string name="onb_howto_accessibility_description">चरण-दर-चरण: सुलभता में DollarBlock पर टैप करें, स्विच चालू करें और अनुमति दें पर टैप करें।</string>
+    <string name="onb_howto_overlay_description">चरण-दर-चरण: DollarBlock का स्विच चालू करें।</string>
+</resources>

@@ -101,6 +101,10 @@ tamanho da luminária, paisagem da janela…). Mude o número no script e rode:
 powershell -File scripts/build-onb-hero.ps1
 ```
 
+Para reaproveitar o desenho em outras telas sem a tela em volta, use `docs/art/onb_hero_scene.webp`
+(recorte limpo e sem edições do mockup, 941×632); o `onb_hero.jpg` é uma versão editada e atrelada
+aos números de `OnboardingHero.kt`.
+
 As animações por cima da arte (ventilador, luz, vapor, brilho nos ícones) ficam em
 `OnboardingHero.kt`; se mudar posição ou tamanho de algo aqui, confira as coordenadas de lá.
 
