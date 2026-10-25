@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.input.pointer.util.VelocityTracker
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextMeasurer
@@ -49,7 +50,8 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.dollarblock.R
-import com.dollarblock.feature.blocking.payment.GooglePayConfig
+import com.dollarblock.data.local.prefs.deviceCurrency
+import com.dollarblock.domain.model.MoneyFormat
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
@@ -225,11 +227,14 @@ private class BlockTexts(
 @Composable
 fun BouncerScene(modifier: Modifier = Modifier) {
     val textMeasurer = rememberTextMeasurer()
+    // Preço do passe na moeda do país, como na tela de bloqueio real (EUA → $0.99).
+    val context = LocalContext.current
+    val currency = remember(context) { context.deviceCurrency() }
     val texts = BlockTexts(
         title = stringResource(R.string.block_screen_title),
         header = stringResource(R.string.block_receipt_header),
         stamp = stringResource(R.string.block_stamp),
-        price = "R$ " + GooglePayConfig.DEFAULT_PRICE.replace('.', ','),
+        price = MoneyFormat.format(currency.dayPassPrice.toDouble(), currency).replace(' ', ' '),
         caption = stringResource(R.string.block_receipt_caption),
         pay = stringResource(R.string.pay_day_pass),
     )
