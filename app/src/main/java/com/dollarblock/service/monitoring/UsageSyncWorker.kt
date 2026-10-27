@@ -5,6 +5,7 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.dollarblock.domain.repository.MonitoredAppRepository
+import com.dollarblock.service.nudge.NudgeEngine
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 
@@ -22,11 +23,14 @@ class UsageSyncWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
     private val repository: MonitoredAppRepository,
+    private val nudgeEngine: NudgeEngine,
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
         return try {
             repository.syncTodayUsage()
+            // Fechamento do dia (D18–D20): a partir das 21h, uma vez por dia, com o uso recém-sincronizado.
+            runCatching { nudgeEngine.onDailyCloseCheck() }
             Result.success()
         } catch (e: Exception) {
             Result.retry()

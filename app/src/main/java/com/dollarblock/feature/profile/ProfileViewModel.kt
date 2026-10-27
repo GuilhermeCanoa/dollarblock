@@ -13,6 +13,7 @@ import com.dollarblock.data.local.prefs.CurrencyPreference
 import com.dollarblock.data.local.prefs.LanguagePreferences
 import com.dollarblock.data.local.prefs.MoneyPreferences
 import com.dollarblock.data.local.prefs.NotificationPreferences
+import com.dollarblock.data.local.prefs.NudgePreferences
 import com.dollarblock.data.local.prefs.OnboardingPreferences
 import com.dollarblock.data.local.prefs.ThemePreferences
 import com.dollarblock.domain.model.AppCurrency
@@ -60,6 +61,7 @@ class ProfileViewModel @Inject constructor(
     private val languagePreferences: LanguagePreferences,
     private val moneyPreferences: MoneyPreferences,
     private val notificationPreferences: NotificationPreferences,
+    private val nudgePreferences: NudgePreferences,
     monitoredAppRepository: MonitoredAppRepository,
     eventDao: EventDao,
 ) : ViewModel() {
@@ -127,6 +129,13 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch { notificationPreferences.setEnabled(enabled) }
     }
 
+    val nudgesEnabled: StateFlow<Boolean> = nudgePreferences.enabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
+
+    fun setNudgesEnabled(enabled: Boolean) {
+        viewModelScope.launch { nudgePreferences.setEnabled(enabled) }
+    }
+
     /** Re-lê o estado das permissões. Barato — seguro chamar em cada ON_RESUME. */
     fun refresh() {
         _permissions.value = permissionsProvider.currentState()
@@ -144,6 +153,7 @@ class ProfileViewModel @Inject constructor(
             languagePreferences.reset()
             moneyPreferences.reset()
             notificationPreferences.reset()
+            nudgePreferences.reset()
         }
     }
 

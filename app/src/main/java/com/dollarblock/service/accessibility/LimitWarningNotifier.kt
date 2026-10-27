@@ -3,7 +3,9 @@ package com.dollarblock.service.accessibility
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.ActivityCompat
@@ -55,9 +57,17 @@ class LimitWarningNotifier @Inject constructor(
             )
             .setContentText(context.getString(R.string.notif_limit_warning_body))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setContentIntent(openAppIntent())
             .setAutoCancel(true)
             .build()
         NotificationManagerCompat.from(context).notify(appLabel.hashCode(), notification)
+    }
+
+    /** Toque na notificação abre o DollarBlock (antes não fazia nada além de sumir). */
+    private fun openAppIntent(): PendingIntent? {
+        val launch = context.packageManager.getLaunchIntentForPackage(context.packageName) ?: return null
+        launch.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        return PendingIntent.getActivity(context, 0, launch, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
     }
 
     private companion object {

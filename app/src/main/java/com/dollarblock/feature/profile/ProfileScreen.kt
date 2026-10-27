@@ -95,6 +95,7 @@ fun ProfileScreen(
     val language by viewModel.language.collectAsStateWithLifecycle()
     val currencyPreference by viewModel.currencyPreference.collectAsStateWithLifecycle()
     val notificationsEnabled by viewModel.notificationsEnabled.collectAsStateWithLifecycle()
+    val nudgesEnabled by viewModel.nudgesEnabled.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     // Re-checa as permissões sempre que a tela volta ao foreground (igual ao onboarding).
@@ -123,12 +124,14 @@ fun ProfileScreen(
         language = language,
         currencyPreference = currencyPreference,
         notificationsEnabled = notificationsEnabled,
+        nudgesEnabled = nudgesEnabled,
         onRequestPermission = ::requestPermission,
         onOpenHistory = onOpenHistory,
         onThemeChange = viewModel::setTheme,
         onLanguageChange = viewModel::setLanguage,
         onCurrencyChange = viewModel::setCurrencyPreference,
         onNotificationsEnabledChange = viewModel::setNotificationsEnabled,
+        onNudgesEnabledChange = viewModel::setNudgesEnabled,
         onResetAllData = viewModel::resetAllData,
         modifier = modifier,
     )
@@ -142,12 +145,14 @@ private fun ProfileScreenContent(
     language: AppLanguage,
     currencyPreference: CurrencyPreference,
     notificationsEnabled: Boolean,
+    nudgesEnabled: Boolean,
     onRequestPermission: (AppPermission) -> Unit,
     onOpenHistory: () -> Unit,
     onThemeChange: (AppTheme) -> Unit,
     onLanguageChange: (AppLanguage) -> Unit,
     onCurrencyChange: (CurrencyPreference) -> Unit,
     onNotificationsEnabledChange: (Boolean) -> Unit,
+    onNudgesEnabledChange: (Boolean) -> Unit,
     onResetAllData: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -333,6 +338,13 @@ private fun ProfileScreenContent(
                     description = stringResource(R.string.pref_notifications_desc),
                     checked = notificationsEnabled,
                     onCheckedChange = onNotificationsEnabledChange,
+                )
+                SettingSwitchRow(
+                    icon = Icons.Filled.Notifications,
+                    title = stringResource(R.string.pref_nudges),
+                    description = stringResource(R.string.pref_nudges_desc),
+                    checked = nudgesEnabled,
+                    onCheckedChange = onNudgesEnabledChange,
                 )
                 SettingRow(
                     icon = Icons.Filled.History,
@@ -765,12 +777,14 @@ private fun ProfileScreenPreview() {
             language = AppLanguage.SYSTEM,
             currencyPreference = CurrencyPreference.SYSTEM,
             notificationsEnabled = true,
+            nudgesEnabled = true,
             onRequestPermission = {},
             onOpenHistory = {},
             onThemeChange = {},
             onLanguageChange = {},
             onCurrencyChange = {},
             onNotificationsEnabledChange = {},
+            onNudgesEnabledChange = {},
             onResetAllData = {},
         )
     }

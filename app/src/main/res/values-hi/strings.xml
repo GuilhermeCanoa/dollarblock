@@ -544,4 +544,49 @@
     <string name="onb_howto_allow">अनुमति दें</string>
     <string name="onb_howto_accessibility_description">चरण-दर-चरण: सुलभता में DollarBlock पर टैप करें, स्विच चालू करें और अनुमति दें पर टैप करें।</string>
     <string name="onb_howto_overlay_description">चरण-दर-चरण: DollarBlock का स्विच चालू करें।</string>
+
+    <!-- मैनेजर के तकाज़े (E22) -->
+    <string name="nudge_channel_name">मैनेजर के तकाज़े</string>
+    <string name="nudge_channel_desc">स्क्रीन टाइम की कीमत की याद (दिन में ज़्यादा से ज़्यादा 2)</string>
+    <string name="pref_nudges">मैनेजर के तकाज़े</string>
+    <string name="pref_nudges_desc">स्क्रीन टाइम की कीमत की याद (दिन में ज़्यादा से ज़्यादा 2)</string>
+    <string name="nudge_title_session">खाता खुला है: %1$s</string>
+    <string name="nudge_title_projection">स्टेटमेंट का अनुमान: %1$s</string>
+    <string name="nudge_title_habit">लेन-देन दर्ज: %1$s</string>
+    <string name="nudge_title_daily_close">आज का हिसाब</string>
+    <string name="nudge_title_pass">डे पास की रसीद</string>
+    <string name="nudge_duration_hm">%1$d घं %2$02d मि</string>
+    <string name="nudge_duration_m">%1$d मिनट</string>
+    <string name="nudge_a1">%1$s पर लगातार 30 मिनट। रोज़ ऐसा हो तो साल में करीब 900 किमी पैदल: दिल्ली से अहमदाबाद, पैदल।</string>
+    <string name="nudge_a2">आपने %1$s \"बस एक चीज़ देखने\" के लिए खोला था। वो %2$s पहले की बात है।</string>
+    <string name="nudge_a3">%1$s पर बिना रुके %2$s। %1$s आपकी लगन का शुक्रिया करता है। बिल भी।</string>
+    <string name="nudge_a4">%1$s पर %2$s। एक पूरी फ़िल्म जितना वक़्त, बस फ़िल्म के बिना।</string>
+    <string name="nudge_a5">सावधान: आपको लूटा जा रहा है और आपको पता भी नहीं। %1$s पर %2$s, अब तक %3$s।</string>
+    <plurals name="nudge_b6">
+        <item quantity="one">रोज़ %2$s %1$s पर, यानी साल में %3$d घंटे। यानी %4$d पूरा दिन जागते हुए, बस अंगूठा चलाते हुए।</item>
+        <item quantity="other">रोज़ %2$s %1$s पर, यानी साल में %3$d घंटे। यानी %4$d पूरे दिन जागते हुए, बस अंगूठा चलाते हुए।</item>
+    </plurals>
+    <string name="nudge_b7">%1$s पर रोज़ के इस वक़्त में आप साल में करीब %2$d किताबें पढ़ सकते थे। आपने मीम के कैप्शन पढ़े।</string>
+    <plurals name="nudge_b8">
+        <item quantity="one">%1$s पर सालाना वक़्त में आप %2$d मैराथन की तैयारी कर सकते थे। फ़िलहाल सिर्फ़ बिल दौड़ रहा है।</item>
+        <item quantity="other">%1$s पर सालाना वक़्त में आप %2$d मैराथन की तैयारी कर सकते थे। फ़िलहाल सिर्फ़ बिल दौड़ रहा है।</item>
+    </plurals>
+    <plurals name="nudge_b9">
+        <item quantity="one">इस रफ़्तार से %1$s इस साल आपका %2$d पूरा दिन ले जाएगा। वो छुट्टी जो आपने कभी ली ही नहीं।</item>
+        <item quantity="other">इस रफ़्तार से %1$s इस साल आपके %2$d पूरे दिन ले जाएगा। वो छुट्टी जो आपने कभी ली ही नहीं।</item>
+    </plurals>
+    <string name="nudge_b10">स्टेटमेंट का अनुमान: %1$s पर साल में %2$s। यानी %3$s की कीमत, स्क्रॉल की किस्तों में।</string>
+    <string name="nudge_b11">%1$s पर साल में %2$d घंटे। इतने में स्पेनिश के पूरे कोर्स का %3$d%% हो जाता। Hasta luego, वक़्त।</string>
+    <string name="nudge_c13">ध्यान की चोरी जारी है। संदिग्ध: %1$s। रकम: %2$s। गवाह: कोई नहीं।</string>
+    <string name="nudge_c14">कौड़ियों के भाव मत बिकिए: %1$s पर हर मिनट की कीमत %2$s है। आप इसे मुफ़्त में दे रहे हैं।</string>
+    <string name="nudge_c15">%1$s की कीमत अरबों में है। उसमें आज के आपके %2$s भी हैं, बिना किसी अनुबंध के।</string>
+    <string name="nudge_c16">आपकी तनख़्वाह वक़्त ख़रीदती है। आज आपने उसमें से %2$s मुफ़्त में %1$s को दे दिए।</string>
+    <string name="nudge_c17">ऑटो-डेबिट पकड़ा गया: %1$s, हर दिन, करीब %2$s बजे। किसी को याद नहीं कि इसकी मंज़ूरी दी थी।</string>
+    <string name="nudge_d18">आज का हिसाब: %1$s स्क्रीन टाइम, %2$s। रसीद स्टेटमेंट में है, अगर विस्तार से रोना हो।</string>
+    <string name="nudge_d19">आज %1$s ने %2$s ले लिए। वो लौटाने वाला नहीं।</string>
+    <string name="nudge_d20">आज एक भी सीमा नहीं टूटी। कोई मेडल नहीं देगा, पर हिसाब बराबर रहा।</string>
+    <string name="nudge_e21">आज पहली बार %1$s: %2$s बजे। खाता चाय की दुकान से पहले खुल गया।</string>
+    <string name="nudge_e22">फ़ोन अनलॉक किया और सीधे %1$s पर। पुराने ग्राहक की आदत।</string>
+    <string name="nudge_e23">%1$s के लिए डे पास का भुगतान हुआ। रसीद जारी। हम फ़ैसला नहीं सुनाते, बस फ़ाइल करते हैं।</string>
+    <string name="nudge_e24">आज का दूसरा डे पास। आप %1$s के सबसे वफ़ादार ग्राहक हैं।</string>
 </resources>

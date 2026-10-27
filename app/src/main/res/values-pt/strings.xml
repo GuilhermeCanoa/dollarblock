@@ -573,4 +573,52 @@
     <string name="onb_howto_allow">Permitir</string>
     <string name="onb_howto_accessibility_description">Passo a passo: em Acessibilidade, toque em DollarBlock, ligue a chave e toque em Permitir.</string>
     <string name="onb_howto_overlay_description">Passo a passo: ligue a chave do DollarBlock.</string>
+
+    <!-- Cobranças do gerente (E22) — ids da lista aprovada; C12 cortada. -->
+    <string name="nudge_channel_name">Cobranças do gerente</string>
+    <string name="nudge_channel_desc">Lembretes do que o tempo de tela está custando (no máximo 2 por dia)</string>
+    <string name="pref_nudges">Cobranças do gerente</string>
+    <string name="pref_nudges_desc">Lembretes do que o tempo de tela está custando (no máximo 2 por dia)</string>
+    <string name="nudge_title_session">Conta em aberto: %1$s</string>
+    <string name="nudge_title_projection">Projeção do extrato: %1$s</string>
+    <string name="nudge_title_habit">Movimentação registrada: %1$s</string>
+    <string name="nudge_title_daily_close">Fechamento do dia</string>
+    <string name="nudge_title_pass">Recibo do passe do dia</string>
+    <string name="nudge_duration_hm">%1$dh %2$02dmin</string>
+    <string name="nudge_duration_m">%1$d min</string>
+    <string name="nudge_a1">30 min seguidos no %1$s. Repetido todo dia, dá uns 900 km por ano de caminhada: São Paulo–Rio a pé, ida e volta.</string>
+    <string name="nudge_a2">Você abriu o %1$s \"só pra ver uma coisa\". Isso foi há %2$s.</string>
+    <string name="nudge_a3">%2$s de %1$s sem pausa. O %1$s agradece a dedicação. A fatura também.</string>
+    <string name="nudge_a4">%2$s no %1$s. Dava um filme inteiro, sem a parte do filme.</string>
+    <string name="nudge_a5">Cuidado: estão te roubando e você nem percebeu. %2$s no %1$s, %3$s até agora.</string>
+    <plurals name="nudge_b6">
+        <item quantity="one">%2$s por dia de %1$s são %3$d horas por ano. É %4$d dia inteiro acordado, só deslizando o dedo.</item>
+        <item quantity="many">%2$s por dia de %1$s são %3$d horas por ano. São %4$d dias inteiros acordado, só deslizando o dedo.</item>
+        <item quantity="other">%2$s por dia de %1$s são %3$d horas por ano. São %4$d dias inteiros acordado, só deslizando o dedo.</item>
+    </plurals>
+    <string name="nudge_b7">Com o tempo diário do %1$s, daria para ler uns %2$d livros por ano. Você leu legendas de meme.</string>
+    <plurals name="nudge_b8">
+        <item quantity="one">Seu tempo anual no %1$s daria para treinar para %2$d maratona. Por enquanto, quem corre é a conta.</item>
+        <item quantity="many">Seu tempo anual no %1$s daria para treinar para %2$d maratonas. Por enquanto, quem corre é a conta.</item>
+        <item quantity="other">Seu tempo anual no %1$s daria para treinar para %2$d maratonas. Por enquanto, quem corre é a conta.</item>
+    </plurals>
+    <plurals name="nudge_b9">
+        <item quantity="one">Nesse ritmo, o %1$s leva %2$d dia inteiro seu este ano. Férias que você não tirou.</item>
+        <item quantity="many">Nesse ritmo, o %1$s leva %2$d dias inteiros seus este ano. Férias que você não tirou.</item>
+        <item quantity="other">Nesse ritmo, o %1$s leva %2$d dias inteiros seus este ano. Férias que você não tirou.</item>
+    </plurals>
+    <string name="nudge_b10">Projeção do extrato: %2$s por ano no %1$s. É o preço de %3$s, pago em parcelas de rolagem.</string>
+    <string name="nudge_b11">%2$d h por ano no %1$s. Dá para fazer %3$d%% de um curso completo de espanhol. Hasta luego, tempo.</string>
+    <string name="nudge_c13">Furto de atenção em andamento. Suspeito: %1$s. Valor: %2$s. Testemunhas: nenhuma.</string>
+    <string name="nudge_c14">Não se venda por migalhas: cada minuto no %1$s vale %2$s. Você está dando de graça.</string>
+    <string name="nudge_c15">O %1$s vale bilhões. Parte disso são os seus %2$s de hoje, cedidos sem contrato.</string>
+    <string name="nudge_c16">Seu salário compra tempo. Hoje você deu %2$s dele de graça ao %1$s.</string>
+    <string name="nudge_c17">Débito automático detectado: %1$s, todo dia, por volta das %2$s. Ninguém lembra de ter autorizado.</string>
+    <string name="nudge_d18">Fechamento do dia: %1$s de tela, %2$s. O recibo está no extrato, caso queira chorar com detalhes.</string>
+    <string name="nudge_d19">Hoje o %1$s levou %2$s. Ele não vai devolver.</string>
+    <string name="nudge_d20">Dia encerrado sem estourar nenhum limite. Ninguém vai te dar medalha, mas a conta fechou.</string>
+    <string name="nudge_e21">Primeira abertura do %1$s hoje: %2$s. A conta abriu antes da padaria.</string>
+    <string name="nudge_e22">Desbloqueou o celular e foi direto pro %1$s. Reflexo de cliente antigo.</string>
+    <string name="nudge_e23">Passe do dia pago para o %1$s. Recibo emitido. A gente não julga, só arquiva.</string>
+    <string name="nudge_e24">Segundo passe do dia. Você já é o cliente mais fiel do %1$s.</string>
 </resources>
