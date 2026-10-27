@@ -1,5 +1,6 @@
 package com.dollarblock.domain.repository
 
+import com.dollarblock.domain.model.MonthWallet
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -16,4 +17,7 @@ interface MoneySummaryRepository {
      * pagamento foi feito naquele dia, conta um passe do dia ao preço atual, em BRL.
      */
     fun observeTotalSaved(): Flow<Double>
+
+    /** Carteira do mês corrente (pago, poupado e faturas), na moeda do país. */
+    fun observeMonthWallet(): Flow<MonthWallet>
 }

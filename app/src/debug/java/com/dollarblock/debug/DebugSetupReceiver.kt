@@ -53,7 +53,7 @@ class DebugSetupReceiver : BroadcastReceiver() {
         val pending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                monitoredAppRepository.setMonitored(pkg, pkg, isMonitored = true)
+                monitoredAppRepository.setMonitored(pkg, intent.getStringExtra(EXTRA_LABEL) ?: pkg, isMonitored = true)
                 monitoredAppRepository.setDailyLimit(pkg, limit)
                 Log.i(TAG, "Debug setup: $pkg monitorado, limite=$limit min")
             } finally {

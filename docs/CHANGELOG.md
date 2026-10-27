@@ -12,6 +12,28 @@ Descrição funcional.
 
 ---
 
+## [2026-10-27] — Home redesenhada ("a conta de hoje")
+**Tipo:** feature
+**Épico:** adhoc
+
+- Nova Home a partir do mockup aprovado: data + escudo (abre o Perfil); o valor do dia com
+  "≈ 2 cafés, doados à big tech" e a barra do orçamento (soma dos limites) fatiada pela cor
+  de cada app, tirada do ícone; atalhos "Tentativas hoje" (com o app mais insistido) e
+  "Próximo a fechar"; "Apps na conta" com até 3 apps (os mais urgentes), tag TRANCADO e
+  barra verde/âmbar/vermelha; carteira do mês recolhível (pago × poupado, "resistiu a X de
+  Y faturas", preço do minuto e salário → Recalcular; "Ver extrato completo" abre o Extrato).
+- Saíram da Home: lista de eventos recentes (segue em Perfil → Histórico), cards antigos de
+  gasto/economizado/bloqueado e o balão do salário (agora o campo da carteira abre destacado
+  na primeira vez). Tema claro com as cores equivalentes.
+- Visual: brilho verde da marca atrás da conta, desenhado também por baixo da barra de status
+  (sem corte no topo); o número fica no centro da tela, com o símbolo da moeda pendurado à
+  esquerda.
+- Primeiro acesso (nenhum app): "R$ 0,00" em vez de traço, orçamento zerado com "Escolher os
+  apps", atalhos zerados ("Defina um limite") e um quadro "Nenhum app na conta ainda"; o "ⓘ"
+  ao lado de "A CONTA DE HOJE" explica o número (e leva aos apps quando ainda não há nenhum).
+- Lógica pura em `HomeDashboard` e `MoneyReport.wallet` (carteira do mês; cortesia não conta
+  como paga nem recusada), com testes em `HomeDashboardTest`.
+
 ## [2026-10-26] — Cobranças do gerente (23 notificações novas)
 **Tipo:** feature
 **Épico:** E22

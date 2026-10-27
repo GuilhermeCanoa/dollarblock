@@ -7,6 +7,16 @@ import androidx.navigation.compose.composable
 const val HOME_ROUTE = "home"
 
 /** Registra a tela Home no grafo. Adicione/edite aqui sem tocar no NavHost compartilhado. */
-fun NavGraphBuilder.homeScreen(onNavigateToApps: () -> Unit) {
-    composable(HOME_ROUTE) { HomeScreen(onNavigateToApps = onNavigateToApps) }
+fun NavGraphBuilder.homeScreen(
+    onNavigateToApps: () -> Unit,
+    onOpenStatement: () -> Unit,
+    onOpenProfile: () -> Unit,
+) {
+    composable(HOME_ROUTE) {
+        HomeScreen(
+            onNavigateToApps = onNavigateToApps,
+            onOpenStatement = onOpenStatement,
+            onOpenProfile = onOpenProfile,
+        )
+    }
 }

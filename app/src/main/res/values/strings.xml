@@ -24,7 +24,7 @@
     <string name="home_card_info_ok">Got it</string>
     <string name="home_card_info_open_apps">See apps</string>
     <string name="home_info_damage_title">Today\'s Damage</string>
-    <string name="home_info_damage_body">Your minutes in monitored apps today, converted to money: your net monthly salary (%1$s by default — add yours on the Home card) spread over the 43,200 minutes of the month. Not a fine — the market price of your scroll.</string>
+    <string name="home_info_damage_body">Your minutes in monitored apps today, converted to money: your net monthly salary (%1$s by default — enter yours in the wallet, further down) spread over the 43,200 minutes of the month. Not a fine — the market price of your scroll.</string>
     <string name="home_info_spent_title">Money Spent</string>
     <string name="home_info_spent_body">Everything you actually paid for day passes, since day one. Pulled straight from your unlock receipts. Real money — that was the deal.</string>
     <string name="home_info_saved_title">Money Saved</string>
@@ -592,8 +592,58 @@
     <string name="nudge_d18">Closing statement: %1$s of screen time, %2$s. The receipt is in your statement, if you\'d like to cry in detail.</string>
     <string name="nudge_d19">Today %1$s took %2$s. It\'s not giving it back.</string>
     <string name="nudge_d20">Day closed without breaking a single limit. No one\'s handing out medals, but the books balance.</string>
-    <string name="nudge_e21">First %1$s of the day: %2$s. The tab opened before the coffee shop did.</string>
+    <string name="nudge_e21">First %1$s check of the day: %2$s. The tab opened before the coffee shop did.</string>
     <string name="nudge_e22">Unlocked your phone and went straight to %1$s. Old customer reflex.</string>
     <string name="nudge_e23">Day pass paid for %1$s. Receipt issued. We don\'t judge, we just file.</string>
     <string name="nudge_e24">Second day pass today. You\'re officially %1$s\'s most loyal customer.</string>
+
+    <!-- Home (Oct 2026 redesign) -->
+    <string name="home_today_label">TODAY\'S TAB</string>
+    <string name="home_hero_equiv">≈ %1$s, donated to big tech</string>
+    <string name="home_budget_used">%1$s used</string>
+    <string name="home_budget_limit">total limit %1$s</string>
+    <string name="home_duration_hm">%1$dh%2$02d</string>
+    <string name="home_duration_m">%1$d min</string>
+    <string name="home_tile_attempts">Attempts today</string>
+    <string name="home_tile_next">Closing next</string>
+    <string name="home_tile_min">min</string>
+    <string name="home_tile_next_none">Set a limit</string>
+    <string name="home_tile_next_all_locked">All locked</string>
+    <string name="home_apps_title">Apps on the tab</string>
+    <string name="home_apps_manage">Manage</string>
+    <string name="home_app_locked">LOCKED</string>
+    <string name="home_app_usage">%1$d / %2$d min</string>
+    <string name="home_app_usage_no_limit">%1$d min · no limit</string>
+    <string name="home_wallet_paid">Paid</string>
+    <string name="home_wallet_saved">Saved</string>
+    <string name="home_wallet_paid_month">PAID THIS MONTH</string>
+    <string name="home_wallet_saved_month">SAVED THIS MONTH</string>
+    <plurals name="home_wallet_passes_paid">
+        <item quantity="one">%d day pass</item>
+        <item quantity="other">%d day passes</item>
+    </plurals>
+    <plurals name="home_wallet_passes_refused">
+        <item quantity="one">%d pass declined</item>
+        <item quantity="other">%d passes declined</item>
+    </plurals>
+    <string name="home_wallet_resisted">Resisted %1$s bills this month.</string>
+    <string name="home_wallet_resisted_count">%1$d of %2$d</string>
+    <string name="home_wallet_no_bills">No bills this month. The books thank you.</string>
+    <string name="home_wallet_minute_title">WHAT YOUR MINUTE IS WORTH</string>
+    <string name="home_wallet_per_min">/ min</string>
+    <string name="home_wallet_calc_on">based on</string>
+    <string name="home_wallet_salary_month">%1$s/month</string>
+    <string name="home_wallet_reference">(reference)</string>
+    <string name="home_wallet_your_salary">(your salary)</string>
+    <string name="home_wallet_salary_label">Your monthly take-home pay</string>
+    <string name="home_wallet_recalc">Recalculate</string>
+    <string name="home_wallet_provoke">The more you earn, the more the same scroll costs. It\'s math, not personal.</string>
+    <string name="home_wallet_statement">See full statement</string>
+    <string name="home_wallet_toggle">Wallet details</string>
+    <string name="home_open_profile">Open profile</string>
+    <string name="home_hero_info">How this number is calculated</string>
+    <string name="home_hero_empty">The tab isn\'t open yet. Pick your apps and it starts running.</string>
+    <string name="home_budget_no_limits">no limits yet</string>
+    <string name="home_apps_empty_title">No apps on the tab yet</string>
+    <string name="home_apps_empty_body">The apps you pick show up here, with today\'s use and how long until they lock.</string>
 </resources>

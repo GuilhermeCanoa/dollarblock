@@ -37,9 +37,18 @@ interface EventDao {
     @Query("SELECT packageName, timestamp FROM block_events")
     fun observeBlockStamps(): Flow<List<EventStamp>>
 
+    @Query("SELECT packageName, timestamp FROM block_events WHERE timestamp >= :startMs")
+    fun observeBlockStampsSince(startMs: Long): Flow<List<EventStamp>>
+
+    @Query("SELECT packageName, timestamp, amount, method FROM unlock_events WHERE timestamp >= :startMs")
+    fun observeUnlockReceiptsSince(startMs: Long): Flow<List<UnlockReceipt>>
+
     @Query("SELECT packageName, timestamp FROM unlock_events")
     fun observeUnlockStamps(): Flow<List<EventStamp>>
 }
 
 /** Projeção mínima de um evento para agregações por app/dia. */
 data class EventStamp(val packageName: String, val timestamp: Long)
+
+/** Recibo de desbloqueio reduzido ao que a carteira da Home precisa (valor e método). */
+data class UnlockReceipt(val packageName: String, val timestamp: Long, val amount: String, val method: String)

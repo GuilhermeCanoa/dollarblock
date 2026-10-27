@@ -24,7 +24,7 @@
     <string name="home_card_info_ok">Entendi</string>
     <string name="home_card_info_open_apps">Ver apps</string>
     <string name="home_info_damage_title">Prejuízo de hoje</string>
-    <string name="home_info_damage_body">Seus minutos de hoje nos apps monitorados, convertidos em dinheiro: seu salário líquido mensal (%1$s por padrão — adicione o seu no card da Home) dividido pelos 43.200 minutos do mês. Não é multa — é o preço de mercado do seu scroll.</string>
+    <string name="home_info_damage_body">Seus minutos de hoje nos apps monitorados, convertidos em dinheiro: seu salário líquido mensal (%1$s por padrão — informe o seu na carteira, mais abaixo) dividido pelos 43.200 minutos do mês. Não é multa — é o preço de mercado do seu scroll.</string>
     <string name="home_info_spent_title">Dinheiro gasto</string>
     <string name="home_info_spent_body">Tudo o que você pagou de verdade em passes do dia, desde o início. Sai direto dos seus recibos de resgate. Dinheiro real — o contrato era esse.</string>
     <string name="home_info_saved_title">Dinheiro economizado</string>
@@ -621,4 +621,56 @@
     <string name="nudge_e22">Desbloqueou o celular e foi direto pro %1$s. Reflexo de cliente antigo.</string>
     <string name="nudge_e23">Passe do dia pago para o %1$s. Recibo emitido. A gente não julga, só arquiva.</string>
     <string name="nudge_e24">Segundo passe do dia. Você já é o cliente mais fiel do %1$s.</string>
+
+    <!-- Home (redesenho out/2026) -->
+    <string name="home_today_label">A CONTA DE HOJE</string>
+    <string name="home_hero_equiv">≈ %1$s, doados à big tech</string>
+    <string name="home_budget_used">%1$s usadas</string>
+    <string name="home_budget_limit">limite total %1$s</string>
+    <string name="home_duration_hm">%1$dh%2$02d</string>
+    <string name="home_duration_m">%1$d min</string>
+    <string name="home_tile_attempts">Tentativas hoje</string>
+    <string name="home_tile_next">Próximo a fechar</string>
+    <string name="home_tile_min">min</string>
+    <string name="home_tile_next_none">Defina um limite</string>
+    <string name="home_tile_next_all_locked">Tudo trancado</string>
+    <string name="home_apps_title">Apps na conta</string>
+    <string name="home_apps_manage">Gerenciar</string>
+    <string name="home_app_locked">TRANCADO</string>
+    <string name="home_app_usage">%1$d / %2$d min</string>
+    <string name="home_app_usage_no_limit">%1$d min · sem limite</string>
+    <string name="home_wallet_paid">Pago</string>
+    <string name="home_wallet_saved">Poupado</string>
+    <string name="home_wallet_paid_month">PAGO NO MÊS</string>
+    <string name="home_wallet_saved_month">POUPADO NO MÊS</string>
+    <plurals name="home_wallet_passes_paid">
+        <item quantity="one">%d passe do dia</item>
+        <item quantity="many">%d passes do dia</item>
+        <item quantity="other">%d passes do dia</item>
+    </plurals>
+    <plurals name="home_wallet_passes_refused">
+        <item quantity="one">%d passe recusado</item>
+        <item quantity="many">%d passes recusados</item>
+        <item quantity="other">%d passes recusados</item>
+    </plurals>
+    <string name="home_wallet_resisted">Resistiu a %1$s faturas este mês.</string>
+    <string name="home_wallet_resisted_count">%1$d de %2$d</string>
+    <string name="home_wallet_no_bills">Nenhuma fatura este mês. A conta agradece.</string>
+    <string name="home_wallet_minute_title">QUANTO VALE SEU MINUTO</string>
+    <string name="home_wallet_per_min">/ min</string>
+    <string name="home_wallet_calc_on">calculado sobre</string>
+    <string name="home_wallet_salary_month">%1$s/mês</string>
+    <string name="home_wallet_reference">(referência)</string>
+    <string name="home_wallet_your_salary">(seu salário)</string>
+    <string name="home_wallet_salary_label">Seu salário líquido mensal</string>
+    <string name="home_wallet_recalc">Recalcular</string>
+    <string name="home_wallet_provoke">Quem ganha mais paga mais caro pelo mesmo scroll. É matemática, não pessoal.</string>
+    <string name="home_wallet_statement">Ver extrato completo</string>
+    <string name="home_wallet_toggle">Detalhes da carteira</string>
+    <string name="home_open_profile">Abrir perfil</string>
+    <string name="home_hero_info">Como esse número é calculado</string>
+    <string name="home_hero_empty">A conta ainda está fechada. Escolha os apps e ela começa a correr.</string>
+    <string name="home_budget_no_limits">sem limites ainda</string>
+    <string name="home_apps_empty_title">Nenhum app na conta ainda</string>
+    <string name="home_apps_empty_body">Os apps que você escolher aparecem aqui, com o uso de hoje e o quanto falta para trancar.</string>
 </resources>

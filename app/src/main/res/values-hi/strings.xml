@@ -24,7 +24,7 @@
     <string name="home_card_info_ok">समझ गया</string>
     <string name="home_card_info_open_apps">ऐप्स देखें</string>
     <string name="home_info_damage_title">आज का नुकसान</string>
-    <string name="home_info_damage_body">आज निगरानी वाले ऐप्स में बिताए आपके मिनट, पैसों में बदले हुए: आपकी मासिक शुद्ध सैलरी (डिफ़ॉल्ट %1$s — होम कार्ड पर अपनी डालें) महीने के 43,200 मिनटों में बाँटी गई। यह जुर्माना नहीं — आपकी स्क्रॉलिंग का बाज़ार भाव है।</string>
+    <string name="home_info_damage_body">आज निगरानी वाले ऐप्स में बिताए आपके मिनट, पैसों में बदले हुए: आपकी मासिक शुद्ध सैलरी (डिफ़ॉल्ट %1$s — नीचे वॉलेट में अपनी डालें) महीने के 43,200 मिनटों में बाँटी गई। यह जुर्माना नहीं — आपकी स्क्रॉलिंग का बाज़ार भाव है।</string>
     <string name="home_info_spent_title">खर्च हुआ पैसा</string>
     <string name="home_info_spent_body">पहले दिन से अब तक डे पास पर आपने जो सचमुच चुकाया, सब कुछ। सीधे आपकी अनलॉक रसीदों से। असली पैसा — यही सौदा था।</string>
     <string name="home_info_saved_title">बचा हुआ पैसा</string>
@@ -589,4 +589,54 @@
     <string name="nudge_e22">फ़ोन अनलॉक किया और सीधे %1$s पर। पुराने ग्राहक की आदत।</string>
     <string name="nudge_e23">%1$s के लिए डे पास का भुगतान हुआ। रसीद जारी। हम फ़ैसला नहीं सुनाते, बस फ़ाइल करते हैं।</string>
     <string name="nudge_e24">आज का दूसरा डे पास। आप %1$s के सबसे वफ़ादार ग्राहक हैं।</string>
+
+    <!-- होम (अक्टूबर 2026 रीडिज़ाइन) -->
+    <string name="home_today_label">आज का बिल</string>
+    <string name="home_hero_equiv">≈ %1$s, बिग टेक को दान</string>
+    <string name="home_budget_used">%1$s इस्तेमाल</string>
+    <string name="home_budget_limit">कुल सीमा %1$s</string>
+    <string name="home_duration_hm">%1$dघं%2$02d</string>
+    <string name="home_duration_m">%1$d मिनट</string>
+    <string name="home_tile_attempts">आज की कोशिशें</string>
+    <string name="home_tile_next">अगला बंद होगा</string>
+    <string name="home_tile_min">मिनट</string>
+    <string name="home_tile_next_none">सीमा तय करें</string>
+    <string name="home_tile_next_all_locked">सब बंद</string>
+    <string name="home_apps_title">बिल पर ऐप्स</string>
+    <string name="home_apps_manage">प्रबंधित करें</string>
+    <string name="home_app_locked">बंद</string>
+    <string name="home_app_usage">%1$d / %2$d मिनट</string>
+    <string name="home_app_usage_no_limit">%1$d मिनट · कोई सीमा नहीं</string>
+    <string name="home_wallet_paid">चुकाया</string>
+    <string name="home_wallet_saved">बचाया</string>
+    <string name="home_wallet_paid_month">इस महीने चुकाया</string>
+    <string name="home_wallet_saved_month">इस महीने बचाया</string>
+    <plurals name="home_wallet_passes_paid">
+        <item quantity="one">%d डे पास</item>
+        <item quantity="other">%d डे पास</item>
+    </plurals>
+    <plurals name="home_wallet_passes_refused">
+        <item quantity="one">%d पास ठुकराया</item>
+        <item quantity="other">%d पास ठुकराए</item>
+    </plurals>
+    <string name="home_wallet_resisted">इस महीने %1$s बिलों का विरोध किया।</string>
+    <string name="home_wallet_resisted_count">%2$d में से %1$d</string>
+    <string name="home_wallet_no_bills">इस महीने कोई बिल नहीं। हिसाब शुक्रगुज़ार है।</string>
+    <string name="home_wallet_minute_title">आपके एक मिनट की कीमत</string>
+    <string name="home_wallet_per_min">/ मिनट</string>
+    <string name="home_wallet_calc_on">इस आधार पर</string>
+    <string name="home_wallet_salary_month">%1$s/माह</string>
+    <string name="home_wallet_reference">(संदर्भ)</string>
+    <string name="home_wallet_your_salary">(आपकी तनख़्वाह)</string>
+    <string name="home_wallet_salary_label">आपकी मासिक शुद्ध तनख़्वाह</string>
+    <string name="home_wallet_recalc">फिर से गिनें</string>
+    <string name="home_wallet_provoke">जो ज़्यादा कमाता है, वो उसी स्क्रॉल की ज़्यादा कीमत चुकाता है। ये गणित है, निजी नहीं।</string>
+    <string name="home_wallet_statement">पूरा स्टेटमेंट देखें</string>
+    <string name="home_wallet_toggle">वॉलेट का ब्यौरा</string>
+    <string name="home_open_profile">प्रोफ़ाइल खोलें</string>
+    <string name="home_hero_info">यह संख्या कैसे निकाली जाती है</string>
+    <string name="home_hero_empty">बिल अभी खुला नहीं है। ऐप्स चुनिए और यह चलने लगेगा।</string>
+    <string name="home_budget_no_limits">अभी कोई सीमा नहीं</string>
+    <string name="home_apps_empty_title">बिल पर अभी कोई ऐप नहीं</string>
+    <string name="home_apps_empty_body">आप जो ऐप्स चुनेंगे, वो यहाँ दिखेंगे — आज के इस्तेमाल और बंद होने में बाक़ी समय के साथ।</string>
 </resources>
