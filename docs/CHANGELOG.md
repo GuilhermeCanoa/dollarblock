@@ -12,6 +12,54 @@ Descrição funcional.
 
 ---
 
+## [2026-10-27] — Home redesenhada ("a conta de hoje")
+**Tipo:** feature
+**Épico:** adhoc
+
+- Nova Home a partir do mockup aprovado: data + escudo (abre o Perfil); o valor do dia com
+  "≈ 2 cafés, doados à big tech" e a barra do orçamento (soma dos limites) fatiada pela cor
+  de cada app, tirada do ícone; atalhos "Tentativas hoje" (com o app mais insistido) e
+  "Próximo a fechar"; "Apps na conta" com até 3 apps (os mais urgentes), tag TRANCADO e
+  barra verde/âmbar/vermelha; carteira do mês recolhível (pago × poupado, "resistiu a X de
+  Y faturas", preço do minuto e salário → Recalcular; "Ver extrato completo" abre o Extrato).
+- Saíram da Home: lista de eventos recentes (segue em Perfil → Histórico), cards antigos de
+  gasto/economizado/bloqueado e o balão do salário (agora o campo da carteira abre destacado
+  na primeira vez). Tema claro com as cores equivalentes.
+- Visual: brilho verde da marca atrás da conta, desenhado também por baixo da barra de status
+  (sem corte no topo); o número fica no centro da tela, com o símbolo da moeda pendurado à
+  esquerda.
+- Primeiro acesso (nenhum app): "R$ 0,00" em vez de traço, orçamento zerado com "Escolher os
+  apps", atalhos zerados ("Defina um limite") e um quadro "Nenhum app na conta ainda"; o "ⓘ"
+  ao lado de "A CONTA DE HOJE" explica o número (e leva aos apps quando ainda não há nenhum).
+- Lógica pura em `HomeDashboard` e `MoneyReport.wallet` (carteira do mês; cortesia não conta
+  como paga nem recusada), com testes em `HomeDashboardTest`.
+
+## [2026-10-26] — Cobranças do gerente (23 notificações novas)
+**Tipo:** feature
+**Épico:** E22
+
+- Novo canal "Cobranças do gerente" com as 23 frases aprovadas (ver
+  `docs/specs/E22-cobrancas-do-gerente.md`): sessão longa (30 min seguidos), projeções
+  anuais, débito automático no horário habitual, abertura antes das 9h, "desbloqueou e
+  foi direto", fechamento do dia às 21h e recibo do passe do dia.
+- No máximo 2 por dia (o fechamento do dia e o aviso de limite ficam de fora); a mesma
+  frase não se repete em seguida. Chave própria no Perfil.
+- Debug: `DEBUG_NUDGE` (preview de qualquer frase ou ALL) e `DEBUG_NUDGE_SESSION`
+  (encurta a sessão longa e zera o estado) no `DebugSetupReceiver`.
+
+## [2026-10-26] — Aviso de limite: memória por dia e toque abre o app
+**Tipo:** bugfix
+**Épico:** E13
+
+- O "já avisou" do aviso de 5 min saiu da memória do serviço de acessibilidade e virou um
+  marcador persistido por app/dia/limite (`NotificationPreferences.wasWarned/markWarned`).
+  Corrige: limites de até 5 min só avisavam no 1º dia (o uso de ontem ficava como "anterior"
+  e nunca virava à meia-noite), e um restart do serviço dentro da janela repetia o aviso.
+  Trocar o limite libera um novo aviso no mesmo dia.
+- `LimitWarningPolicy.shouldWarn` agora é "está na janela final e ainda não avisou hoje"
+  (antes: "cruzou o limiar entre dois frames").
+- Tocar na notificação abre o DollarBlock (antes só sumia).
+
 ## [2026-10-25] — Índia em rupia
 **Tipo:** regra
 **Épico:** adhoc

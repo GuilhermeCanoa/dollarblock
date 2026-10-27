@@ -8,6 +8,7 @@ import com.dollarblock.domain.model.RecentEvent
 import com.dollarblock.domain.repository.EventsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 import java.time.ZoneId
 import javax.inject.Inject
@@ -49,6 +50,10 @@ class EventsRepositoryImpl @Inject constructor(
     override fun blockAttemptsToday(): Flow<Int> {
         return eventDao.countBlocksSince(startOfTodayMillis())
     }
+
+    override fun blockAttemptsTodayByPackage(): Flow<Map<String, Int>> =
+        eventDao.observeBlockStampsSince(startOfTodayMillis())
+            .map { stamps -> stamps.groupingBy { it.packageName }.eachCount() }
 
     override suspend fun unlocksPaidToday(): Int =
         eventDao.countUnlocksSince(startOfTodayMillis())

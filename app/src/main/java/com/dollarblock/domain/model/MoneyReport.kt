@@ -12,6 +12,24 @@ data class AppDay(val packageName: String, val epochDay: Long)
  * acessibilidade registra vários block_events por sessão e o passe do dia permite no máximo
  * um pagamento por app por dia.
  */
+/**
+ * Carteira do mês na Home: o que foi pago em passes, o que foi poupado resistindo e quantas
+ * faturas (pares app/dia com bloqueio) houve. A cortesia (valor 0) não conta como paga nem
+ * como resistida — a cobrança falhou, ninguém escolheu nada.
+ */
+data class MonthWallet(
+    val paid: Double,
+    val passesPaid: Int,
+    val saved: Double,
+    val passesRefused: Int,
+) {
+    /** Faturas com decisão do usuário: pagas + recusadas. */
+    val bills: Int get() = passesPaid + passesRefused
+}
+
+/** Um desbloqueio com valor e método, para separar pagos de cortesias. */
+data class UnlockDay(val appDay: AppDay, val amount: String, val method: String)
+
 object MoneyReport {
 
     /** Soma valores monetários armazenados como texto ("1.00"); entradas ilegíveis valem 0. */
@@ -30,4 +48,16 @@ object MoneyReport {
     /** Valor economizado: passes resistidos × preço do passe do dia. */
     fun totalSaved(blocks: List<AppDay>, unlocks: List<AppDay>, dayPassPrice: Double): Double =
         resistedAppDays(blocks, unlocks) * dayPassPrice
+
+    /** Carteira de um período (o mês, na Home) a partir dos bloqueios e desbloqueios dele. */
+    fun wallet(blocks: List<AppDay>, unlocks: List<UnlockDay>, dayPassPrice: Double): MonthWallet {
+        val paid = unlocks.filter { it.method != PaymentMethod.COURTESY }
+        val refused = resistedAppDays(blocks, unlocks.map { it.appDay })
+        return MonthWallet(
+            paid = totalSpent(paid.map { it.amount }),
+            passesPaid = paid.size,
+            saved = refused * dayPassPrice,
+            passesRefused = refused,
+        )
+    }
 }

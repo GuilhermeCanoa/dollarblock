@@ -11,18 +11,21 @@ object LimitWarningPolicy {
     const val WARNING_THRESHOLD_MS = 5 * 60_000L
 
     /**
-     * true quando o uso cruzou para dentro da janela final de 5 min antes do limite
-     * neste frame (usedMillis antes < limiar <= usedMillis agora), evitando disparos
-     * repetidos a cada poll enquanto o usuário permanece nessa janela.
+     * true quando o uso está dentro da janela final de 5 min antes do limite e o aviso
+     * ainda não saiu hoje para este app/limite.
+     *
+     * O "já avisou hoje" vem de fora (persistido por dia), e não de comparar com o uso do
+     * frame anterior: essa comparação vivia em memória e não virava à meia-noite — limites
+     * de até 5 min deixavam de avisar a partir do 2º dia, e um restart do serviço dentro
+     * da janela repetia o aviso.
+     *
+     * Limites menores que a janela: o "5 min restantes" nunca é literal — a janela cobre o
+     * limite inteiro, então avisa já no primeiro uso do dia.
      */
-    fun shouldWarn(previousUsedMillis: Long, currentUsedMillis: Long, limitMillis: Long): Boolean {
-        if (limitMillis <= 0) return false
-        // Para limites menores que a janela de aviso, o "5 min restantes" nunca é
-        // literal — a janela some inteira dentro do limite, então avisa já no
-        // primeiro uso (previousUsedMillis == 0), e só nessa vez.
-        val warnAt = limitMillis - WARNING_THRESHOLD_MS
-        if (warnAt <= 0) return previousUsedMillis <= 0 && currentUsedMillis in 1 until limitMillis
-        return previousUsedMillis < warnAt && currentUsedMillis >= warnAt && currentUsedMillis < limitMillis
+    fun shouldWarn(currentUsedMillis: Long, limitMillis: Long, alreadyWarnedToday: Boolean): Boolean {
+        if (limitMillis <= 0 || alreadyWarnedToday) return false
+        val warnAt = (limitMillis - WARNING_THRESHOLD_MS).coerceAtLeast(1L)
+        return currentUsedMillis >= warnAt && currentUsedMillis < limitMillis
     }
 
     /**
