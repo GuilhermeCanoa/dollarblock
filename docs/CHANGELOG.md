@@ -12,6 +12,17 @@ Descrição funcional.
 
 ---
 
+## [2026-10-31] — Acessibilidade reconhecida em Motorola e outras marcas
+**Tipo:** bugfix
+**Épico:** adhoc
+
+- No Motorola Edge Fusion o onboarding pedia a acessibilidade para sempre, embora o bloqueio
+  funcionasse: a marca grava o serviço no formato abreviado
+  (`com.dollarblock/.service.accessibility...`) e a checagem comparava só a string completa.
+- `isAccessibilityServiceEnabled` agora aceita os dois formatos e, como reserva, consulta o
+  `AccessibilityManager`. Afeta onboarding e Perfil. Testes em `AccessibilityStatusTest`;
+  validado num Samsung S9+ (Android 10) gravando os dois formatos via `adb`.
+
 ## [2026-10-27] — Home redesenhada ("a conta de hoje")
 **Tipo:** feature
 **Épico:** adhoc
