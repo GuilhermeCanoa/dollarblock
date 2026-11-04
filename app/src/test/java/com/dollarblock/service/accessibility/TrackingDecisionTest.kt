@@ -16,11 +16,11 @@ class TrackingDecisionTest {
     private fun frame(
         tracked: String = chrome,
         foreground: String? = chrome,
-        previous: Long = warnAt - 1000,
+        warned: Boolean = false,
         current: Long = warnAt,
         limitMs: Long = limit,
         unlock: Boolean = false,
-    ) = Frame(tracked, foreground, previous, current, limitMs, unlock)
+    ) = Frame(tracked, foreground, warned, current, limitMs, unlock)
 
     // --- O BUG QUE O USUÁRIO SENTIU --------------------------------------
 
@@ -36,7 +36,7 @@ class TrackingDecisionTest {
     @Test
     fun `nao bloqueia quando o app rastreado nao e mais o foreground`() {
         val d = TrackingDecision.decide(
-            frame(tracked = chrome, foreground = whatsapp, previous = limit, current = limit + 5000),
+            frame(tracked = chrome, foreground = whatsapp, current = limit + 5000),
         )
         assertFalse(d.block)
         assertFalse(d.warn)
@@ -60,7 +60,7 @@ class TrackingDecisionTest {
     @Test
     fun `bloqueia ao atingir o limite com o app em foreground e sem passe`() {
         val d = TrackingDecision.decide(
-            frame(foreground = chrome, previous = limit - 1000, current = limit, unlock = false),
+            frame(foreground = chrome, current = limit, unlock = false),
         )
         assertTrue(d.block)
     }
@@ -68,7 +68,7 @@ class TrackingDecisionTest {
     @Test
     fun `nao bloqueia quando ha passe do dia ativo`() {
         val d = TrackingDecision.decide(
-            frame(foreground = chrome, previous = limit - 1000, current = limit + 1000, unlock = true),
+            frame(foreground = chrome, current = limit + 1000, unlock = true),
         )
         assertFalse(d.block)
     }
@@ -77,9 +77,15 @@ class TrackingDecisionTest {
     fun `no frame de bloqueio nao emite tambem o aviso`() {
         // Pulou direto de antes da janela para além do limite: bloqueia, não avisa.
         val d = TrackingDecision.decide(
-            frame(foreground = chrome, previous = warnAt - 2000, current = limit + 1000),
+            frame(foreground = chrome, current = limit + 1000),
         )
         assertTrue(d.block)
+        assertFalse(d.warn)
+    }
+
+    @Test
+    fun `nao avisa de novo se ja avisou hoje`() {
+        val d = TrackingDecision.decide(frame(warned = true))
         assertFalse(d.warn)
     }
 

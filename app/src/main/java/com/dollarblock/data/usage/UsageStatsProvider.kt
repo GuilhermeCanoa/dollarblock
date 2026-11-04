@@ -215,6 +215,26 @@ class UsageStatsProvider @Inject constructor(
         return out
     }
 
+    /**
+     * Minuto do dia (0–1439) da primeira abertura de [packageName] em cada um dos [days]
+     * dias anteriores a hoje (hoje fora). Dias sem abertura não entram na lista. Base do
+     * "débito automático" das cobranças do gerente (horário habitual de abrir o app).
+     */
+    suspend fun firstOpenMinutesOfDay(packageName: String, days: Int): List<Int> = withContext(Dispatchers.IO) {
+        if (!hasUsageAccess()) return@withContext emptyList()
+        val zone = ZoneId.systemDefault()
+        val today = LocalDate.now(zone)
+        val from = today.minusDays(days.toLong()).atStartOfDay(zone).toInstant().toEpochMilli()
+        val to = today.atStartOfDay(zone).toInstant().toEpochMilli()
+        readSessionEvents(from, to)
+            .filter { it.packageName == packageName && it.type == UsageAggregator.Type.RESUMED }
+            .groupBy { java.time.Instant.ofEpochMilli(it.timeStamp).atZone(zone).toLocalDate() }
+            .map { (_, events) ->
+                val first = java.time.Instant.ofEpochMilli(events.minOf { it.timeStamp }).atZone(zone)
+                first.hour * 60 + first.minute
+            }
+    }
+
     /** epochDay local consistente com o usado nas entidades Room. */
     fun currentEpochDay(): Long = LocalDate.now(ZoneId.systemDefault()).toEpochDay()
 

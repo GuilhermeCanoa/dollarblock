@@ -1,20 +1,26 @@
 package com.dollarblock.service.accessibility
 
 import android.accessibilityservice.AccessibilityService
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
+import androidx.core.content.ContextCompat
 import com.dollarblock.data.local.db.MonitoredAppDao
 import com.dollarblock.data.local.db.MonitoredAppEntity
 import com.dollarblock.data.local.prefs.BlockPreferences
+import com.dollarblock.data.local.prefs.NotificationPreferences
 import com.dollarblock.data.usage.UsageStatsProvider
 import com.dollarblock.domain.model.BlockReason
 import com.dollarblock.domain.repository.EventsRepository
 import com.dollarblock.domain.repository.MonitoredAppRepository
 import com.dollarblock.feature.blocking.BlockActivity
+import com.dollarblock.service.nudge.NudgeEngine
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -42,9 +48,17 @@ class DollarBlockAccessibilityService : AccessibilityService() {
     @Inject lateinit var usageStatsProvider: UsageStatsProvider
     @Inject lateinit var monitoredAppRepository: MonitoredAppRepository
     @Inject lateinit var limitWarningNotifier: LimitWarningNotifier
+    @Inject lateinit var notificationPreferences: NotificationPreferences
+    @Inject lateinit var nudgeEngine: NudgeEngine
 
-    /** Último uso observado por app, para detectar o cruzamento do limiar de 5 min ([LimitWarningPolicy]). */
-    private val lastUsedMillisByPackage = mutableMapOf<String, Long>()
+    /** Instante do último desbloqueio da tela (ACTION_USER_PRESENT), para a cobrança E22. */
+    @Volatile private var lastUserPresentMs = 0L
+
+    private val userPresentReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == Intent.ACTION_USER_PRESENT) lastUserPresentMs = System.currentTimeMillis()
+        }
+    }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val handler = Handler(Looper.getMainLooper())
@@ -73,6 +87,9 @@ class DollarBlockAccessibilityService : AccessibilityService() {
 
     override fun onServiceConnected() {
         super.onServiceConnected()
+        ContextCompat.registerReceiver(
+            this, userPresentReceiver, IntentFilter(Intent.ACTION_USER_PRESENT), ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
         Log.i(TAG, "Service connected")
     }
 
@@ -107,6 +124,14 @@ class DollarBlockAccessibilityService : AccessibilityService() {
             val app = monitoredAppDao.getByPackage(packageName)
             if (app == null || !app.isMonitored) return@launch
 
+            // Cobranças de hábito (E21/E22/C17) olham só a entrada do app, com ou sem limite.
+            // Em corrotina própria: a leitura do histórico não pode atrasar o bloqueio abaixo.
+            scope.launch {
+                runCatching {
+                    nudgeEngine.onMonitoredAppForeground(packageName, { resolveLabel(packageName) }, enteredForegroundAt, lastUserPresentMs)
+                }
+            }
+
             val usedMillis = effectiveUsageMillis(app, enteredForegroundAt)
             val limitMillis = (app.dailyLimitMinutes ?: return@launch) * 60_000L
 
@@ -138,13 +163,14 @@ class DollarBlockAccessibilityService : AccessibilityService() {
             while (isActive) {
                 val app = monitoredAppDao.getByPackage(packageName) ?: break
                 if (!app.isMonitored) break
-                val limitMillis = (app.dailyLimitMinutes ?: break) * 60_000L
+                val limitMinutes = app.dailyLimitMinutes ?: break
+                val limitMillis = limitMinutes * 60_000L
 
                 val usedMillis = effectiveUsageMillis(app, foregroundSinceMillis)
                 monitoredAppRepository.syncTodayUsage(packageName, foregroundSinceMillis)
 
-                val previousUsedMillis = lastUsedMillisByPackage[packageName] ?: 0L
-                lastUsedMillisByPackage[packageName] = usedMillis
+                val today = usageStatsProvider.currentEpochDay()
+                val warnedToday = notificationPreferences.wasWarned(packageName, today, limitMinutes)
 
                 // Decisão pura (testável): só avisa/bloqueia se o app rastreado AINDA é o
                 // foreground atual — a correção do aviso/bloqueio-fantasma.
@@ -152,15 +178,24 @@ class DollarBlockAccessibilityService : AccessibilityService() {
                     TrackingDecision.Frame(
                         trackedPackage = packageName,
                         foregroundPackage = lastForegroundPackage,
-                        previousUsedMillis = previousUsedMillis,
+                        alreadyWarnedToday = warnedToday,
                         currentUsedMillis = usedMillis,
                         limitMillis = limitMillis,
                         unlockActive = isUnlockActive(packageName),
                     ),
                 )
 
+                // Cobranças da sessão longa (A/B/C) — só com o app na frente e sem bloqueio
+                // (com passe do dia ativo continua valendo: a conta segue correndo).
+                if (lastForegroundPackage == packageName && !decision.block) {
+                    runCatching {
+                        nudgeEngine.onSessionTick(packageName, { resolveLabel(packageName) }, foregroundSinceMillis, usedMillis)
+                    }
+                }
+
                 if (decision.warn) {
                     val minutesRemaining = LimitWarningPolicy.minutesRemaining(usedMillis, limitMillis)
+                    notificationPreferences.markWarned(packageName, today, limitMinutes)
                     limitWarningNotifier.notifyLimitApproaching(resolveLabel(packageName), minutesRemaining)
                 }
 
@@ -258,6 +293,7 @@ class DollarBlockAccessibilityService : AccessibilityService() {
 
     override fun onDestroy() {
         super.onDestroy()
+        runCatching { unregisterReceiver(userPresentReceiver) }
         handler.removeCallbacksAndMessages(null)
         scope.cancel()
     }

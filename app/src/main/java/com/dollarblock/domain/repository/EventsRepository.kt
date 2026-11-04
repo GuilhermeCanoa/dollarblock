@@ -23,6 +23,9 @@ interface EventsRepository {
     /** Total de tentativas de abertura de apps bloqueados desde o início do dia. */
     fun blockAttemptsToday(): Flow<Int>
 
+    /** Tentativas de hoje por app (pacote → quantidade), para destacar o app mais insistido. */
+    fun blockAttemptsTodayByPackage(): Flow<Map<String, Int>>
+
     /** Total de desbloqueios pagos (todos os apps) desde o início do dia. */
     suspend fun unlocksPaidToday(): Int
 }

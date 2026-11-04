@@ -5,13 +5,20 @@ import com.dollarblock.data.local.db.dao.EventStamp
 import com.dollarblock.data.local.prefs.MoneyPreferences
 import com.dollarblock.domain.model.AppDay
 import com.dollarblock.domain.model.MoneyReport
+import com.dollarblock.domain.model.MonthWallet
+import com.dollarblock.domain.model.UnlockDay
 import com.dollarblock.domain.repository.MoneySummaryRepository
+import com.dollarblock.data.usage.localEpochDayFlow
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import javax.inject.Inject
 
@@ -38,6 +45,32 @@ class MoneySummaryRepositoryImpl @Inject constructor(
             dayPassPrice,
         ) { blocks, unlocks, price ->
             MoneyReport.totalSaved(blocks.map { it.toAppDay() }, unlocks.map { it.toAppDay() }, price)
+        }
+    }
+
+    /** O mês é reativo: vira no dia 1º mesmo com o processo vivo há dias (ver [localEpochDayFlow]). */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun observeMonthWallet(): Flow<MonthWallet> {
+        val monthStartFlow = localEpochDayFlow()
+            .map { LocalDate.ofEpochDay(it).withDayOfMonth(1) }
+            .distinctUntilChanged()
+            .map { it.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli() }
+        val dayPassPrice = flow {
+            val currency = moneyPreferences.settings.first().currency
+            emit(pricingRepository.getDayPassPrice(currency.code).replace(',', '.').toDoubleOrNull() ?: 0.0)
+        }
+        return combine(
+            monthStartFlow.flatMapLatest { eventDao.observeBlockStampsSince(it) },
+            monthStartFlow.flatMapLatest { eventDao.observeUnlockReceiptsSince(it) },
+            dayPassPrice,
+        ) { blocks, unlocks, price ->
+            MoneyReport.wallet(
+                blocks = blocks.map { it.toAppDay() },
+                unlocks = unlocks.map {
+                    UnlockDay(EventStamp(it.packageName, it.timestamp).toAppDay(), it.amount, it.method)
+                },
+                dayPassPrice = price,
+            )
         }
     }
 

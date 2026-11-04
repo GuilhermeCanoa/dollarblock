@@ -19,8 +19,8 @@ object TrackingDecision {
         val trackedPackage: String,
         /** Pacote atualmente em foreground (o último window-state observado). Null = desconhecido. */
         val foregroundPackage: String?,
-        /** Uso do app rastreado no frame anterior (para detectar o cruzamento do limiar). */
-        val previousUsedMillis: Long,
+        /** true se o aviso de 5 min já saiu hoje para este app/limite (persistido por dia). */
+        val alreadyWarnedToday: Boolean,
         /** Uso do app rastreado agora. */
         val currentUsedMillis: Long,
         val limitMillis: Long,
@@ -48,8 +48,8 @@ object TrackingDecision {
     /**
      * Decide aviso e bloqueio para o frame. Ambos exigem que o app rastreado ainda esteja
      * em foreground — essa é a correção do aviso-fantasma. O bloqueio ainda exige limite
-     * atingido e ausência de passe do dia; o aviso exige o cruzamento do limiar de 5 min
-     * ([LimitWarningPolicy.shouldWarn]) e que o limite ainda não tenha estourado.
+     * atingido e ausência de passe do dia; o aviso exige estar na janela final de 5 min
+     * sem ter avisado hoje ([LimitWarningPolicy.shouldWarn]) e que o limite não tenha estourado.
      */
     fun decide(frame: Frame): Decision {
         if (!isStillForeground(frame)) return Decision.NONE
@@ -60,9 +60,9 @@ object TrackingDecision {
         // Não avisa se já vamos bloquear neste frame (o bloqueio é a mensagem mais forte).
         val warn = !limitReached &&
             LimitWarningPolicy.shouldWarn(
-                previousUsedMillis = frame.previousUsedMillis,
                 currentUsedMillis = frame.currentUsedMillis,
                 limitMillis = frame.limitMillis,
+                alreadyWarnedToday = frame.alreadyWarnedToday,
             )
 
         return Decision(warn = warn, block = block)

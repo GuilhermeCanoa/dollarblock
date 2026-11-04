@@ -18,6 +18,8 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="com.dollarblock.DEBUG_SET_LIMIT" />
+                <action android:name="com.dollarblock.DEBUG_NUDGE" />
+                <action android:name="com.dollarblock.DEBUG_NUDGE_SESSION" />
             </intent-filter>
         </receiver>
     </application>

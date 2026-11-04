@@ -1,107 +1,72 @@
 package com.dollarblock.service.accessibility
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class LimitWarningPolicyTest {
 
     private val limit = 30 * 60_000L // 30 min
+    private val warnAt = limit - LimitWarningPolicy.WARNING_THRESHOLD_MS // 25 min
+
+    private fun warn(current: Long, limitMs: Long = limit, warned: Boolean = false) =
+        LimitWarningPolicy.shouldWarn(currentUsedMillis = current, limitMillis = limitMs, alreadyWarnedToday = warned)
 
     @Test
-    fun `dispara ao cruzar a janela de 5 min restantes`() {
-        val warnAt = limit - LimitWarningPolicy.WARNING_THRESHOLD_MS // 25 min
-
-        assertEquals(
-            true,
-            LimitWarningPolicy.shouldWarn(previousUsedMillis = warnAt - 1000, currentUsedMillis = warnAt, limitMillis = limit),
-        )
+    fun `dispara ao entrar na janela de 5 min restantes`() {
+        assertTrue(warn(warnAt))
+        assertTrue(warn(warnAt + 60_000L))
     }
 
     @Test
     fun `nao dispara antes da janela`() {
-        val warnAt = limit - LimitWarningPolicy.WARNING_THRESHOLD_MS
-
-        assertEquals(
-            false,
-            LimitWarningPolicy.shouldWarn(previousUsedMillis = warnAt - 5000, currentUsedMillis = warnAt - 2000, limitMillis = limit),
-        )
+        assertFalse(warn(warnAt - 1))
     }
 
     @Test
-    fun `nao dispara de novo enquanto permanece na janela`() {
-        val warnAt = limit - LimitWarningPolicy.WARNING_THRESHOLD_MS
-
-        assertEquals(
-            false,
-            LimitWarningPolicy.shouldWarn(previousUsedMillis = warnAt + 1000, currentUsedMillis = warnAt + 2000, limitMillis = limit),
-        )
+    fun `nao dispara de novo se ja avisou hoje`() {
+        assertFalse(warn(warnAt + 2000, warned = true))
     }
 
     @Test
-    fun `nao dispara apos estourar o limite`() {
-        assertEquals(
-            false,
-            LimitWarningPolicy.shouldWarn(previousUsedMillis = limit - 1000, currentUsedMillis = limit + 1000, limitMillis = limit),
-        )
+    fun `nao dispara com o limite atingido ou estourado`() {
+        assertFalse(warn(limit))
+        assertFalse(warn(limit + 5000))
     }
 
     @Test
-    fun `limite menor que a janela avisa uma unica vez no primeiro uso`() {
-        val shortLimit = 2 * 60_000L // 2 min < janela de 5 min: a janela inteira cabe no limite
+    fun `limite menor que a janela avisa no primeiro uso do dia`() {
+        val shortLimit = 2 * 60_000L
+        assertFalse(warn(0, shortLimit))
+        assertTrue(warn(1000, shortLimit))
+        assertFalse(warn(2000, shortLimit, warned = true))
+    }
 
-        assertEquals(
-            true,
-            LimitWarningPolicy.shouldWarn(previousUsedMillis = 0, currentUsedMillis = 1000, limitMillis = shortLimit),
-        )
-        assertEquals(
-            false,
-            LimitWarningPolicy.shouldWarn(previousUsedMillis = 1000, currentUsedMillis = 2000, limitMillis = shortLimit),
-        )
+    @Test
+    fun `limite curto volta a avisar no dia seguinte`() {
+        // Bug antigo: o uso de ontem ficava em memória como "anterior" e o aviso de limites
+        // de até 5 min nunca mais saía. Agora o "já avisou" é por dia — dia novo, aviso novo.
+        val shortLimit = 5 * 60_000L
+        assertTrue(warn(30_000L, shortLimit, warned = false))
     }
 
     @Test
     fun `limite invalido nunca dispara`() {
-        assertEquals(false, LimitWarningPolicy.shouldWarn(0, 1000, 0))
-    }
-
-    @Test
-    fun `dispara quando cruza exatamente no ponto de aviso`() {
-        val warnAt = limit - LimitWarningPolicy.WARNING_THRESHOLD_MS // 25 min
-        // previous logo abaixo, current exatamente em warnAt → deve avisar.
-        assertEquals(
-            true,
-            LimitWarningPolicy.shouldWarn(previousUsedMillis = warnAt - 1, currentUsedMillis = warnAt, limitMillis = limit),
-        )
-    }
-
-    @Test
-    fun `nao dispara quando o uso ja atingiu o limite exato neste frame`() {
-        val warnAt = limit - LimitWarningPolicy.WARNING_THRESHOLD_MS
-        // Pulou direto de antes da janela para exatamente o limite: bloqueio, não aviso.
-        assertEquals(
-            false,
-            LimitWarningPolicy.shouldWarn(previousUsedMillis = warnAt - 1000, currentUsedMillis = limit, limitMillis = limit),
-        )
-    }
-
-    @Test
-    fun `nao dispara quando o uso ja comecou acima do limite`() {
-        assertEquals(
-            false,
-            LimitWarningPolicy.shouldWarn(previousUsedMillis = limit + 1000, currentUsedMillis = limit + 5000, limitMillis = limit),
-        )
+        assertFalse(warn(1000, limitMs = 0))
     }
 
     @Test
     fun `avisa uma unica vez em polls sucessivos dentro da janela`() {
-        val warnAt = limit - LimitWarningPolicy.WARNING_THRESHOLD_MS
-        // Simula o loop de tracking: cada frame usa o "current" anterior como "previous".
+        // Simula o loop de tracking com o "já avisou hoje" persistido entre frames.
         val frames = listOf(warnAt - 3000, warnAt - 1000, warnAt + 1000, warnAt + 3000, limit - 500)
+        var warned = false
         var warnCount = 0
-        var previous = frames.first()
-        for (current in frames.drop(1)) {
-            if (LimitWarningPolicy.shouldWarn(previous, current, limit)) warnCount++
-            previous = current
+        for (current in frames) {
+            if (warn(current, warned = warned)) {
+                warnCount++
+                warned = true
+            }
         }
         assertEquals(1, warnCount)
     }

@@ -11,6 +11,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 import java.time.ZoneId
 import javax.inject.Inject
@@ -58,6 +59,15 @@ class EventsRepositoryImpl @Inject constructor(
                 LocalDate.ofEpochDay(epochDay).atStartOfDay(zone).toInstant().toEpochMilli(),
             )
         }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun blockAttemptsTodayByPackage(): Flow<Map<String, Int>> =
+        localEpochDayFlow().flatMapLatest { epochDay ->
+            val zone = ZoneId.systemDefault()
+            eventDao.observeBlockStampsSince(
+                LocalDate.ofEpochDay(epochDay).atStartOfDay(zone).toInstant().toEpochMilli(),
+            )
+        }.map { stamps -> stamps.groupingBy { it.packageName }.eachCount() }
 
     override suspend fun unlocksPaidToday(): Int =
         eventDao.countUnlocksSince(startOfTodayMillis())

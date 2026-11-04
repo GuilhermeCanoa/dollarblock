@@ -7,6 +7,7 @@ import com.dollarblock.core.locale.LocaleManager
 import com.dollarblock.data.local.prefs.LanguagePreferences
 import com.dollarblock.service.accessibility.LimitWarningNotifier
 import com.dollarblock.service.monitoring.UsageSyncScheduler
+import com.dollarblock.service.nudge.NudgeNotifier
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -32,6 +33,9 @@ class DollarBlockApp : Application(), Configuration.Provider {
     @Inject
     lateinit var limitWarningNotifier: LimitWarningNotifier
 
+    @Inject
+    lateinit var nudgeNotifier: NudgeNotifier
+
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
             .setWorkerFactory(workerFactory)
@@ -48,5 +52,6 @@ class DollarBlockApp : Application(), Configuration.Provider {
 
         usageSyncScheduler.schedule()
         limitWarningNotifier.ensureChannel()
+        nudgeNotifier.ensureChannel()
     }
 }

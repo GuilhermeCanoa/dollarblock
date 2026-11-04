@@ -3,6 +3,7 @@ package com.dollarblock.data.local.prefs
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
@@ -28,6 +29,22 @@ class NotificationPreferences @Inject constructor(
     suspend fun setEnabled(enabled: Boolean) {
         dataStore.edit { it[enabledKey] = enabled }
     }
+
+    /**
+     * Se o aviso de 5 min já saiu para [packageName] no dia [epochDay] com este limite.
+     * Persistido (e não em memória no serviço) para virar à meia-noite e sobreviver a
+     * restarts do serviço de acessibilidade. Trocar o limite libera um novo aviso.
+     */
+    suspend fun wasWarned(packageName: String, epochDay: Long, limitMinutes: Int): Boolean =
+        dataStore.data.first()[warnedKey(packageName)] == warnedMarker(epochDay, limitMinutes)
+
+    suspend fun markWarned(packageName: String, epochDay: Long, limitMinutes: Int) {
+        dataStore.edit { it[warnedKey(packageName)] = warnedMarker(epochDay, limitMinutes) }
+    }
+
+    private fun warnedKey(packageName: String) = stringPreferencesKey("limit_warned_$packageName")
+
+    private fun warnedMarker(epochDay: Long, limitMinutes: Int) = "$epochDay:$limitMinutes"
 
     suspend fun reset() {
         dataStore.edit { it.clear() }

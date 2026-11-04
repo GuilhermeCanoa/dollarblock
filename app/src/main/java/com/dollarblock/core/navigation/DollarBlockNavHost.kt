@@ -9,8 +9,10 @@ import com.dollarblock.feature.apps.appsScreen
 import com.dollarblock.feature.home.HOME_ROUTE
 import com.dollarblock.feature.home.homeScreen
 import com.dollarblock.feature.profile.HISTORY_ROUTE
+import com.dollarblock.feature.profile.PROFILE_ROUTE
 import com.dollarblock.feature.profile.historyScreen
 import com.dollarblock.feature.profile.profileScreen
+import com.dollarblock.feature.statistics.STATISTICS_ROUTE
 import com.dollarblock.feature.statistics.statisticsScreen
 
 /**
@@ -29,15 +31,21 @@ fun DollarBlockNavHost(
         startDestination = HOME_ROUTE,
         modifier = modifier,
     ) {
-        homeScreen(onNavigateToApps = {
-            navController.navigate(APPS_ROUTE) {
+        // Atalhos da Home para outras abas: mesmo comportamento de tocar na bottom bar.
+        val toTab = { route: String ->
+            navController.navigate(route) {
                 popUpTo(navController.graph.startDestinationId) {
                     saveState = true
                 }
                 launchSingleTop = true
                 restoreState = true
             }
-        })
+        }
+        homeScreen(
+            onNavigateToApps = { toTab(APPS_ROUTE) },
+            onOpenStatement = { toTab(STATISTICS_ROUTE) },
+            onOpenProfile = { toTab(PROFILE_ROUTE) },
+        )
         appsScreen()
         statisticsScreen()
         profileScreen(onOpenHistory = { navController.navigate(HISTORY_ROUTE) })
