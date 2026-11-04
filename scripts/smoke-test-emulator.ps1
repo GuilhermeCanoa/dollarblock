@@ -51,10 +51,18 @@ function TapText($pattern) {
 }
 
 Step "Dispositivo"
-$devices = (& $adb devices | Select-String "device$")
-if (-not $devices) { Write-Host "Nenhum emulador/dispositivo conectado. Suba um com: emulator -avd NOME_DO_AVD" -ForegroundColor Red; exit 1 }
+# O script faz pm clear + installDebug: NUNCA pode cair num celular real conectado
+# (ex.: o aparelho pessoal via adb wireless). Fixa ANDROID_SERIAL num emulador —
+# adb e o installDebug do Gradle respeitam essa variável.
+if (-not $env:ANDROID_SERIAL) {
+    $emu = (& $adb devices | Select-String "^(emulator-\d+)\s+device$" | Select-Object -First 1)
+    if (-not $emu) { Write-Host "Nenhum emulador conectado (celulares reais são ignorados de propósito). Suba um com: emulator -avd NOME_DO_AVD" -ForegroundColor Red; exit 1 }
+    $env:ANDROID_SERIAL = $emu.Matches[0].Groups[1].Value
+} elseif ($env:ANDROID_SERIAL -notmatch "^emulator-") {
+    Write-Host "ANDROID_SERIAL=$env:ANDROID_SERIAL não é um emulador — o smoke test apagaria os dados do app nesse aparelho. Abortando." -ForegroundColor Red; exit 1
+}
 & $adb wait-for-device
-Write-Host "  device: $(($devices | Select-Object -First 1).ToString().Trim())"
+Write-Host "  device: $env:ANDROID_SERIAL"
 
 Step "Instalação"
 Push-Location (Split-Path $PSScriptRoot -Parent)
@@ -225,13 +233,18 @@ if ((UiText) -match "paperwork|running blind|permiss") {
     Start-Sleep -Seconds 4
 }
 
-# A lista de transacoes fica abaixo da dobra na Home: rola ate o fim antes de ler.
-& $adb shell input swipe 540 1800 540 500 400 | Out-Null
+# Desde a Home redesenhada (ca53f92) os eventos recentes saíram da Home e ficam em
+# Perfil → Recibos (HistoryScreen). Navega até lá e lê a linha do recibo.
+[void](TapText "^(Profile|Perfil)$")
+Start-Sleep -Seconds 3
+& $adb shell input swipe 540 1800 540 400 400 | Out-Null
+Start-Sleep -Seconds 1
+& $adb shell input swipe 540 1800 540 400 400 | Out-Null
 Start-Sleep -Seconds 2
-& $adb shell input swipe 540 1800 540 500 400 | Out-Null
+$opened = TapText "^(Receipts|Recibos)$"
 Start-Sleep -Seconds 3
 $t = UiText
-Check "Recibo de cortesia na Home" ($t -match "Courtesy|Cortesia") "transações: $($t -join ' / ')"
+Check "Recibo de cortesia em Perfil → Recibos" ($opened -and ($t -match "Courtesy|Cortesia")) "abriu=$opened; tela: $($t -join ' / ')"
 Check "Valor zero no recibo" ($t -match "0[.,]00") "o valor deveria ser 0,00"
 
 Step "Sem crashes"
