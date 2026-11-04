@@ -6,8 +6,11 @@ import com.dollarblock.data.local.db.entity.UnlockEventEntity
 import com.dollarblock.domain.model.BlockReason
 import com.dollarblock.domain.model.RecentEvent
 import com.dollarblock.domain.repository.EventsRepository
+import com.dollarblock.data.usage.localEpochDayFlow
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import java.time.LocalDate
 import java.time.ZoneId
 import javax.inject.Inject
@@ -46,9 +49,15 @@ class EventsRepositoryImpl @Inject constructor(
         )
     }
 
-    override fun blockAttemptsToday(): Flow<Int> {
-        return eventDao.countBlocksSince(startOfTodayMillis())
-    }
+    /** Reinicia a contagem na virada do dia (o processo vive por dias; ver [localEpochDayFlow]). */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun blockAttemptsToday(): Flow<Int> =
+        localEpochDayFlow().flatMapLatest { epochDay ->
+            val zone = ZoneId.systemDefault()
+            eventDao.countBlocksSince(
+                LocalDate.ofEpochDay(epochDay).atStartOfDay(zone).toInstant().toEpochMilli(),
+            )
+        }
 
     override suspend fun unlocksPaidToday(): Int =
         eventDao.countUnlocksSince(startOfTodayMillis())

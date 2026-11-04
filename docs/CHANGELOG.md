@@ -12,6 +12,19 @@ Descrição funcional.
 
 ---
 
+## [2026-11-04] — Contadores da tela Apps/Home não zeravam na meia-noite
+**Tipo:** bugfix
+**Épico:** adhoc
+
+- `observeMonitoredAppsUsage()` e `blockAttemptsToday()` calculavam "hoje" uma única vez
+  ao montar o Flow. Como o processo do app vive por dias (no aparelho do relato: 2d13h),
+  as telas Apps/Home/Perfil ficavam presas no dia em que o ViewModel nasceu — mostrando o
+  uso de dias atrás como se fosse de hoje. O bloqueio em si não era afetado (o serviço de
+  acessibilidade sempre mediu desde a meia-noite via `UsageEvents`).
+- Novo `localEpochDayFlow()` (`data/usage/LocalDayFlow.kt`): emite o epochDay local e
+  re-emite na virada do dia (reavalia o relógio a cada ≤60 s, porque `delay` longo não
+  anda com o aparelho em sono profundo). Os dois Flows usam `flatMapLatest` sobre ele.
+
 ## [2026-10-25] — Índia em rupia
 **Tipo:** regra
 **Épico:** adhoc

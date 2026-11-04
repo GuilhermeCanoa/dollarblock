@@ -7,8 +7,11 @@ import com.dollarblock.data.local.db.MonitoredAppEntity
 import com.dollarblock.data.usage.UsageStatsProvider
 import com.dollarblock.domain.model.MonitoredAppUsage
 import com.dollarblock.domain.repository.MonitoredAppRepository
+import com.dollarblock.data.usage.localEpochDayFlow
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -19,11 +22,13 @@ class MonitoredAppRepositoryImpl @Inject constructor(
     private val usageStatsProvider: UsageStatsProvider,
 ) : MonitoredAppRepository {
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun observeMonitoredAppsUsage(): Flow<List<MonitoredAppUsage>> {
-        val today = usageStatsProvider.currentEpochDay()
+        // O dia é reativo: com o processo vivo por dias, um `today` capturado aqui
+        // congelava a tela Apps/Home no dia em que o ViewModel foi criado.
         return combine(
             monitoredAppDao.observeAll(),
-            dailyUsageDao.observeForDay(today),
+            localEpochDayFlow().flatMapLatest { today -> dailyUsageDao.observeForDay(today) },
         ) { apps, usageToday ->
             val usageByPackage = usageToday.associateBy { it.packageName }
             apps.map { app ->
