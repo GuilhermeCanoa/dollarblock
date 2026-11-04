@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dollarblock.data.apps.InstalledAppsProvider
+import com.dollarblock.data.local.prefs.BlockPreferences
 import com.dollarblock.data.local.prefs.MoneyPreferences
 import com.dollarblock.domain.model.MoneySettings
 import com.dollarblock.domain.model.MonthWallet
@@ -33,6 +34,8 @@ data class HomeUiState(
     val attemptsToday: Int = 0,
     val attemptsTopPackage: String? = null,
     val nextToClose: NextToClose? = null,
+    /** Há app estourado mas liberado por passe do dia (muda o texto de "tudo trancado"). */
+    val anyOnDayPass: Boolean = false,
     val wallet: MonthWallet? = null,
     val moneySettings: MoneySettings = MoneySettings(),
     val showSalaryTip: Boolean = false,
@@ -48,6 +51,7 @@ class HomeViewModel @Inject constructor(
     private val installedAppsProvider: InstalledAppsProvider,
     eventsRepository: EventsRepository,
     moneySummaryRepository: MoneySummaryRepository,
+    blockPreferences: BlockPreferences,
 ) : ViewModel() {
 
     private val activity = combine(
@@ -55,10 +59,17 @@ class HomeViewModel @Inject constructor(
         eventsRepository.blockAttemptsToday(),
         eventsRepository.blockAttemptsTodayByPackage(),
         moneySummaryRepository.observeMonthWallet(),
-    ) { usage, attempts, attemptsByPackage, wallet ->
+        blockPreferences.unlockGrants,
+    ) { usage, attempts, attemptsByPackage, wallet, grants ->
         loadVisuals(usage.filter { it.isMonitored }.map { it.packageName })
+        // O uso re-emite a cada sync (5 s), então o passe que expira na meia-noite some sozinho.
+        val dayPasses = HomeDashboard.activeDayPasses(
+            grants.mapValues { it.value.unlockUntilMs },
+            System.currentTimeMillis(),
+        )
         HomeUiState(
-            apps = HomeDashboard.appRows(usage),
+            apps = HomeDashboard.appRows(usage, dayPasses),
+            anyOnDayPass = HomeDashboard.anyOnDayPass(usage, dayPasses),
             budget = HomeDashboard.budget(usage),
             attemptsToday = attempts,
             attemptsTopPackage = HomeDashboard.topAttempts(attemptsByPackage),

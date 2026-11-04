@@ -609,9 +609,11 @@
     <string name="home_tile_min">min</string>
     <string name="home_tile_next_none">Set a limit</string>
     <string name="home_tile_next_all_locked">All locked</string>
+    <string name="home_tile_next_day_pass">On day pass</string>
     <string name="home_apps_title">Apps on the tab</string>
     <string name="home_apps_manage">Manage</string>
     <string name="home_app_locked">LOCKED</string>
+    <string name="home_app_day_pass">DAY PASS</string>
     <string name="home_app_usage">%1$d / %2$d min</string>
     <string name="home_app_usage_no_limit">%1$d min · no limit</string>
     <string name="home_wallet_paid">Paid</string>

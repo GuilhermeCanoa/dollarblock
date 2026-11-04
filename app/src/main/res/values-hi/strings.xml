@@ -602,9 +602,11 @@
     <string name="home_tile_min">मिनट</string>
     <string name="home_tile_next_none">सीमा तय करें</string>
     <string name="home_tile_next_all_locked">सब बंद</string>
+    <string name="home_tile_next_day_pass">डे पास पर</string>
     <string name="home_apps_title">बिल पर ऐप्स</string>
     <string name="home_apps_manage">प्रबंधित करें</string>
     <string name="home_app_locked">बंद</string>
+    <string name="home_app_day_pass">डे पास</string>
     <string name="home_app_usage">%1$d / %2$d मिनट</string>
     <string name="home_app_usage_no_limit">%1$d मिनट · कोई सीमा नहीं</string>
     <string name="home_wallet_paid">चुकाया</string>

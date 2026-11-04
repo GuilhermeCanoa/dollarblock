@@ -26,6 +26,33 @@ class HomeDashboardTest {
     }
 
     @Test
+    fun `estourado com passe do dia aparece como passe, nao trancado`() {
+        val rows = HomeDashboard.appRows(mockup, dayPassPackages = setOf("ig"))
+        assertEquals(UsageLevel.DAY_PASS, rows.first { it.packageName == "ig" }.level)
+    }
+
+    @Test
+    fun `passe do dia nao muda app que ainda nao estourou`() {
+        val rows = HomeDashboard.appRows(mockup, dayPassPackages = setOf("tt"))
+        assertEquals(UsageLevel.WARN, rows.first { it.packageName == "tt" }.level)
+    }
+
+    @Test
+    fun `tile proximo a fechar sabe quando ha passe do dia`() {
+        val allOver = listOf(app("ig", 47, 45), app("yt", 70, 60))
+        assertEquals(true, HomeDashboard.anyOnDayPass(allOver, setOf("yt")))
+        assertEquals(false, HomeDashboard.anyOnDayPass(allOver, emptySet()))
+        // Passe em app que nem estourou não conta.
+        assertEquals(false, HomeDashboard.anyOnDayPass(listOf(app("tt", 10, 60)), setOf("tt")))
+    }
+
+    @Test
+    fun `passe expirado na meia-noite deixa de valer`() {
+        val grants = mapOf("ig" to 1_000L, "yt" to 5_000L)
+        assertEquals(setOf("yt"), HomeDashboard.activeDayPasses(grants, nowMs = 1_000L))
+    }
+
+    @Test
     fun `app sem limite vai para o fim e fica sem barra`() {
         val rows = HomeDashboard.appRows(listOf(app("wa", 90, null), app("ig", 47, 45)))
         assertEquals("wa", rows.last().packageName)

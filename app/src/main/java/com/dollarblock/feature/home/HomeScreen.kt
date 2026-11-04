@@ -172,7 +172,11 @@ fun HomeScreen(
                 value = uiState.nextToClose?.minutesLeft?.toString(),
                 // Sem número: ou não há limite nenhum ainda, ou todos os apps com limite já trancaram.
                 emptyText = stringResource(
-                    if (uiState.budget == null) R.string.home_tile_next_none else R.string.home_tile_next_all_locked,
+                    when {
+                        uiState.budget == null -> R.string.home_tile_next_none
+                        uiState.anyOnDayPass -> R.string.home_tile_next_day_pass
+                        else -> R.string.home_tile_next_all_locked
+                    },
                 ),
                 unit = uiState.nextToClose?.let { stringResource(R.string.home_tile_min) },
                 icon = uiState.nextToClose?.let { visuals[it.packageName]?.icon },
@@ -783,6 +787,7 @@ private fun EmptyAppsPlaceholder(palette: HomePalette, onClick: () -> Unit) {
 private fun AppUsageRow(app: HomeAppRow, icon: ImageBitmap?, palette: HomePalette, showDivider: Boolean) {
     val barColor = when (app.level) {
         UsageLevel.LOCKED -> BlockingRed
+        UsageLevel.DAY_PASS -> palette.emerald
         UsageLevel.WARN -> AlertAmber
         UsageLevel.OK -> palette.emerald
         UsageLevel.NO_LIMIT -> palette.muted.copy(alpha = 0.5f)
@@ -810,19 +815,26 @@ private fun AppUsageRow(app: HomeAppRow, icon: ImageBitmap?, palette: HomePalett
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f, fill = false),
                         )
-                        if (app.level == UsageLevel.LOCKED) {
+                        // Selo de estado: trancado (vermelho) ou liberado pelo passe do dia (verde).
+                        val badge = when (app.level) {
+                            UsageLevel.LOCKED -> R.string.home_app_locked to BlockingRed
+                            UsageLevel.DAY_PASS -> R.string.home_app_day_pass to palette.emerald
+                            else -> null
+                        }
+                        if (badge != null) {
+                            val (label, badgeColor) = badge
                             Spacer(Modifier.width(8.dp))
                             Text(
-                                stringResource(R.string.home_app_locked),
+                                stringResource(label),
                                 fontFamily = Mono,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 10.sp,
                                 letterSpacing = 1.sp,
-                                color = BlockingRed,
+                                color = badgeColor,
                                 maxLines = 1,
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(6.dp))
-                                    .background(BlockingRed.copy(alpha = 0.14f))
+                                    .background(badgeColor.copy(alpha = 0.14f))
                                     .padding(horizontal = 7.dp, vertical = 3.dp),
                             )
                         }

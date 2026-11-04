@@ -2,8 +2,11 @@ package com.dollarblock.feature.home
 
 import com.dollarblock.domain.model.MonitoredAppUsage
 
-/** Faixa de cor da barra de um app na Home: verde, âmbar (passou da metade), vermelho (trancado). */
-enum class UsageLevel { NO_LIMIT, OK, WARN, LOCKED }
+/**
+ * Faixa de cor da barra de um app na Home: verde, âmbar (passou da metade), vermelho (trancado).
+ * [DAY_PASS]: estourou o limite mas há passe do dia ativo (pago ou cortesia) — o app está aberto.
+ */
+enum class UsageLevel { NO_LIMIT, OK, WARN, LOCKED, DAY_PASS }
 
 /** Uma linha de "Apps na conta". [progress] em 0..1 (null sem limite). */
 data class HomeAppRow(
@@ -38,18 +41,18 @@ object HomeDashboard {
     /** A partir daqui a barra do app fica âmbar: metade do limite já foi. */
     const val WARN_RATIO = 0.5f
 
-    fun level(usedMinutes: Int, limitMinutes: Int?): UsageLevel = when {
+    fun level(usedMinutes: Int, limitMinutes: Int?, onDayPass: Boolean = false): UsageLevel = when {
         limitMinutes == null || limitMinutes <= 0 -> UsageLevel.NO_LIMIT
-        usedMinutes >= limitMinutes -> UsageLevel.LOCKED
+        usedMinutes >= limitMinutes -> if (onDayPass) UsageLevel.DAY_PASS else UsageLevel.LOCKED
         usedMinutes.toFloat() / limitMinutes >= WARN_RATIO -> UsageLevel.WARN
         else -> UsageLevel.OK
     }
 
     /**
      * Até [MAX_APP_ROWS] linhas, ordenadas por urgência: trancados, depois mais perto do
-     * limite; sem limite por último.
+     * limite; sem limite por último. [dayPassPackages]: apps com passe do dia ativo agora.
      */
-    fun appRows(usage: List<MonitoredAppUsage>): List<HomeAppRow> =
+    fun appRows(usage: List<MonitoredAppUsage>, dayPassPackages: Set<String> = emptySet()): List<HomeAppRow> =
         usage.filter { it.isMonitored }
             .map { app ->
                 val limit = app.dailyLimitMinutes?.takeIf { it > 0 }
@@ -58,7 +61,7 @@ object HomeDashboard {
                     appName = app.appName,
                     usedMinutes = app.usedMinutesToday,
                     limitMinutes = limit,
-                    level = level(app.usedMinutesToday, limit),
+                    level = level(app.usedMinutesToday, limit, app.packageName in dayPassPackages),
                     progress = limit?.let { (app.usedMinutesToday.toFloat() / it).coerceIn(0f, 1f) },
                 )
             }
@@ -91,6 +94,20 @@ object HomeDashboard {
             .filter { (_, left) -> left > 0 }
             .minByOrNull { (_, left) -> left }
             ?.let { (pkg, left) -> NextToClose(pkg, left) }
+
+    /**
+     * Algum app estourou o limite e está liberado por passe do dia — aí "tudo trancado"
+     * seria mentira no tile "Próximo a fechar".
+     */
+    fun anyOnDayPass(usage: List<MonitoredAppUsage>, dayPassPackages: Set<String>): Boolean =
+        usage.any { app ->
+            val limit = app.dailyLimitMinutes ?: 0
+            app.isMonitored && limit > 0 && app.usedMinutesToday >= limit && app.packageName in dayPassPackages
+        }
+
+    /** Pacotes cujo passe do dia ainda vale em [nowMs] (expira na meia-noite local). */
+    fun activeDayPasses(unlockUntilByPackage: Map<String, Long>, nowMs: Long): Set<String> =
+        unlockUntilByPackage.filterValues { nowMs < it }.keys
 
     /** App com mais tentativas hoje (empate: o primeiro em ordem alfabética, para não piscar). */
     fun topAttempts(attemptsByPackage: Map<String, Int>): String? =

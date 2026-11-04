@@ -12,6 +12,16 @@ Descrição funcional.
 
 ---
 
+## [2026-11-04] — Home mostra "passe do dia" em vez de "trancado"
+**Tipo:** bugfix
+**Épico:** adhoc
+
+- App que estourou o limite mas está liberado por passe do dia (pago ou cortesia) aparecia
+  na Home como TRANCADO, com barra vermelha. Novo `UsageLevel.DAY_PASS`: selo verde
+  "PASSE DO DIA" e barra verde. O tile "Próximo a fechar" diz "No passe do dia" em vez de
+  "Tudo trancado" quando há passe ativo. Regra pura em `HomeDashboard` (com testes);
+  o passe vem de `BlockPreferences.unlockGrants` e expira na meia-noite local.
+
 ## [2026-11-04] — Contadores da tela Apps/Home não zeravam na meia-noite
 **Tipo:** bugfix
 **Épico:** adhoc
