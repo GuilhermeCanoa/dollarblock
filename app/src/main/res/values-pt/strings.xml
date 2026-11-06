@@ -252,7 +252,6 @@
 
     <!-- Statistics -->
     <string name="statistics_title">Extrato</string>
-    <string name="statistics_subtitle">Seus gastos de tempo, item por item. Diário, semanal, mensal.</string>
 
     <!-- Apps (monitored list) -->
     <string name="apps_monitored_count">%1$d apps na conta</string>
@@ -263,38 +262,10 @@
     <string name="apps_monitoring_off">Pausado</string>
 
     <!-- Statistics -->
-    <string name="stat_period_daily">Diário</string>
-    <string name="stat_period_weekly">Semanal</string>
-    <string name="stat_period_monthly">Mensal</string>
-    <string name="stat_time_spent_daily">Tempo gasto diário</string>
-    <string name="stat_time_spent_weekly">Tempo gasto semanal</string>
-    <string name="stat_time_spent_monthly">Tempo gasto mensal</string>
-    <string name="stat_money_lost_week">Prejuízo da semana</string>
-    <string name="stat_money_lost_month">Prejuízo do mês</string>
-    <string name="stat_most_used">Mais usado</string>
-    <string name="stat_usage_overview">Visão geral de uso</string>
-    <string name="stat_statement_title">Extrato</string>
-    <string name="stat_best_day">Melhor dia</string>
-    <string name="stat_worst_day">Pior dia</string>
-    <string name="stat_best_day_caption">menor fatura</string>
-    <string name="stat_worst_day_caption">maior fatura</string>
-    <string name="stat_no_data">Ainda não há dados de uso.\nAbra apps monitorados e a conta começa a correr.</string>
-    <string name="stat_period_total">Total</string>
-    <string name="stat_time_spent_total">Tempo gasto total</string>
-    <string name="stat_money_lost_total">Prejuízo total</string>
+    <string name="stat_period_weekly">Semana</string>
+    <string name="stat_period_monthly">Mês</string>
+    <string name="stat_period_total">Tudo</string>
     <string name="stat_info_ok">Entendi</string>
-    <string name="stat_info_top_apps_title">Top Apps</string>
-    <string name="stat_info_top_apps_body">Para onde o seu tempo foi no período. Cada fatia é a participação de um app no total medido pelo Android desde a meia-noite de cada dia. O centro mostra o total consolidado.</string>
-    <string name="stat_info_overview_title">Visão geral de uso</string>
-    <string name="stat_info_overview_body">Tempo de uso de cada app monitorado ao longo do período: dia a dia na semana, semana a semana no mês e no total. Tempo bruto medido pelo celular — sem arredondar a seu favor. Se a linha desce, a conta desce junto.</string>
-    <string name="stat_info_statement_title">Extrato</string>
-    <string name="stat_info_statement_body">A fatura de cada dia: tempo nos apps monitorados convertido em dinheiro pela sua taxa salarial (salário mensal ÷ 43.200 minutos). Melhor dia é a menor fatura; pior dia, a maior.</string>
-    <string name="stat_info_money_lost_title">Prejuízo</string>
-    <string name="stat_info_money_lost_body">A soma da fatura de cada dia do período. Minutos nos apps monitorados × sua taxa por minuto (salário mensal ÷ 43.200 minutos no mês).</string>
-    <string name="stat_info_time_spent_title">Tempo gasto</string>
-    <string name="stat_info_time_spent_body">Tempo total nos apps monitorados no período, exatamente como o Android mediu. A conta não arredonda a seu favor.</string>
-    <string name="stat_info_most_used_title">Mais usado</string>
-    <string name="stat_info_most_used_body">O app com mais tempo acumulado no período. Alguém precisa liderar a fatura.</string>
     <string name="stat_day_no_usage">sem movimentação</string>
 
     <!-- Profile -->
@@ -675,4 +646,39 @@
     <string name="home_budget_no_limits">sem limites ainda</string>
     <string name="home_apps_empty_title">Nenhum app na conta ainda</string>
     <string name="home_apps_empty_body">Os apps que você escolher aparecem aqui, com o uso de hoje e o quanto falta para trancar.</string>
+    <!-- E24: Extrato calendário + passe livre do 1º dia -->
+    <string name="stat_hero_label">DIAS DENTRO DO LIMITE</string>
+    <string name="stat_hero_count">%1$d de %2$d</string>
+    <string name="stat_streak_zero">Sequência zerada. O extrato não esquece.</string>
+    <string name="stat_hero_empty">Nenhum app com limite. Sem limite, não há fatura para conferir.</string>
+    <string name="stat_hero_waiting">Nenhum dia fechado ainda. O extrato começa a contar hoje.</string>
+    <string name="stat_info_calendar_title">Como ler o extrato</string>
+    <string name="stat_info_calendar_body">Cada bolinha é um dia, na cor do pior app daquele dia.\n\nVerde: abaixo do limite.\nÂmbar: a conta fechou e você não pagou o resgate.\nAnel: passe livre ou cortesia, sem cobrança.\nVermelho: pagou o passe do dia.\n\nTracejado: dias de antes do DollarBlock, tirados do histórico do celular. Lá, vermelho quer dizer que você teria pagado.\n\nVerde e âmbar contam como dentro do limite. Os dias usam o limite atual de cada app.</string>
+    <string name="stat_legend_within">dentro</string>
+    <string name="stat_legend_held">aguentou</string>
+    <string name="stat_legend_free">passe livre</string>
+    <string name="stat_legend_paid">pagou</string>
+    <string name="stat_legend_over">passou</string>
+    <string name="stat_legend_before">antes do DollarBlock</string>
+    <string name="stat_tone_within">Dentro do limite</string>
+    <string name="stat_tone_held">A conta fechou e você aguentou</string>
+    <string name="stat_tone_free">Passe livre, sem cobrança</string>
+    <string name="stat_tone_over">Passou do limite</string>
+    <string name="stat_tone_paid">Pagou o passe do dia</string>
+    <string name="stat_tone_empty">Sem limite</string>
+    <string name="stat_tile_average">Média por dia</string>
+    <string name="stat_tile_average_caption">%1$s por dia</string>
+    <string name="stat_tile_priciest">Dia mais caro</string>
+    <string name="stat_apps_title">Apps</string>
+    <string name="stat_app_within">%1$d/%2$d dias</string>
+    <string name="stat_day_usage">%1$s de %2$s</string>
+    <string name="pay_method_free_pass">Passe livre do 1º dia</string>
+    <string name="apps_first_day_title">Primeiro dia por conta da casa?</string>
+    <string name="apps_first_day_body">Você já gastou %1$s no %2$s hoje, e o limite novo é %3$s. A conta fecharia agora.\n\nComo é o seu primeiro dia, o gerente aceita começar a contar amanhã. Ou tranca já, sem desconto.</string>
+    <string name="apps_first_day_accept">Sim, hoje quero um passe livre</string>
+    <string name="apps_first_day_decline">Não, pode bloquear. Estou determinado.</string>
+    <plurals name="stat_streak">
+        <item quantity="one">Sequência: %d dia dentro do limite</item>
+        <item quantity="other">Sequência: %d dias dentro do limite</item>
+    </plurals>
 </resources>

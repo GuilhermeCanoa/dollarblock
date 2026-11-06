@@ -229,7 +229,6 @@
 
     <!-- Statistics -->
     <string name="statistics_title">Statement</string>
-    <string name="statistics_subtitle">Your time spending, itemized. Daily, weekly, monthly.</string>
 
     <!-- Profile -->
     <string name="profile_title">Profile</string>
@@ -244,38 +243,10 @@
     <string name="apps_monitoring_off">Paused</string>
 
     <!-- Statistics -->
-    <string name="stat_period_daily">Daily</string>
-    <string name="stat_period_weekly">Weekly</string>
-    <string name="stat_period_monthly">Monthly</string>
-    <string name="stat_time_spent_daily">Daily Time Spent</string>
-    <string name="stat_time_spent_weekly">Weekly Time Spent</string>
-    <string name="stat_time_spent_monthly">Monthly Time Spent</string>
-    <string name="stat_money_lost_week">This Week\'s Damage</string>
-    <string name="stat_money_lost_month">This Month\'s Damage</string>
-    <string name="stat_most_used">Most used</string>
-    <string name="stat_usage_overview">Usage overview</string>
-    <string name="stat_statement_title">Statement</string>
-    <string name="stat_best_day">Best day</string>
-    <string name="stat_worst_day">Worst day</string>
-    <string name="stat_best_day_caption">lowest bill</string>
-    <string name="stat_worst_day_caption">highest bill</string>
-    <string name="stat_no_data">No usage data yet.\nOpen monitored apps and the tab starts running.</string>
-    <string name="stat_period_total">Total</string>
-    <string name="stat_time_spent_total">Total Time Spent</string>
-    <string name="stat_money_lost_total">Total Damage</string>
+    <string name="stat_period_weekly">Week</string>
+    <string name="stat_period_monthly">Month</string>
+    <string name="stat_period_total">All</string>
     <string name="stat_info_ok">Got it</string>
-    <string name="stat_info_top_apps_title">Top Apps</string>
-    <string name="stat_info_top_apps_body">Where your time went in this period. Each slice is one app\'s share of the total measured by Android since midnight of each day. The center shows the combined total.</string>
-    <string name="stat_info_overview_title">Usage overview</string>
-    <string name="stat_info_overview_body">Each monitored app\'s screen time across the period: day by day for the week, week by week for the month and the total. Raw time as measured by your phone — no rounding in your favor. If the line goes down, so does the tab.</string>
-    <string name="stat_info_statement_title">Statement</string>
-    <string name="stat_info_statement_body">Each day\'s bill: time on monitored apps converted to money at your salary rate (monthly salary ÷ 43,200 minutes). Best day is the lowest bill, worst day the highest.</string>
-    <string name="stat_info_money_lost_title">Damage</string>
-    <string name="stat_info_money_lost_body">The sum of every day\'s bill in this period. Minutes on monitored apps × your per-minute rate (monthly salary ÷ 43,200 minutes in a month).</string>
-    <string name="stat_info_time_spent_title">Time spent</string>
-    <string name="stat_info_time_spent_body">Total time on monitored apps in this period, exactly as Android measured it. The tab doesn\'t round in your favor.</string>
-    <string name="stat_info_most_used_title">Most used</string>
-    <string name="stat_info_most_used_body">The app with the most accumulated time in this period. Someone has to lead the invoice.</string>
     <string name="stat_day_no_usage">no movement</string>
 
     <!-- Profile -->
@@ -648,4 +619,39 @@
     <string name="home_budget_no_limits">no limits yet</string>
     <string name="home_apps_empty_title">No apps on the tab yet</string>
     <string name="home_apps_empty_body">The apps you pick show up here, with today\'s use and how long until they lock.</string>
+    <!-- E24: Extrato calendário + passe livre do 1º dia -->
+    <string name="stat_hero_label">DAYS WITHIN THE LIMIT</string>
+    <string name="stat_hero_count">%1$d of %2$d</string>
+    <string name="stat_streak_zero">Streak reset. The statement doesn\'t forget.</string>
+    <string name="stat_hero_empty">No app has a limit. No limit, no bill to check.</string>
+    <string name="stat_hero_waiting">No day closed yet. The statement starts counting today.</string>
+    <string name="stat_info_calendar_title">How to read the statement</string>
+    <string name="stat_info_calendar_body">Each dot is a day, in the color of that day\'s worst app.\n\nGreen: under the limit.\nAmber: the tab closed and you didn\'t pay to reopen it.\nRing: free pass or courtesy, nothing charged.\nRed: paid the day pass.\n\nDashed: days before DollarBlock, taken from the phone\'s history. There, red means you would have paid.\n\nGreen and amber count as within the limit. Days use each app\'s current limit.</string>
+    <string name="stat_legend_within">within</string>
+    <string name="stat_legend_held">held out</string>
+    <string name="stat_legend_free">free pass</string>
+    <string name="stat_legend_paid">paid</string>
+    <string name="stat_legend_over">over</string>
+    <string name="stat_legend_before">before DollarBlock</string>
+    <string name="stat_tone_within">Within the limit</string>
+    <string name="stat_tone_held">The tab closed and you held out</string>
+    <string name="stat_tone_free">Free pass, nothing charged</string>
+    <string name="stat_tone_over">Over the limit</string>
+    <string name="stat_tone_paid">Paid the day pass</string>
+    <string name="stat_tone_empty">No limit</string>
+    <string name="stat_tile_average">Average per day</string>
+    <string name="stat_tile_average_caption">%1$s a day</string>
+    <string name="stat_tile_priciest">Priciest day</string>
+    <string name="stat_apps_title">Apps</string>
+    <string name="stat_app_within">%1$d/%2$d days</string>
+    <string name="stat_day_usage">%1$s of %2$s</string>
+    <string name="pay_method_free_pass">First-day free pass</string>
+    <string name="apps_first_day_title">First day on the house?</string>
+    <string name="apps_first_day_body">You\'ve already spent %1$s on %2$s today, and the new limit is %3$s. The tab would close right now.\n\nSince it\'s your first day, the manager can start counting tomorrow. Or lock it now, no discount.</string>
+    <string name="apps_first_day_accept">Yes, I want a free pass today</string>
+    <string name="apps_first_day_decline">No, lock it. I\'m determined.</string>
+    <plurals name="stat_streak">
+        <item quantity="one">Streak: %d day within the limit</item>
+        <item quantity="other">Streak: %d days within the limit</item>
+    </plurals>
 </resources>

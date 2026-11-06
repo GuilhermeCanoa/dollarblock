@@ -44,7 +44,10 @@ class MonitoredAppRepositoryImpl @Inject constructor(
         }
     }
 
-    private companion object { const val TAG = "DollarBlockRepo" }
+    private companion object {
+        const val TAG = "DollarBlockRepo"
+        const val BACKFILL_DAYS = 7
+    }
 
     override suspend fun setMonitored(packageName: String, appName: String, isMonitored: Boolean) {
         val existing = monitoredAppDao.getByPackage(packageName)
@@ -61,6 +64,23 @@ class MonitoredAppRepositoryImpl @Inject constructor(
                 ),
             )
         }
+        if (isMonitored) backfillPastDays(packageName)
+    }
+
+    /**
+     * Histórico de antes do monitoramento (E24): grava os últimos [BACKFILL_DAYS] dias que o
+     * Android ainda guarda, sem sobrescrever dia já sincronizado. Só alimenta o Extrato —
+     * bloqueio e cobrança olham apenas o dia de hoje.
+     */
+    private suspend fun backfillPastDays(packageName: String) {
+        val now = System.currentTimeMillis()
+        runCatching { usageStatsProvider.getPastDaysUsage(setOf(packageName), BACKFILL_DAYS) }
+            .getOrDefault(emptyMap())
+            .also { Log.d(TAG, "backfill $packageName: ${it.mapValues { (_, m) -> m[packageName] }}") }
+            .forEach { (epochDay, byPackage) ->
+                val millis = byPackage[packageName] ?: return@forEach
+                dailyUsageDao.insertIfNotExists(packageName, epochDay, millis, now)
+            }
     }
 
     override suspend fun setDailyLimit(packageName: String, dailyLimitMinutes: Int?) {

@@ -70,6 +70,7 @@ fun AppsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val limitChangeNotice by viewModel.limitChangeNotice.collectAsStateWithLifecycle()
+    val firstDayOffer by viewModel.firstDayOffer.collectAsStateWithLifecycle()
     var pendingDelete by remember { mutableStateOf<AppUsageRow?>(null) }
 
     LazyColumn(
@@ -206,6 +207,15 @@ fun AppsScreen(
         LimitChangeNoticeDialog(
             notice = notice,
             onDismiss = viewModel::dismissLimitChangeNotice,
+        )
+    }
+
+    firstDayOffer?.let { offer ->
+        FirstDayOfferDialog(
+            offer = offer,
+            onAccept = viewModel::acceptFirstDayPass,
+            onDecline = viewModel::declineFirstDayPass,
+            onDismiss = viewModel::dismissFirstDayOffer,
         )
     }
 
@@ -616,6 +626,33 @@ private fun LimitChangeNoticeDialog(
                     .height(124.dp),
             )
         },
+    )
+}
+
+/**
+ * Passe livre do 1º dia (E24): o limite novo já estourou hoje, dia da instalação. O gerente
+ * oferece a casa — ou o usuário pede para trancar já.
+ */
+@Composable
+private fun FirstDayOfferDialog(
+    offer: FirstDayOffer,
+    onAccept: () -> Unit,
+    onDecline: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    DollarBlockDialog(
+        onDismissRequest = onDismiss,
+        title = stringResource(R.string.apps_first_day_title),
+        body = stringResource(
+            R.string.apps_first_day_body,
+            formatMinutes(offer.usedMinutes),
+            offer.appName,
+            formatMinutes(offer.limitMinutes),
+        ),
+        confirmText = stringResource(R.string.apps_first_day_accept),
+        onConfirm = onAccept,
+        dismissText = stringResource(R.string.apps_first_day_decline),
+        onDismiss = onDecline,
     )
 }
 

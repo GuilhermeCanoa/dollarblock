@@ -170,6 +170,12 @@ if ($wheel) {
     Write-Host "  roda de minutos em: $(if ($wheel) { $wheel.Value } else { '?' })"
     [void](TapText "^Save$|^Salvar$")
     Start-Sleep -Seconds 3
+    # E24: no dia da instalação, se o app-alvo já passou de 1 min hoje, o limite novo abre a
+    # oferta do passe livre do 1º dia. O teste quer o bloqueio — recusa ("pode bloquear").
+    if (TapText "I'm determined|Estou determinado") {
+        Write-Host "  oferta do passe livre do 1º dia recusada"
+        Start-Sleep -Seconds 3
+    }
 }
 Check "Limite diário salvo" ((UiText) -match "of 1m|de 1m") "o app continua sem limite"
 

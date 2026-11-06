@@ -174,13 +174,17 @@ private fun HistoryEventRow(event: RecentEvent) {
             )
             Text(
                 text = if (unlocked) {
-                    val method = when ((event as RecentEvent.Unlocked).method) {
+                    val methodCode = (event as RecentEvent.Unlocked).method
+                    val method = when (methodCode) {
                         PaymentMethod.PLAY_BILLING -> stringResource(R.string.pay_method_play)
                         PaymentMethod.GOOGLE_PAY -> stringResource(R.string.pay_method_google)
                         PaymentMethod.COURTESY -> stringResource(R.string.pay_method_courtesy)
+                        PaymentMethod.FREE_PASS -> stringResource(R.string.pay_method_free_pass)
                         else -> stringResource(R.string.pay_method_simulated)
                     }
-                    "${stringResource(R.string.history_entry_paid)} · $method"
+                    // Cortesia e passe livre não foram pagos: o método sozinho já diz o que houve.
+                    if (PaymentMethod.isFree(methodCode)) method
+                    else "${stringResource(R.string.history_entry_paid)} · $method"
                 } else {
                     stringResource(R.string.history_entry_locked)
                 },

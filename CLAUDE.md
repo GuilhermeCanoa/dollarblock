@@ -146,7 +146,7 @@ Single Gradle module (`:app`) with Clean Architecture packages. Dependency rule:
 | `feature/blocking` | `BlockActivity` (blocking UI) + `payment/` (Google Pay + Stripe charge via AWS backend) |
 | `feature/home` | Dashboard: Daily Score, Time Saved, Active Limits, Recent Events |
 | `feature/apps` | App list with monitoring toggle, limit config, usage bar |
-| `feature/statistics` | Period selector + bar chart (Compose Canvas) |
+| `feature/statistics` | Extrato (E24): calendar of days colored by outcome (`StatementCalendar`, pure + tested), period chips Semana/Mês/Tudo, day sheet; reuses Home visuals from `core/designsystem/components/HomeStyle.kt` |
 | `feature/profile` | Real permission status + today's stats header; `HistoryScreen` (full block/unlock timeline) on a nested `HISTORY_ROUTE` |
 
 ### Blocking mechanism (ADR-001)
@@ -216,6 +216,9 @@ Two devs work in parallel. `CONTRIBUTING.md` defines the workflow (feature-verti
 - **E12** Uso = 100% da métrica do celular ✅ — `usageBaselineMillis` removido (Room v3→v4); limite
   diário, UI e Statistics comparam/exibem uso bruto do `UsageStatsManager`/`UsageEvents` desde a
   meia-noite, sem baseline por app. Ver `docs/specs/E12-uso-100-porcento-real.md`.
+- **E24** Extrato calendário ✅ — dias coloridos pelo desfecho (dentro/aguentou/passe livre/pagou),
+  backfill de 7 dias ao monitorar um app (`MonitoredAppRepositoryImpl.backfillPastDays`) e passe livre
+  do 1º dia (`PaymentMethod.FREE_PASS`). Ver `docs/specs/E24-extrato-calendario.md`.
 
 Docs: `docs/ROADMAP.md` (epics + acceptance criteria), `docs/ARCHITECTURE.md` (ADRs + data model).
 

@@ -30,4 +30,13 @@ object PaymentMethod {
      * liberado sem cobrar nada. Registrado com valor 0 no extrato.
      */
     const val COURTESY = "cortesia"
+
+    /**
+     * Passe livre do primeiro dia (E24): no dia da instalação, o usuário já tinha passado do
+     * limite que acabou de definir e escolheu não começar bloqueado. Valor 0, nada cobrado.
+     */
+    const val FREE_PASS = "passe_livre"
+
+    /** Desbloqueios sem cobrança — não contam como pagos nem como resistidos. */
+    fun isFree(method: String): Boolean = method == COURTESY || method == FREE_PASS
 }

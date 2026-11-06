@@ -6,8 +6,11 @@ import androidx.lifecycle.viewModelScope
 import com.dollarblock.data.apps.InstalledApp
 import com.dollarblock.data.apps.InstalledAppsProvider
 import com.dollarblock.data.local.prefs.BlockPreferences
+import com.dollarblock.data.local.prefs.MoneyPreferences
 import com.dollarblock.data.usage.UsageStatsProvider
 import com.dollarblock.domain.model.MonitoredAppUsage
+import com.dollarblock.domain.model.PaymentMethod
+import com.dollarblock.domain.repository.EventsRepository
 import com.dollarblock.domain.repository.MonitoredAppRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -15,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -62,12 +66,41 @@ fun classifyLimitChange(previousMinutes: Int?, newMinutes: Int?): LimitChangeNot
     )
 }
 
+/**
+ * Oferta do passe livre do 1º dia (E24): no dia da instalação, o usuário define um limite que
+ * o uso de hoje já estourou. Em vez de trancar na hora, o app pergunta.
+ */
+data class FirstDayOffer(
+    val packageName: String,
+    val appName: String,
+    val usedMinutes: Int,
+    val limitMinutes: Int,
+)
+
+/**
+ * Oferece o passe livre só no dia da instalação, quando o novo limite já foi alcançado hoje,
+ * o app ainda não está liberado e o usuário ainda não respondeu a oferta para esse app.
+ */
+fun shouldOfferFirstDayPass(
+    isInstallDay: Boolean,
+    usedMinutesToday: Int,
+    newLimitMinutes: Int?,
+    unlockedToday: Boolean,
+    alreadyAnswered: Boolean,
+): Boolean = isInstallDay &&
+    newLimitMinutes != null &&
+    usedMinutesToday >= newLimitMinutes &&
+    !unlockedToday &&
+    !alreadyAnswered
+
 @HiltViewModel
 class AppsViewModel @Inject constructor(
     private val installedAppsProvider: InstalledAppsProvider,
     private val monitoredAppRepository: MonitoredAppRepository,
     private val blockPreferences: BlockPreferences,
     private val usageStatsProvider: UsageStatsProvider,
+    private val eventsRepository: EventsRepository,
+    private val moneyPreferences: MoneyPreferences,
 ) : ViewModel() {
 
     private val installedApps = MutableStateFlow<List<InstalledApp>>(emptyList())
@@ -80,6 +113,14 @@ class AppsViewModel @Inject constructor(
 
     /** Aviso pós-troca de limite (irônico no aumento, seco no corte); null quando não há nada a dizer. */
     val limitChangeNotice: StateFlow<LimitChangeNotice?> = _limitChangeNotice
+
+    private val _firstDayOffer = MutableStateFlow<FirstDayOffer?>(null)
+
+    /** Pergunta do passe livre do 1º dia; null quando não há nada a perguntar. */
+    val firstDayOffer: StateFlow<FirstDayOffer?> = _firstDayOffer
+
+    /** Apps cuja oferta do 1º dia já foi respondida nesta tela (não pergunta de novo). */
+    private val firstDayAnswered = mutableSetOf<String>()
 
     private data class BaseState(
         val installed: List<InstalledApp>,
@@ -210,14 +251,61 @@ class AppsViewModel @Inject constructor(
 
     /** Salva o novo limite diário (em minutos) e fecha o diálogo. Use null para remover o limite. */
     fun confirmDailyLimit(packageName: String, minutes: Int?) {
-        val previousMinutes = uiState.value.editingLimitFor
-            ?.takeIf { it.packageName == packageName }
-            ?.dailyLimitMinutes
+        val row = uiState.value.editingLimitFor?.takeIf { it.packageName == packageName }
+        val previousMinutes = row?.dailyLimitMinutes
+        if (row != null && minutes != null && shouldOfferFirstDayPass(
+                isInstallDay = installedAppsProvider.isInstallDay(),
+                usedMinutesToday = row.usedMinutesToday,
+                newLimitMinutes = minutes,
+                unlockedToday = row.unlockedToday,
+                alreadyAnswered = packageName in firstDayAnswered,
+            )
+        ) {
+            // O limite só é salvo depois da resposta: salvar antes trancaria o app na hora.
+            _firstDayOffer.value = FirstDayOffer(packageName, row.label, row.usedMinutesToday, minutes)
+            editingLimitForPackage.value = null
+            return
+        }
         _limitChangeNotice.value = classifyLimitChange(previousMinutes, minutes)
         viewModelScope.launch {
             monitoredAppRepository.setDailyLimit(packageName, minutes)
         }
         editingLimitForPackage.value = null
+    }
+
+    /**
+     * "Sim, hoje é passe livre": libera o app até a meia-noite sem cobrar (recibo de valor 0)
+     * e só então salva o limite — nessa ordem, o serviço de acessibilidade nunca vê o limite
+     * estourado sem o passe.
+     */
+    fun acceptFirstDayPass() {
+        val offer = _firstDayOffer.value ?: return
+        _firstDayOffer.value = null
+        firstDayAnswered += offer.packageName
+        blockPreferences.grantUnlockForToday(offer.packageName)
+        viewModelScope.launch {
+            monitoredAppRepository.setDailyLimit(offer.packageName, offer.limitMinutes)
+            eventsRepository.recordUnlock(
+                packageName = offer.packageName,
+                appLabel = offer.appName,
+                amount = FREE_PASS_AMOUNT,
+                currency = moneyPreferences.settings.first().currency.code,
+                method = PaymentMethod.FREE_PASS,
+            )
+        }
+    }
+
+    /** "Não, pode trancar": salva o limite; o bloqueio dispara na próxima abertura do app. */
+    fun declineFirstDayPass() {
+        val offer = _firstDayOffer.value ?: return
+        _firstDayOffer.value = null
+        firstDayAnswered += offer.packageName
+        viewModelScope.launch { monitoredAppRepository.setDailyLimit(offer.packageName, offer.limitMinutes) }
+    }
+
+    /** Fechou a pergunta sem responder: nada muda, o limite não é salvo. */
+    fun dismissFirstDayOffer() {
+        _firstDayOffer.value = null
     }
 
     /** Fecha o aviso de troca de limite. */
@@ -227,6 +315,7 @@ class AppsViewModel @Inject constructor(
 
     private companion object {
         const val SYNC_INTERVAL_MS = 5_000L
+        const val FREE_PASS_AMOUNT = "0.00"
 
         /** Ralos de tempo clássicos, sugeridos por padrão quando instalados e fora da conta. */
         val SUGGESTED_PACKAGES = listOf(

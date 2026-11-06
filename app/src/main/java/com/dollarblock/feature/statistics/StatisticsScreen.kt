@@ -1,13 +1,10 @@
 package com.dollarblock.feature.statistics
 
 import androidx.annotation.StringRes
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,35 +12,28 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AttachMoney
-import androidx.compose.material.icons.filled.EmojiEvents
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Surface
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,402 +41,162 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dollarblock.R
-import com.dollarblock.core.designsystem.DollarBlockTheme
-import com.dollarblock.core.designsystem.TabularNumerals
+import com.dollarblock.core.designsystem.AlertAmber
+import com.dollarblock.core.designsystem.BlockingRed
+import com.dollarblock.core.designsystem.InterFamily
+import com.dollarblock.core.designsystem.JakartaFamily
+import com.dollarblock.core.designsystem.MintGlow
+import com.dollarblock.core.designsystem.components.AppIcon
 import com.dollarblock.core.designsystem.components.DollarBlockDialog
-import com.dollarblock.core.designsystem.components.MetricCard
+import com.dollarblock.core.designsystem.components.HomePalette
+import com.dollarblock.core.designsystem.components.Mono
+import com.dollarblock.core.designsystem.components.TileColors
+import com.dollarblock.core.designsystem.components.homePalette
 import com.dollarblock.domain.model.AppCurrency
 import com.dollarblock.domain.model.MoneyFormat
-import com.dollarblock.core.designsystem.components.ScreenHeader
-import com.dollarblock.core.designsystem.components.SectionHeader
-import kotlin.math.roundToInt
+import java.time.LocalDate
+import java.time.YearMonth
+import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle as JavaTextStyle
+import java.util.Locale
 
-/** Qual popup informativo está aberto na tela de Extrato. */
-private enum class StatInfoDialog { TOP_APPS, OVERVIEW, STATEMENT, MONEY_LOST, TIME_SPENT, MOST_USED }
-
+/**
+ * Extrato (E24) — o calendário da disciplina, na linguagem visual da Home. Um dia vira uma
+ * bolinha colorida pelo desfecho; o herói conta os dias dentro do limite. Nada aqui repete a
+ * Home (uso de hoje, tentativas, carteira do mês): é o histórico, não o dia.
+ */
 @Composable
 fun StatisticsScreen(
     modifier: Modifier = Modifier,
     viewModel: StatisticsViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    val period by viewModel.period.collectAsState()
-    var infoDialog by remember { mutableStateOf<StatInfoDialog?>(null) }
-
-    infoDialog?.let { dialog ->
-        StatInfoDialogContent(
-            dialog = dialog,
-            uiState = uiState,
-            onDismiss = { infoDialog = null },
-        )
-    }
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val palette = homePalette()
+    val scrollState = rememberScrollState()
+    val statusBarPx = WindowInsets.statusBars.getTop(LocalDensity.current).toFloat()
+    var showInfo by remember { mutableStateOf(false) }
+    val locale = LocalConfiguration.current.locales[0]
+    val currency = state.moneySettings.currency
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        ScreenHeader(
-            title = stringResource(R.string.statistics_title),
-            subtitle = stringResource(R.string.statistics_subtitle),
-        )
-
-        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-            StatPeriod.entries.forEachIndexed { index, entry ->
-                SegmentedButton(
-                    selected = period == entry,
-                    onClick = { viewModel.period.value = entry },
-                    shape = SegmentedButtonDefaults.itemShape(index, StatPeriod.entries.size),
-                ) {
-                    Text(stringResource(entry.labelRes))
-                }
-            }
-        }
-
-        if (uiState.topApps.isNotEmpty()) {
-            DonutChartCard(
-                topApps = uiState.topApps,
-                totalTime = uiState.totalPeriodTime,
-                onInfoClick = { infoDialog = StatInfoDialog.TOP_APPS },
-            )
-        }
-
-        if (uiState.chartLines.isNotEmpty() && uiState.chartXLabels.isNotEmpty()) {
-            LineChartCard(
-                lines = uiState.chartLines,
-                xLabels = uiState.chartXLabels,
-                onInfoClick = { infoDialog = StatInfoDialog.OVERVIEW },
-            )
-        }
-
-        if (uiState.bestDay != null || uiState.worstDay != null) {
-            StatementCard(
-                bestDay = uiState.bestDay,
-                worstDay = uiState.worstDay,
-                currency = uiState.moneySettings.currency,
-                onInfoClick = { infoDialog = StatInfoDialog.STATEMENT },
-            )
-        }
-
-        uiState.moneyLost?.let { lost ->
-            MetricCard(
-                title = stringResource(uiState.period.moneyLostRes!!),
-                value = MoneyFormat.format(lost, uiState.moneySettings.currency),
-                icon = Icons.Filled.AttachMoney,
-                modifier = Modifier.fillMaxWidth(),
-                onClick = { infoDialog = StatInfoDialog.MONEY_LOST },
-            )
-        }
-        MetricCard(
-            title = stringResource(uiState.period.timeSpentRes),
-            value = uiState.timeSpent,
-            icon = Icons.Filled.Schedule,
-            modifier = Modifier.fillMaxWidth(),
-            onClick = { infoDialog = StatInfoDialog.TIME_SPENT },
-        )
-        MetricCard(
-            title = stringResource(R.string.stat_most_used),
-            value = uiState.mostUsed,
-            icon = Icons.Filled.EmojiEvents,
-            modifier = Modifier.fillMaxWidth(),
-            onClick = { infoDialog = StatInfoDialog.MOST_USED },
-        )
-    }
-}
-
-/**
- * Popups informativos dos cards do Extrato. Extrato e Prejuízo detalham a fatura
- * dia a dia — cada linha explica de onde saiu o número consolidado.
- */
-@Composable
-private fun StatInfoDialogContent(
-    dialog: StatInfoDialog,
-    uiState: StatisticsUiState,
-    onDismiss: () -> Unit,
-) {
-    val currency = uiState.moneySettings.currency
-    val showBreakdown = dialog == StatInfoDialog.STATEMENT || dialog == StatInfoDialog.MONEY_LOST
-    val (titleRes, bodyRes) = when (dialog) {
-        StatInfoDialog.TOP_APPS -> R.string.stat_info_top_apps_title to R.string.stat_info_top_apps_body
-        StatInfoDialog.OVERVIEW -> R.string.stat_info_overview_title to R.string.stat_info_overview_body
-        StatInfoDialog.STATEMENT -> R.string.stat_info_statement_title to R.string.stat_info_statement_body
-        StatInfoDialog.MONEY_LOST -> R.string.stat_info_money_lost_title to R.string.stat_info_money_lost_body
-        StatInfoDialog.TIME_SPENT -> R.string.stat_info_time_spent_title to R.string.stat_info_time_spent_body
-        StatInfoDialog.MOST_USED -> R.string.stat_info_most_used_title to R.string.stat_info_most_used_body
-    }
-    DollarBlockDialog(
-        onDismissRequest = onDismiss,
-        title = stringResource(titleRes),
-        body = stringResource(bodyRes),
-        confirmText = stringResource(R.string.stat_info_ok),
-        onConfirm = onDismiss,
-    ) {
-        if (showBreakdown && uiState.dayBreakdown.isNotEmpty()) {
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                uiState.dayBreakdown.forEach { entry ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = entry.label,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.weight(1f),
-                        )
-                        Text(
-                            text = if (entry.usedMillis > 0) {
-                                formatMsShort(entry.usedMillis.toFloat())
-                            } else {
-                                stringResource(R.string.stat_day_no_usage)
-                            },
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        Spacer(Modifier.width(12.dp))
-                        Text(
-                            text = MoneyFormat.format(entry.amount, currency),
-                            style = TabularNumerals.copy(fontSize = 14.sp),
-                            color = if (entry.amount > 0) {
-                                MaterialTheme.colorScheme.error
-                            } else {
-                                DollarBlockTheme.colors.success
-                            },
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun DonutChartCard(
-    topApps: List<TopAppEntry>,
-    totalTime: String,
-    onInfoClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val trackColor = MaterialTheme.colorScheme.surfaceVariant
-    val onSurface = MaterialTheme.colorScheme.onSurface
-    val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
-
-    Card(
-        onClick = onInfoClick,
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
-        ),
-        border = BorderStroke(1.dp, DollarBlockTheme.colors.glow.copy(alpha = 0.15f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            Text(
-                text = "Top Apps",
-                style = MaterialTheme.typography.titleSmall,
-                color = onSurface,
-            )
-
-            // Donut + total time centered
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center,
-            ) {
-                val strokeWidth = 28.dp
-                Canvas(modifier = Modifier.size(180.dp)) {
-                    val sw = strokeWidth.toPx()
-                    val radius = (size.minDimension - sw) / 2f
-                    val topLeft = Offset((size.width - radius * 2) / 2f, (size.height - radius * 2) / 2f)
-                    val arcSize = Size(radius * 2, radius * 2)
-                    var startAngle = -90f
-
-                    // Background track
-                    drawArc(
-                        color = trackColor,
-                        startAngle = 0f,
-                        sweepAngle = 360f,
-                        useCenter = false,
-                        topLeft = topLeft,
-                        size = arcSize,
-                        style = Stroke(width = sw, cap = StrokeCap.Butt),
-                    )
-
-                    topApps.forEachIndexed { idx, app ->
-                        val sweep = 360f * app.percentage
-                        drawArc(
-                            color = chartPalette[idx % chartPalette.size],
-                            startAngle = startAngle,
-                            sweepAngle = sweep,
-                            useCenter = false,
-                            topLeft = topLeft,
-                            size = arcSize,
-                            style = Stroke(width = sw, cap = StrokeCap.Butt),
-                        )
-                        startAngle += sweep
-                    }
-                }
-
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "Total",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = onSurfaceVariant,
-                    )
-                    Text(
-                        text = totalTime,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = onSurface,
+            .background(palette.background)
+            .drawBehind {
+                with(palette) {
+                    drawHeroGlow(
+                        centerY = 120.dp.toPx() - scrollState.value,
+                        radius = 380.dp.toPx(),
+                        extendUp = statusBarPx,
                     )
                 }
             }
-
-            // App list
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                topApps.forEachIndexed { idx, app ->
-                    val color = chartPalette[idx % chartPalette.size]
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        // Icon or colored placeholder
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(color.copy(alpha = 0.15f)),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            if (app.icon != null) {
-                                Image(
-                                    bitmap = app.icon,
-                                    contentDescription = app.appName,
-                                    modifier = Modifier.size(36.dp).clip(CircleShape),
-                                    contentScale = ContentScale.Crop,
-                                )
-                            } else {
-                                Text(
-                                    text = app.appName.first().uppercaseChar().toString(),
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = color,
-                                    fontWeight = FontWeight.Bold,
-                                )
-                            }
-                        }
-
-                        Spacer(Modifier.width(12.dp))
-
-                        Column(modifier = Modifier.weight(1f)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                            ) {
-                                Text(
-                                    text = app.appName,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = onSurface,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.weight(1f),
-                                )
-                                Text(
-                                    text = "${(app.percentage * 100).roundToInt()}%",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = onSurfaceVariant,
-                                    modifier = Modifier.padding(start = 8.dp),
-                                )
-                            }
-                            Spacer(Modifier.height(4.dp))
-                            LinearProgressIndicator(
-                                progress = { app.percentage },
-                                modifier = Modifier.fillMaxWidth().height(4.dp).clip(CircleShape),
-                                color = color,
-                                trackColor = trackColor,
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-/**
- * Extrato: melhor e pior dia do período lado a lado, numerais tabulares
- * reforçando a estética de painel financeiro (styleguide — voz "gerente do
- * banco de tempo").
- */
-@Composable
-private fun StatementCard(
-    bestDay: DayHighlight?,
-    worstDay: DayHighlight?,
-    currency: AppCurrency,
-    onInfoClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Card(
-        onClick = onInfoClick,
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
-        ),
-        border = BorderStroke(1.dp, DollarBlockTheme.colors.glow.copy(alpha = 0.15f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            .verticalScroll(scrollState)
+            .padding(bottom = 24.dp),
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Text(
-                text = stringResource(R.string.stat_statement_title),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
+        Header(period = state.period, palette = palette, onPeriod = { viewModel.period.value = it })
+        Hero(state, palette, onInfo = { showInfo = true })
+
+        if (state.hasLimits) {
+            CalendarPanel(state, palette, locale, onDay = viewModel::selectDay)
+            Legend(state.days.any { it.beforeDollarBlock }, palette)
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 18.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                DayHighlightEntry(
-                    label = stringResource(R.string.stat_best_day),
-                    caption = stringResource(R.string.stat_best_day_caption),
-                    highlight = bestDay,
-                    currency = currency,
-                    accent = DollarBlockTheme.colors.success,
+                InfoTile(
+                    label = stringResource(R.string.stat_tile_average),
+                    value = state.averageMillis?.let { duration(it) } ?: "—",
+                    caption = state.averageCost?.let { stringResource(R.string.stat_tile_average_caption, MoneyFormat.format(it, currency)) }
+                        ?: stringResource(R.string.stat_day_no_usage),
+                    colors = palette.nextTile,
                     modifier = Modifier.weight(1f),
                 )
-                DayHighlightEntry(
-                    label = stringResource(R.string.stat_worst_day),
-                    caption = stringResource(R.string.stat_worst_day_caption),
-                    highlight = worstDay,
-                    currency = currency,
-                    accent = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.weight(1f),
+                InfoTile(
+                    label = stringResource(R.string.stat_tile_priciest),
+                    value = state.priciestCost?.let { MoneyFormat.format(it, currency) } ?: "—",
+                    caption = state.priciestDay?.let { dayLabel(it.epochDay, locale) } ?: stringResource(R.string.stat_day_no_usage),
+                    colors = palette.paidTile,
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable(enabled = state.priciestDay != null) { state.priciestDay?.let { viewModel.selectDay(it.epochDay) } },
+                )
+            }
+            AppsSection(state, palette)
+        }
+    }
+
+    if (showInfo) {
+        DollarBlockDialog(
+            onDismissRequest = { showInfo = false },
+            title = stringResource(R.string.stat_info_calendar_title),
+            body = stringResource(R.string.stat_info_calendar_body),
+            confirmText = stringResource(R.string.stat_info_ok),
+            onConfirm = { showInfo = false },
+        )
+    }
+
+    state.selected?.let { detail ->
+        DaySheet(detail, currency, palette, locale, onDismiss = { viewModel.selectDay(null) })
+    }
+}
+
+// ── Topo ──────────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun Header(period: StatPeriod, palette: HomePalette, onPeriod: (StatPeriod) -> Unit) {
+    Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 14.dp)) {
+        Text(
+            stringResource(R.string.statistics_title),
+            fontFamily = JakartaFamily,
+            fontWeight = FontWeight.Bold,
+            fontSize = 22.sp,
+            color = palette.text,
+        )
+        Row(
+            modifier = Modifier.padding(top = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            StatPeriod.entries.forEach { entry ->
+                val selected = entry == period
+                Text(
+                    stringResource(entry.labelRes),
+                    fontFamily = InterFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 13.sp,
+                    // Escuro: tinta escura sobre o verde vivo; claro: o verde é escuro, texto branco.
+                    color = when {
+                        !selected -> palette.muted
+                        palette.dark -> Color(0xFF04210E)
+                        else -> Color.White
+                    },
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .background(if (selected) palette.emerald else palette.chip)
+                        .clickable { onPeriod(entry) }
+                        .padding(horizontal = 14.dp, vertical = 7.dp),
                 )
             }
         }
@@ -454,259 +204,566 @@ private fun StatementCard(
 }
 
 @Composable
-private fun DayHighlightEntry(
-    label: String,
-    caption: String,
-    highlight: DayHighlight?,
-    currency: AppCurrency,
-    accent: Color,
-    modifier: Modifier = Modifier,
-) {
+private fun Hero(state: StatisticsUiState, palette: HomePalette, onInfo: () -> Unit) {
     Column(
-        modifier = modifier
-            .clip(RoundedCornerShape(14.dp))
-            .background(accent.copy(alpha = 0.08f))
-            .padding(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onInfo)
+            .padding(start = 24.dp, end = 24.dp, top = 28.dp, bottom = 20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                stringResource(R.string.stat_hero_label),
+                fontFamily = Mono,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 11.sp,
+                letterSpacing = 2.5.sp,
+                color = palette.heroLabel,
+            )
+            Spacer(Modifier.width(6.dp))
+            Icon(
+                Icons.Outlined.Info,
+                contentDescription = stringResource(R.string.stat_info_calendar_title),
+                tint = palette.heroLabel,
+                modifier = Modifier.size(14.dp),
+            )
+        }
+        Spacer(Modifier.height(12.dp))
+        if (!state.hasLimits || state.counted == 0) {
+            Text(
+                "—",
+                fontFamily = JakartaFamily,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 64.sp,
+                color = palette.text,
+            )
+            Text(
+                stringResource(if (state.hasLimits) R.string.stat_hero_waiting else R.string.stat_hero_empty),
+                fontFamily = InterFamily,
+                fontSize = 15.sp,
+                color = palette.heroEquiv,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 6.dp),
+            )
+            return@Column
+        }
         Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            text = digitsBig(stringResource(R.string.stat_hero_count, state.within, state.counted)),
+            fontFamily = JakartaFamily,
+            fontWeight = FontWeight.ExtraBold,
+            color = palette.text,
+            style = TextStyle(fontFeatureSettings = "tnum"),
+            maxLines = 1,
         )
-        Spacer(Modifier.height(4.dp))
         Text(
-            text = highlight?.let { MoneyFormat.format(it.amount, currency) } ?: "—",
-            style = TabularNumerals.copy(fontSize = 20.sp),
-            color = accent,
-        )
-        Text(
-            text = highlight?.label ?: caption,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            text = if (state.streak > 0) {
+                pluralStringResource(R.plurals.stat_streak, state.streak, state.streak)
+            } else {
+                stringResource(R.string.stat_streak_zero)
+            },
+            fontFamily = InterFamily,
+            fontSize = 15.sp,
+            color = palette.heroEquiv,
+            modifier = Modifier.padding(top = 6.dp),
         )
     }
 }
 
-// Paleta de gráficos alinhada à marca: emerald, mint glow e tons análogos de
-// verde/teal, com âmbar e vermelho reservados para realces semânticos.
-private val chartPalette = listOf(
-    Color(0xFF00E676), // Emerald Premium
-    Color(0xFF64FFDA), // Mint Glow
-    Color(0xFF00A86B), // Emerald médio
-    Color(0xFF2DD4BF), // Teal
-    Color(0xFFA7F432), // Lime
-    Color(0xFFFFC24B), // Amber
-    Color(0xFF4ECDC4), // Aqua
-)
+/** "5 de 7" com os números no tamanho do herói e as palavras menores (vale para qualquer idioma). */
+private fun digitsBig(text: String): AnnotatedString = buildAnnotatedString {
+    text.forEach { c ->
+        if (c.isDigit()) {
+            withStyle(SpanStyle(fontSize = 72.sp, letterSpacing = (-2).sp)) { append(c) }
+        } else {
+            withStyle(SpanStyle(fontSize = 30.sp, letterSpacing = 0.sp)) { append(c) }
+        }
+    }
+}
+
+// ── Calendário ────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun CalendarPanel(
+    state: StatisticsUiState,
+    palette: HomePalette,
+    locale: Locale,
+    onDay: (Long) -> Unit,
+) {
+    val shape = RoundedCornerShape(20.dp)
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 20.dp)
+            .fillMaxWidth()
+            .clip(shape)
+            .background(palette.walletBg)
+            .border(1.dp, palette.walletBorder, shape)
+            .padding(horizontal = 12.dp, vertical = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        when (state.period) {
+            StatPeriod.WEEKLY -> {
+                WeekdayHeader(palette, locale)
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    state.days.forEach { day ->
+                        Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                            DayCell(day, state.today, palette, size = 38, onClick = onDay)
+                        }
+                    }
+                }
+            }
+            StatPeriod.MONTHLY -> MonthGrid(state.days, state.today, palette, locale, title = null, onDay = onDay)
+            StatPeriod.TOTAL -> {
+                // Um bloco por mês, do mais recente para o mais antigo.
+                state.days.groupBy { YearMonth.from(LocalDate.ofEpochDay(it.epochDay)) }
+                    .toSortedMap(compareByDescending { it })
+                    .forEach { (month, days) ->
+                        MonthGrid(days, state.today, palette, locale, title = monthTitle(month, locale), onDay = onDay)
+                    }
+            }
+        }
+    }
+}
+
+@Composable
+private fun WeekdayHeader(palette: HomePalette, locale: Locale) {
+    Row(modifier = Modifier.fillMaxWidth()) {
+        java.time.DayOfWeek.entries.forEach { dow ->
+            Text(
+                dow.getDisplayName(JavaTextStyle.NARROW, locale).uppercase(locale),
+                fontFamily = Mono,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 11.sp,
+                color = palette.muted,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+/** Grade de um mês, semanas começando na segunda; [days] pode cobrir só parte do mês. */
+@Composable
+private fun MonthGrid(
+    days: List<CalendarDay>,
+    today: Long,
+    palette: HomePalette,
+    locale: Locale,
+    title: String?,
+    onDay: (Long) -> Unit,
+) {
+    if (days.isEmpty()) return
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (title != null) {
+            Text(
+                title,
+                fontFamily = Mono,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 11.sp,
+                letterSpacing = 2.sp,
+                color = palette.heroLabel,
+                modifier = Modifier.padding(start = 4.dp),
+            )
+        }
+        WeekdayHeader(palette, locale)
+        val leading = LocalDate.ofEpochDay(days.first().epochDay).dayOfWeek.value - 1
+        val cells: List<CalendarDay?> = List(leading) { null } + days
+        cells.chunked(7).forEach { week ->
+            Row(modifier = Modifier.fillMaxWidth()) {
+                (0 until 7).forEach { i ->
+                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                        week.getOrNull(i)?.let { DayCell(it, today, palette, size = 34, onClick = onDay) }
+                    }
+                }
+            }
+        }
+    }
+}
+
+private data class ToneStyle(val fill: Color, val ring: Color?, val text: Color)
+
+@Composable
+private fun toneStyle(tone: DayTone, palette: HomePalette): ToneStyle {
+    val ink = Color(0xFF04210E)
+    return when (tone) {
+        DayTone.WITHIN -> ToneStyle(palette.emerald, null, ink)
+        DayTone.HELD -> ToneStyle(AlertAmber, null, Color(0xFF2A1C00))
+        DayTone.FREE -> ToneStyle(Color.Transparent, MintGlow, palette.text)
+        DayTone.OVER, DayTone.PAID -> ToneStyle(BlockingRed, null, Color.White)
+        DayTone.EMPTY -> ToneStyle(Color.Transparent, palette.track, palette.muted)
+    }
+}
+
+@Composable
+private fun DayCell(day: CalendarDay, today: Long, palette: HomePalette, size: Int, onClick: (Long) -> Unit) {
+    val future = day.epochDay > today
+    val style = toneStyle(day.tone, palette)
+    val isToday = day.epochDay == today
+    val todayRing = palette.text
+    // Antes do DollarBlock: cor mais fraca e contorno tracejado — é o histórico do Android.
+    val fill = if (day.beforeDollarBlock) style.fill.copy(alpha = style.fill.alpha * 0.45f) else style.fill
+    val dashedColor = style.ring ?: style.fill
+    Box(
+        modifier = Modifier
+            .size((size + 6).dp)
+            .clip(CircleShape)
+            .clickable(enabled = !future) { onClick(day.epochDay) },
+        contentAlignment = Alignment.Center,
+    ) {
+        Canvas(Modifier.size(size.dp)) {
+            val r = this.size.minDimension / 2
+            drawCircle(fill, radius = r)
+            when {
+                day.beforeDollarBlock -> drawCircle(
+                    dashedColor,
+                    radius = r - 1.dp.toPx(),
+                    style = Stroke(1.5.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 5f))),
+                )
+                style.ring != null && !future -> drawCircle(style.ring, radius = r - 1.dp.toPx(), style = Stroke(2.dp.toPx()))
+            }
+            if (isToday) {
+                drawCircle(todayRing, radius = r + 2.5.dp.toPx(), center = Offset(this.size.width / 2, this.size.height / 2), style = Stroke(1.5.dp.toPx()))
+            }
+        }
+        Text(
+            LocalDate.ofEpochDay(day.epochDay).dayOfMonth.toString(),
+            fontFamily = InterFamily,
+            fontWeight = if (day.tone == DayTone.EMPTY) FontWeight.Medium else FontWeight.Bold,
+            fontSize = 12.sp,
+            color = when {
+                future -> palette.muted.copy(alpha = 0.4f)
+                day.beforeDollarBlock -> palette.text
+                else -> style.text
+            },
+            style = TextStyle(fontFeatureSettings = "tnum"),
+        )
+    }
+}
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun LineChartCard(
-    lines: List<AppChartLine>,
-    xLabels: List<String>,
-    onInfoClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    var expanded by remember { mutableStateOf(true) }
-
-    val gridColor = MaterialTheme.colorScheme.outlineVariant
-    val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
-    val bgColor = MaterialTheme.colorScheme.surface
-
-    Card(
-        onClick = onInfoClick,
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = bgColor.copy(alpha = 0.92f)),
-        border = BorderStroke(1.dp, DollarBlockTheme.colors.glow.copy(alpha = 0.15f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+private fun Legend(showBefore: Boolean, palette: HomePalette) {
+    FlowRow(
+        modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = stringResource(R.string.stat_usage_overview),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                IconButton(onClick = { expanded = !expanded }) {
-                    Icon(
-                        imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                        contentDescription = if (expanded) "Recolher" else "Expandir",
-                        tint = labelColor,
+        LegendItem(DayTone.WITHIN, R.string.stat_legend_within, palette)
+        LegendItem(DayTone.HELD, R.string.stat_legend_held, palette)
+        LegendItem(DayTone.FREE, R.string.stat_legend_free, palette)
+        LegendItem(DayTone.PAID, R.string.stat_legend_paid, palette)
+        if (showBefore) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Canvas(Modifier.size(10.dp)) {
+                    drawCircle(
+                        palette.muted,
+                        radius = size.minDimension / 2 - 0.5.dp.toPx(),
+                        style = Stroke(1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(4f, 3f))),
                     )
                 }
+                Spacer(Modifier.width(5.dp))
+                Text(stringResource(R.string.stat_legend_before), fontFamily = InterFamily, fontSize = 11.5.sp, color = palette.muted)
             }
+        }
+    }
+}
 
-            AnimatedVisibility(
-                visible = expanded,
-                enter = expandVertically(),
-                exit = shrinkVertically(),
-            ) {
-                Column {
-                    val pointCount = xLabels.size
-                    val maxVal = lines.flatMap { it.points }.maxOrNull()?.coerceAtLeast(1f) ?: 1f
+@Composable
+private fun LegendItem(tone: DayTone, @StringRes label: Int, palette: HomePalette) {
+    val style = toneStyle(tone, palette)
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        ToneDot(style, size = 10)
+        Spacer(Modifier.width(5.dp))
+        Text(stringResource(label), fontFamily = InterFamily, fontSize = 11.5.sp, color = palette.muted)
+    }
+}
 
-                    Canvas(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(180.dp),
-                    ) {
-                        val leftPad = 44.dp.toPx()
-                        val chartW = size.width - leftPad
-                        val chartH = size.height
+@Composable
+private fun ToneDot(style: ToneStyle, size: Int) {
+    Canvas(Modifier.size(size.dp)) {
+        val r = this.size.minDimension / 2
+        drawCircle(style.fill, radius = r)
+        style.ring?.let { drawCircle(it, radius = r - 0.75.dp.toPx(), style = Stroke(1.5.dp.toPx())) }
+    }
+}
 
-                        // Y-axis labels and grid lines at 0%, 50%, 100%
-                        val gridFractions = listOf(1f, 0.5f, 0f)
-                        gridFractions.forEach { fraction ->
-                            val y = chartH * (1f - fraction)
-                            drawLine(
-                                color = gridColor,
-                                start = Offset(leftPad, y),
-                                end = Offset(size.width, y),
-                                strokeWidth = 1.dp.toPx(),
-                            )
-                            drawIntoCanvas { canvas ->
-                                val paint = android.graphics.Paint().apply {
-                                    isAntiAlias = true
-                                    textSize = 9.sp.toPx()
-                                    color = android.graphics.Color.argb(
-                                        (labelColor.alpha * 255).toInt(),
-                                        (labelColor.red * 255).toInt(),
-                                        (labelColor.green * 255).toInt(),
-                                        (labelColor.blue * 255).toInt(),
-                                    )
-                                    textAlign = android.graphics.Paint.Align.RIGHT
-                                }
-                                val label = formatMsShort(maxVal * fraction)
-                                canvas.nativeCanvas.drawText(
-                                    label,
-                                    leftPad - 6.dp.toPx(),
-                                    y + paint.textSize / 3f,
-                                    paint,
-                                )
-                            }
+// ── Tiles ─────────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun InfoTile(label: String, value: String, caption: String, colors: TileColors, modifier: Modifier = Modifier) {
+    val shape = RoundedCornerShape(22.dp)
+    Column(
+        modifier = modifier
+            .clip(shape)
+            .background(colors.background)
+            .border(1.dp, colors.border, shape)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+    ) {
+        Text(label, fontFamily = InterFamily, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, color = colors.title)
+        Text(
+            value,
+            fontFamily = JakartaFamily,
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = 26.sp,
+            letterSpacing = (-0.5).sp,
+            color = colors.value,
+            style = TextStyle(fontFeatureSettings = "tnum"),
+            maxLines = 1,
+            modifier = Modifier.padding(top = 10.dp),
+        )
+        Text(
+            caption,
+            fontFamily = InterFamily,
+            fontSize = 12.sp,
+            color = colors.title.copy(alpha = 0.8f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+// ── Apps ──────────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun AppsSection(state: StatisticsUiState, palette: HomePalette) {
+    if (state.apps.isEmpty()) return
+    Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 22.dp)) {
+        Text(
+            stringResource(R.string.stat_apps_title),
+            fontFamily = JakartaFamily,
+            fontWeight = FontWeight.Bold,
+            fontSize = 17.sp,
+            color = palette.text,
+            modifier = Modifier.padding(bottom = 6.dp),
+        )
+        state.apps.forEachIndexed { i, app ->
+            AppStripRow(app, state.period, palette)
+            if (i < state.apps.lastIndex) Box(Modifier.fillMaxWidth().height(1.dp).background(palette.divider))
+        }
+    }
+}
+
+@Composable
+private fun AppStripRow(app: StatementAppRow, period: StatPeriod, palette: HomePalette) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        AppIcon(app.icon, size = 36, corner = 10)
+        Spacer(Modifier.width(14.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    app.appName,
+                    fontFamily = JakartaFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 15.sp,
+                    color = palette.text,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    stringResource(R.string.stat_app_within, app.within, app.counted),
+                    fontFamily = InterFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 13.sp,
+                    color = palette.muted,
+                    style = TextStyle(fontFeatureSettings = "tnum"),
+                    modifier = Modifier.padding(start = 8.dp),
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            if (period == StatPeriod.WEEKLY) {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    app.tones.forEach { ToneDot(toneStyle(it, palette), size = 12) }
+                }
+            } else {
+                // Mês/Tudo: muitos dias — uma barra fina de segmentos, um por dia.
+                val gap = if (app.tones.size > 45) 0.dp else 2.dp
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(6.dp)),
+                    horizontalArrangement = Arrangement.spacedBy(gap),
+                ) {
+                    app.tones.forEach { tone ->
+                        val style = toneStyle(tone, palette)
+                        val color = when (tone) {
+                            DayTone.EMPTY -> palette.track
+                            DayTone.FREE -> MintGlow
+                            else -> style.fill
                         }
-
-                        // Lines per app
-                        lines.forEachIndexed { idx, appLine ->
-                            val color = chartPalette[idx % chartPalette.size]
-                            if (pointCount < 2) return@forEachIndexed
-
-                            val path = Path()
-                            appLine.points.forEachIndexed { i, value ->
-                                val x = leftPad + (i.toFloat() / (pointCount - 1)) * chartW
-                                val y = chartH * (1f - value / maxVal)
-                                if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
-                            }
-                            drawPath(
-                                path = path,
-                                color = color,
-                                style = Stroke(
-                                    width = 2.dp.toPx(),
-                                    cap = StrokeCap.Round,
-                                    join = StrokeJoin.Round,
-                                ),
-                            )
-
-                            // Dots at each point
-                            appLine.points.forEachIndexed { i, value ->
-                                val x = leftPad + (i.toFloat() / (pointCount - 1)) * chartW
-                                val y = chartH * (1f - value / maxVal)
-                                drawCircle(color = color, radius = 4.dp.toPx(), center = Offset(x, y))
-                                drawCircle(color = Color.White, radius = 2.dp.toPx(), center = Offset(x, y))
-                            }
-                        }
+                        Box(Modifier.weight(1f).fillMaxHeight().background(color))
                     }
-
-                    // X-axis labels
-                    Row(modifier = Modifier.fillMaxWidth().padding(start = 44.dp)) {
-                        xLabels.forEach { label ->
-                            Text(
-                                text = label,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = labelColor,
-                                textAlign = TextAlign.Center,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.weight(1f),
-                            )
-                        }
-                    }
-
-                    Spacer(Modifier.height(12.dp))
-
-                    // Legend
-                    FlowRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        lines.forEachIndexed { idx, appLine ->
-                            val color = chartPalette[idx % chartPalette.size]
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Surface(
-                                    modifier = Modifier.size(8.dp),
-                                    shape = CircleShape,
-                                    color = color,
-                                ) {}
-                                Spacer(Modifier.width(4.dp))
-                                Text(
-                                    text = appLine.appName,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = labelColor,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(Modifier.height(4.dp))
                 }
             }
         }
     }
 }
 
-private fun formatMsShort(ms: Float): String {
-    val totalMinutes = (ms / 60_000).toLong()
-    val hours = totalMinutes / 60
-    val minutes = totalMinutes % 60
-    return if (hours > 0) "${hours}h${if (minutes > 0) "${minutes}m" else ""}" else "${minutes}m"
+// ── Extrato do dia ────────────────────────────────────────────────────────────────────────
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DaySheet(
+    detail: DayDetail,
+    currency: AppCurrency,
+    palette: HomePalette,
+    locale: Locale,
+    onDismiss: () -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = palette.background,
+    ) {
+        Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 28.dp)) {
+            Text(
+                dayLabel(detail.day.epochDay, locale, long = true),
+                fontFamily = JakartaFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                color = palette.text,
+            )
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 6.dp)) {
+                ToneDot(toneStyle(detail.day.tone, palette), size = 10)
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    buildString {
+                        append(stringResource(detail.day.tone.labelRes))
+                        if (detail.day.beforeDollarBlock) append(" · ").append(stringResource(R.string.stat_legend_before))
+                    },
+                    fontFamily = InterFamily,
+                    fontSize = 13.sp,
+                    color = palette.muted,
+                )
+            }
+            Text(
+                text = buildAnnotatedString {
+                    withStyle(SpanStyle(color = palette.text, fontWeight = FontWeight.Bold)) {
+                        append(MoneyFormat.format(detail.cost, currency))
+                    }
+                    append("  ·  ")
+                    append(duration(detail.day.usedMillis))
+                },
+                fontFamily = InterFamily,
+                fontSize = 14.sp,
+                color = palette.muted,
+                style = TextStyle(fontFeatureSettings = "tnum"),
+                modifier = Modifier.padding(top = 14.dp, bottom = 4.dp),
+            )
+            if (detail.rows.isEmpty()) {
+                Text(
+                    stringResource(R.string.stat_day_no_usage),
+                    fontFamily = InterFamily,
+                    fontSize = 13.sp,
+                    color = palette.muted,
+                    modifier = Modifier.padding(top = 10.dp),
+                )
+            }
+            detail.rows.forEachIndexed { i, row ->
+                DayRow(row, currency, palette)
+                if (i < detail.rows.lastIndex) Box(Modifier.fillMaxWidth().height(1.dp).background(palette.divider))
+            }
+        }
+    }
+}
+
+@Composable
+private fun DayRow(row: DayDetailRow, currency: AppCurrency, palette: HomePalette) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        AppIcon(row.icon, size = 32, corner = 9)
+        Spacer(Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                row.appName,
+                fontFamily = JakartaFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 15.sp,
+                color = palette.text,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = row.limitMinutes?.let { stringResource(R.string.stat_day_usage, duration(row.usedMillis), durationMin(it)) }
+                    ?: duration(row.usedMillis),
+                fontFamily = InterFamily,
+                fontSize = 12.sp,
+                color = palette.muted,
+                style = TextStyle(fontFeatureSettings = "tnum"),
+            )
+        }
+        Column(horizontalAlignment = Alignment.End) {
+            Text(
+                MoneyFormat.format(row.cost, currency),
+                fontFamily = JakartaFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp,
+                color = palette.text,
+                style = TextStyle(fontFeatureSettings = "tnum"),
+            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                ToneDot(toneStyle(row.tone, palette), size = 8)
+                Spacer(Modifier.width(4.dp))
+                Text(stringResource(row.tone.shortLabelRes), fontFamily = InterFamily, fontSize = 11.5.sp, color = palette.muted)
+            }
+        }
+    }
+}
+
+// ── Formatação ────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun duration(millis: Long): String = durationMin((millis / 60_000L).toInt())
+
+@Composable
+private fun durationMin(minutes: Int): String =
+    if (minutes >= 60) stringResource(R.string.home_duration_hm, minutes / 60, minutes % 60)
+    else stringResource(R.string.home_duration_m, minutes)
+
+private fun dayLabel(epochDay: Long, locale: Locale, long: Boolean = false): String {
+    val pattern = android.text.format.DateFormat.getBestDateTimePattern(locale, if (long) "EEEEdMMMM" else "EEEdMMM")
+    return LocalDate.ofEpochDay(epochDay).format(DateTimeFormatter.ofPattern(pattern, locale))
+        .replaceFirstChar { it.titlecase(locale) }
+}
+
+private fun monthTitle(month: YearMonth, locale: Locale): String {
+    val pattern = android.text.format.DateFormat.getBestDateTimePattern(locale, "MMMMyyyy")
+    return month.atDay(1).format(DateTimeFormatter.ofPattern(pattern, locale)).uppercase(locale)
 }
 
 private val StatPeriod.labelRes: Int
     @StringRes get() = when (this) {
-        StatPeriod.DAILY -> R.string.stat_period_daily
         StatPeriod.WEEKLY -> R.string.stat_period_weekly
         StatPeriod.MONTHLY -> R.string.stat_period_monthly
         StatPeriod.TOTAL -> R.string.stat_period_total
     }
 
-private val StatPeriod.timeSpentRes: Int
+private val DayTone.labelRes: Int
     @StringRes get() = when (this) {
-        StatPeriod.DAILY -> R.string.stat_time_spent_daily
-        StatPeriod.WEEKLY -> R.string.stat_time_spent_weekly
-        StatPeriod.MONTHLY -> R.string.stat_time_spent_monthly
-        StatPeriod.TOTAL -> R.string.stat_time_spent_total
+        DayTone.WITHIN -> R.string.stat_tone_within
+        DayTone.HELD -> R.string.stat_tone_held
+        DayTone.FREE -> R.string.stat_tone_free
+        DayTone.OVER -> R.string.stat_tone_over
+        DayTone.PAID -> R.string.stat_tone_paid
+        DayTone.EMPTY -> R.string.stat_tone_empty
     }
 
-private val StatPeriod.moneyLostRes: Int?
+private val DayTone.shortLabelRes: Int
     @StringRes get() = when (this) {
-        StatPeriod.DAILY -> null
-        StatPeriod.WEEKLY -> R.string.stat_money_lost_week
-        StatPeriod.MONTHLY -> R.string.stat_money_lost_month
-        StatPeriod.TOTAL -> R.string.stat_money_lost_total
+        DayTone.WITHIN -> R.string.stat_legend_within
+        DayTone.HELD -> R.string.stat_legend_held
+        DayTone.FREE -> R.string.stat_legend_free
+        DayTone.OVER -> R.string.stat_legend_over
+        DayTone.PAID -> R.string.stat_legend_paid
+        DayTone.EMPTY -> R.string.stat_tone_empty
     }
-
-@Preview(showBackground = true)
-@Composable
-private fun StatisticsScreenPreview() {
-    DollarBlockTheme {
-        StatisticsScreen()
-    }
-}

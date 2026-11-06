@@ -51,7 +51,7 @@ object MoneyReport {
 
     /** Carteira de um período (o mês, na Home) a partir dos bloqueios e desbloqueios dele. */
     fun wallet(blocks: List<AppDay>, unlocks: List<UnlockDay>, dayPassPrice: Double): MonthWallet {
-        val paid = unlocks.filter { it.method != PaymentMethod.COURTESY }
+        val paid = unlocks.filterNot { PaymentMethod.isFree(it.method) }
         val refused = resistedAppDays(blocks, unlocks.map { it.appDay })
         return MonthWallet(
             paid = totalSpent(paid.map { it.amount }),

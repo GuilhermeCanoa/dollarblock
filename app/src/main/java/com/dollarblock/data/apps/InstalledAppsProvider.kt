@@ -29,6 +29,16 @@ class InstalledAppsProvider @Inject constructor(
     private var cachedApps: List<InstalledApp>? = null
     private val cacheMutex = Mutex()
 
+    /**
+     * Hoje é o dia em que o DollarBlock foi instalado (dia local de `firstInstallTime`)?
+     * Base do passe livre do 1º dia (E24). Reinstalar conta como um novo primeiro dia.
+     */
+    fun isInstallDay(): Boolean = runCatching {
+        val installedAt = context.packageManager.getPackageInfo(context.packageName, 0).firstInstallTime
+        val zone = java.time.ZoneId.systemDefault()
+        java.time.Instant.ofEpochMilli(installedAt).atZone(zone).toLocalDate() == java.time.LocalDate.now(zone)
+    }.getOrDefault(false)
+
     suspend fun getLaunchableApps(): List<InstalledApp> {
         cachedApps?.let { return it }
         return cacheMutex.withLock {

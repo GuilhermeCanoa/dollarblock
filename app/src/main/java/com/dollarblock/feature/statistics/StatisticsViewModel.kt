@@ -6,328 +6,223 @@ import androidx.lifecycle.viewModelScope
 import com.dollarblock.data.apps.InstalledAppsProvider
 import com.dollarblock.data.local.db.DailyUsageDao
 import com.dollarblock.data.local.db.MonitoredAppDao
+import com.dollarblock.data.local.db.MonitoredAppEntity
+import com.dollarblock.data.local.db.dao.EventDao
 import com.dollarblock.data.local.prefs.MoneyPreferences
+import com.dollarblock.data.usage.epochDayAt
+import com.dollarblock.data.usage.localEpochDayFlow
+import com.dollarblock.domain.model.AppDay
 import com.dollarblock.domain.model.MoneySettings
+import com.dollarblock.domain.model.UnlockDay
 import com.dollarblock.feature.home.HomeMetrics
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.ZoneId
-import java.time.format.TextStyle
-import java.util.Locale
 import javax.inject.Inject
 
-enum class StatPeriod { DAILY, WEEKLY, MONTHLY, TOTAL }
+/** Períodos do Extrato. "Hoje" não existe aqui: a Home já é o dia. */
+enum class StatPeriod { WEEKLY, MONTHLY, TOTAL }
 
-data class AppChartLine(val appName: String, val points: List<Float>)
+/** Linha de app do Extrato: a tira de dias do período e quantos ficaram dentro. */
+data class StatementAppRow(
+    val packageName: String,
+    val appName: String,
+    val icon: ImageBitmap?,
+    val tones: List<DayTone>,
+    val within: Int,
+    val counted: Int,
+)
 
-data class TopAppEntry(
+/** Um app no extrato de um dia (bottom sheet ao tocar no calendário). */
+data class DayDetailRow(
     val appName: String,
     val icon: ImageBitmap?,
     val usedMillis: Long,
-    val percentage: Float,
+    val cost: Double,
+    val limitMinutes: Int?,
+    val tone: DayTone,
 )
 
-data class DayHighlight(val label: String, val amount: Double)
-
-/** Uma linha do detalhamento dia a dia exibido nos popups de Extrato/Prejuízo. */
-data class DayBreakdownEntry(
-    val label: String,
-    val usedMillis: Long,
-    val amount: Double,
+data class DayDetail(
+    val day: CalendarDay,
+    val rows: List<DayDetailRow>,
+    val cost: Double,
 )
 
 data class StatisticsUiState(
     val period: StatPeriod = StatPeriod.WEEKLY,
-    val chartLines: List<AppChartLine> = emptyList(),
-    val chartXLabels: List<String> = emptyList(),
-    val topApps: List<TopAppEntry> = emptyList(),
-    val totalPeriodTime: String = "—",
-    val timeSpent: String = "—",
-    val mostUsed: String = "—",
-    /** null when period == DAILY (shown on Home instead). */
-    val moneyLost: Double? = null,
-    /** Melhor/pior dia do período — null quando DAILY (não há o que comparar). */
-    val bestDay: DayHighlight? = null,
-    val worstDay: DayHighlight? = null,
-    /** Gasto dia a dia do período (popups de Extrato/Prejuízo) — vazio quando DAILY. */
-    val dayBreakdown: List<DayBreakdownEntry> = emptyList(),
-    /** Salário/moeda vigentes — a moeda decide como formatar os valores na tela. */
+    val today: Long = 0L,
+    /** Dias do período, inclusive os futuros da semana/mês (desenhados vazios). */
+    val days: List<CalendarDay> = emptyList(),
+    val within: Int = 0,
+    val counted: Int = 0,
+    val streak: Int = 0,
+    /** Média por dia com dado no período; null sem dado. */
+    val averageMillis: Long? = null,
+    val averageCost: Double? = null,
+    /** Dia mais caro do período (maior uso × preço do minuto); null sem uso. */
+    val priciestDay: CalendarDay? = null,
+    val priciestCost: Double? = null,
+    val apps: List<StatementAppRow> = emptyList(),
+    val hasLimits: Boolean = false,
+    val selected: DayDetail? = null,
     val moneySettings: MoneySettings = MoneySettings(),
 )
 
 @HiltViewModel
 class StatisticsViewModel @Inject constructor(
-    private val dailyUsageDao: DailyUsageDao,
-    private val monitoredAppDao: MonitoredAppDao,
+    dailyUsageDao: DailyUsageDao,
+    monitoredAppDao: MonitoredAppDao,
+    eventDao: EventDao,
     private val installedAppsProvider: InstalledAppsProvider,
-    private val moneyPreferences: MoneyPreferences,
+    moneyPreferences: MoneyPreferences,
 ) : ViewModel() {
 
     val period = MutableStateFlow(StatPeriod.WEEKLY)
-    private val _uiState = MutableStateFlow(StatisticsUiState())
-    val uiState: StateFlow<StatisticsUiState> = _uiState
-
+    private val selectedDay = MutableStateFlow<Long?>(null)
     private val iconCache = MutableStateFlow<Map<String, ImageBitmap?>>(emptyMap())
+    private val zone: ZoneId get() = ZoneId.systemDefault()
+
+    /** Tudo o que veio do banco, já reduzido a chaves app/dia. */
+    private data class Ledger(
+        val apps: List<MonitoredAppEntity>,
+        val usage: Map<AppDay, Long>,
+        val blocks: Set<AppDay>,
+        val unlocks: List<UnlockDay>,
+    )
+
+    private val ledger = combine(
+        dailyUsageDao.observeRange(0L, Long.MAX_VALUE),
+        monitoredAppDao.observeMonitored(),
+        eventDao.observeBlockStamps(),
+        eventDao.observeUnlockReceiptsSince(0L),
+    ) { usageRows, apps, blockStamps, receipts ->
+        val z = zone
+        Ledger(
+            apps = apps,
+            usage = usageRows.associate { AppDay(it.packageName, it.epochDay) to it.usedMillis },
+            blocks = blockStamps.map { AppDay(it.packageName, epochDayAt(it.timestamp, z)) }.toSet(),
+            unlocks = receipts.map {
+                UnlockDay(AppDay(it.packageName, epochDayAt(it.timestamp, z)), it.amount, it.method)
+            },
+        )
+    }
+
+    private val controls = combine(period, selectedDay, localEpochDayFlow()) { p, sel, today -> Triple(p, sel, today) }
+
+    val uiState: StateFlow<StatisticsUiState> = combine(
+        ledger,
+        controls,
+        iconCache,
+        moneyPreferences.settings,
+    ) { ledger, (p, sel, today), icons, money ->
+        build(ledger, p, sel, today, icons, money)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), StatisticsUiState())
 
     init {
-        period.onEach { resubscribe(it) }.launchIn(viewModelScope)
-        // Load icons for monitored apps, caching them as they arrive
         viewModelScope.launch {
             monitoredAppDao.observeMonitored().collect { apps ->
                 val missing = apps.map { it.packageName }.toSet() - iconCache.value.keys
                 if (missing.isNotEmpty()) {
-                    val newIcons = missing.associateWith { installedAppsProvider.getIconForPackage(it) }
-                    iconCache.value = iconCache.value + newIcons
+                    iconCache.value = iconCache.value + missing.associateWith { installedAppsProvider.getIconForPackage(it) }
                 }
             }
         }
     }
 
-    private var dataJob: kotlinx.coroutines.Job? = null
+    fun selectDay(epochDay: Long?) {
+        selectedDay.value = epochDay
+    }
 
-    private fun resubscribe(p: StatPeriod) {
-        dataJob?.cancel()
-        val today = LocalDate.now(ZoneId.systemDefault())
-        val todayEpoch = today.toEpochDay()
-
-        val mondayEpoch = todayEpoch - (today.dayOfWeek.value - 1)
-        val (startDay, endDay) = when (p) {
-            StatPeriod.DAILY -> todayEpoch to todayEpoch
-            StatPeriod.WEEKLY -> mondayEpoch to todayEpoch
-            StatPeriod.MONTHLY -> (todayEpoch - 27) to todayEpoch
-            // Consolidado de tudo desde o início; o range efetivo é ajustado
-            // depois para o primeiro dia com dados.
-            StatPeriod.TOTAL -> 0L to todayEpoch
+    private fun build(
+        ledger: Ledger,
+        p: StatPeriod,
+        sel: Long?,
+        today: Long,
+        icons: Map<String, ImageBitmap?>,
+        money: MoneySettings,
+    ): StatisticsUiState {
+        val z = zone
+        val apps = ledger.apps.map {
+            CalendarApp(it.packageName, it.dailyLimitMinutes, epochDayAt(it.createdAt, z))
         }
+        val names = ledger.apps.associate { it.packageName to it.appName }
+        val rate = HomeMetrics.perMinuteRate(money.monthlySalary)
+        fun cost(millis: Long) = millis / 60_000.0 * rate
 
-        dataJob = combine(
-            dailyUsageDao.observeRange(startDay, endDay),
-            monitoredAppDao.observeMonitored(),
-            iconCache,
-            moneyPreferences.settings,
-        ) { usageRows, monitoredApps, icons, moneySettings ->
-            val perMinuteRate = HomeMetrics.perMinuteRate(moneySettings.monthlySalary)
+        // Histórico inteiro (para a sequência e para a aba Tudo), do primeiro dia com dado.
+        val firstDay = (ledger.usage.keys.map { it.epochDay } + apps.map { it.firstMonitoredDay })
+            .minOrNull()?.coerceAtMost(today) ?: today
+        val history = StatementCalendar.days(firstDay..today, today, apps, ledger.usage, ledger.blocks, ledger.unlocks)
 
-            val appNames = monitoredApps.associate { it.packageName to it.appName }
+        val range = periodRange(p, today, firstDay)
+        val days = StatementCalendar.days(range, today, apps, ledger.usage, ledger.blocks, ledger.unlocks)
+        val (within, counted) = StatementCalendar.withinCount(days)
+        val measured = days.filter { it.epochDay <= today && it.usedMillis > 0 }
+        val average = if (measured.isEmpty()) null else measured.sumOf { it.usedMillis } / measured.size
+        val priciest = measured.maxByOrNull { it.usedMillis }
 
-            // ── Métricas globais ────────────────────────────────────────────
-            val totalMillis = usageRows.sumOf { it.usedMillis }
-            val timeSpent = formatMillis(totalMillis)
-
-            val mostUsedPkg = usageRows
-                .groupBy { it.packageName }
-                .mapValues { (_, rows) -> rows.sumOf { it.usedMillis } }
-                .filter { it.value > 0 }
-                .maxByOrNull { it.value }?.key
-            val mostUsed = mostUsedPkg?.let { appNames[it] ?: it } ?: ""
-
-            // ── Money lost (weekly/monthly only — daily is shown on Home) ───
-            val moneyLost = if (p == StatPeriod.DAILY) null
-            else (totalMillis / 60_000.0) * perMinuteRate
-
-            // ── Melhor/pior dia + detalhamento dia a dia (extrato) ───────────
-            var bestDay: DayHighlight? = null
-            var worstDay: DayHighlight? = null
-            var dayBreakdown: List<DayBreakdownEntry> = emptyList()
-            if (p != StatPeriod.DAILY) {
-                // No TOTAL o range efetivo começa no primeiro dia com dados,
-                // não no epoch 0 — senão o "melhor dia" seria sempre um dia vazio.
-                val effectiveStart = if (p == StatPeriod.TOTAL) {
-                    usageRows.minOfOrNull { it.epochDay } ?: todayEpoch
-                } else {
-                    startDay
-                }
-                val millisByDay = usageRows
-                    .groupBy { it.epochDay }
-                    .mapValues { (_, rows) -> rows.sumOf { it.usedMillis } }
-                val labelFormatter = { day: Long ->
-                    val date = LocalDate.ofEpochDay(day)
-                    val weekday = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale("pt", "BR"))
-                        .replaceFirstChar { it.uppercase() }
-                    // Semana atual: só o dia da semana já identifica; períodos
-                    // maiores precisam da data para não ficar ambíguo.
-                    if (p == StatPeriod.WEEKLY) {
-                        weekday
-                    } else {
-                        "$weekday %02d/%02d".format(date.dayOfMonth, date.monthValue)
-                    }
-                }
-                val daySpends = (effectiveStart..endDay).map { day ->
-                    com.dollarblock.feature.home.DaySpend(
-                        day,
-                        (millisByDay[day] ?: 0L) / 60_000.0 * perMinuteRate,
-                    )
-                }
-                val result = HomeMetrics.bestAndWorstDay(daySpends)
-                bestDay = result.best?.let { DayHighlight(labelFormatter(it.epochDay), it.amount) }
-                worstDay = result.worst?.let { DayHighlight(labelFormatter(it.epochDay), it.amount) }
-                dayBreakdown = daySpends.map { spend ->
-                    DayBreakdownEntry(
-                        label = labelFormatter(spend.epochDay),
-                        usedMillis = millisByDay[spend.epochDay] ?: 0L,
-                        amount = spend.amount,
-                    )
-                }
-            }
-
-            // ── Top apps (donut chart) ──────────────────────────────────────
-            val usageByPkg = usageRows
-                .groupBy { it.packageName }
-                .mapValues { (_, rows) -> rows.sumOf { it.usedMillis } }
-                .filter { it.value > 0 }
-            val sorted = usageByPkg.entries.sortedByDescending { it.value }
-            val top5 = sorted.take(5)
-            val othersMillis = sorted.drop(5).sumOf { it.value }
-            val topApps = buildList {
-                top5.forEach { (pkg, millis) ->
-                    add(TopAppEntry(
-                        appName = appNames[pkg] ?: pkg,
-                        icon = icons[pkg],
-                        usedMillis = millis,
-                        percentage = if (totalMillis > 0) millis.toFloat() / totalMillis else 0f,
-                    ))
-                }
-                if (othersMillis > 0) {
-                    add(TopAppEntry(
-                        appName = "Others",
-                        icon = null,
-                        usedMillis = othersMillis,
-                        percentage = if (totalMillis > 0) othersMillis.toFloat() / totalMillis else 0f,
-                    ))
-                }
-            }
-
-            // ── Dados do gráfico (linha por app; DAILY não exibe gráfico) ───
-            val (chartLines, chartXLabels) = when (p) {
-                StatPeriod.DAILY -> emptyList<AppChartLine>() to emptyList()
-                StatPeriod.WEEKLY -> buildWeeklyChartPerApp(usageRows, monitoredApps, appNames, todayEpoch)
-                StatPeriod.MONTHLY -> buildMonthlyChartPerApp(usageRows, monitoredApps, appNames, todayEpoch)
-                // TOTAL: tendência semana a semana desde o primeiro registro — é
-                // onde a queda de uso após adotar o DollarBlock fica visível.
-                StatPeriod.TOTAL -> buildTotalChartPerApp(usageRows, monitoredApps, appNames, todayEpoch)
-            }
-
-            StatisticsUiState(
-                period = p,
-                chartLines = chartLines,
-                chartXLabels = chartXLabels,
-                topApps = topApps,
-                totalPeriodTime = timeSpent,
-                timeSpent = timeSpent,
-                mostUsed = mostUsed,
-                moneyLost = moneyLost,
-                bestDay = bestDay,
-                worstDay = worstDay,
-                dayBreakdown = dayBreakdown,
-                moneySettings = moneySettings,
+        val rows = apps.filter { it.dailyLimitMinutes != null }.map { app ->
+            val tones = StatementCalendar.appTones(app, range, today, ledger.usage, ledger.blocks, ledger.unlocks)
+            StatementAppRow(
+                packageName = app.packageName,
+                appName = names[app.packageName] ?: app.packageName,
+                icon = icons[app.packageName],
+                tones = tones,
+                within = tones.count { it.isWithin },
+                counted = tones.count { it != DayTone.EMPTY },
             )
-        }.onEach { _uiState.value = it }.launchIn(viewModelScope)
-    }
+        }.sortedWith(compareBy<StatementAppRow> { it.within.toFloat() / it.counted.coerceAtLeast(1) }.thenBy { it.appName })
 
-    // ── Chart builders ──────────────────────────────────────────────────────
-
-    private fun buildWeeklyChartPerApp(
-        rows: List<com.dollarblock.data.local.db.DailyUsageEntity>,
-        monitoredApps: List<com.dollarblock.data.local.db.MonitoredAppEntity>,
-        appNames: Map<String, String>,
-        todayEpoch: Long,
-    ): Pair<List<AppChartLine>, List<String>> {
-        if (monitoredApps.isEmpty()) return emptyList<AppChartLine>() to emptyList()
-        val locale = Locale("pt", "BR")
-        val today = LocalDate.ofEpochDay(todayEpoch)
-        val mondayEpoch = todayEpoch - (today.dayOfWeek.value - 1)
-        val epochs = (0..6).map { mondayEpoch + it }
-        val xLabels = epochs.map { epoch ->
-            LocalDate.ofEpochDay(epoch)
-                .dayOfWeek.getDisplayName(TextStyle.SHORT, locale)
-                .replaceFirstChar { it.uppercase() }
+        val selected = sel?.let { day ->
+            val calendarDay = history.firstOrNull { it.epochDay == day } ?: days.firstOrNull { it.epochDay == day }
+                ?: return@let null
+            val detailRows = apps.mapNotNull { app ->
+                val key = AppDay(app.packageName, day)
+                val used = ledger.usage[key] ?: 0L
+                val tone = StatementCalendar.appTones(app, day..day, today, ledger.usage, ledger.blocks, ledger.unlocks).single()
+                if (used == 0L && tone == DayTone.EMPTY) return@mapNotNull null
+                DayDetailRow(names[app.packageName] ?: app.packageName, icons[app.packageName], used, cost(used), app.dailyLimitMinutes, tone)
+            }.sortedByDescending { it.usedMillis }
+            DayDetail(calendarDay, detailRows, cost(calendarDay.usedMillis))
         }
-        val lines = monitoredApps.map { app ->
-            val points = epochs.map { epoch ->
-                rows.filter { it.packageName == app.packageName && it.epochDay == epoch }
-                    .sumOf { it.usedMillis }
-                    .toFloat()
-            }
-            AppChartLine(appName = appNames[app.packageName] ?: app.packageName, points = points)
-        }.filter { line -> line.points.any { it > 0f } }
-        return lines to xLabels
+
+        return StatisticsUiState(
+            period = p,
+            today = today,
+            days = days,
+            within = within,
+            counted = counted,
+            streak = StatementCalendar.streak(history, today),
+            averageMillis = average,
+            averageCost = average?.let(::cost),
+            priciestDay = priciest,
+            priciestCost = priciest?.let { cost(it.usedMillis) },
+            apps = rows,
+            hasLimits = apps.any { it.dailyLimitMinutes != null },
+            selected = selected,
+            moneySettings = money,
+        )
     }
 
-    private fun buildMonthlyChartPerApp(
-        rows: List<com.dollarblock.data.local.db.DailyUsageEntity>,
-        monitoredApps: List<com.dollarblock.data.local.db.MonitoredAppEntity>,
-        appNames: Map<String, String>,
-        todayEpoch: Long,
-    ): Pair<List<AppChartLine>, List<String>> {
-        if (monitoredApps.isEmpty()) return emptyList<AppChartLine>() to emptyList()
-        // Sem 1 (mais antiga) → Sem 4 (mais recente)
-        val weekRanges = (3 downTo 0).mapIndexed { index, weekOffset ->
-            val weekEnd = todayEpoch - weekOffset * 7
-            val weekStart = weekEnd - 6
-            Triple(index + 1, weekStart, weekEnd)
-        }
-        val xLabels = weekRanges.map { (num, _, _) -> "Sem $num" }
-        val lines = monitoredApps.map { app ->
-            val points = weekRanges.map { (_, weekStart, weekEnd) ->
-                rows.filter { it.packageName == app.packageName && it.epochDay in weekStart..weekEnd }
-                    .sumOf { it.usedMillis }
-                    .toFloat()
+    private fun periodRange(p: StatPeriod, today: Long, firstDay: Long): LongRange {
+        val date = LocalDate.ofEpochDay(today)
+        return when (p) {
+            StatPeriod.WEEKLY -> {
+                val monday = today - (date.dayOfWeek.value - 1)
+                monday..(monday + 6)
             }
-            AppChartLine(appName = appNames[app.packageName] ?: app.packageName, points = points)
-        }.filter { line -> line.points.any { it > 0f } }
-        return lines to xLabels
-    }
-
-    /**
-     * Tendência de longo prazo para a aba Total: uma linha por app monitorado com o
-     * tempo de uso somado por semana, da primeira semana com registro até a atual.
-     * É a visão em que o usuário enxerga a queda de uso depois de adotar o app. Para
-     * não estourar o eixo X, no máximo as 12 semanas mais recentes são plotadas.
-     */
-    private fun buildTotalChartPerApp(
-        rows: List<com.dollarblock.data.local.db.DailyUsageEntity>,
-        monitoredApps: List<com.dollarblock.data.local.db.MonitoredAppEntity>,
-        appNames: Map<String, String>,
-        todayEpoch: Long,
-    ): Pair<List<AppChartLine>, List<String>> {
-        if (monitoredApps.isEmpty() || rows.isEmpty()) return emptyList<AppChartLine>() to emptyList()
-        val locale = Locale("pt", "BR")
-        // Semana ancorada na segunda-feira da semana atual, recuando de 7 em 7 até
-        // cobrir o dia mais antigo com uso (limitado a 12 janelas).
-        val mondayThisWeek = todayEpoch - (LocalDate.ofEpochDay(todayEpoch).dayOfWeek.value - 1)
-        val firstDay = rows.minOf { it.epochDay }
-        val weeksBack = ((mondayThisWeek - firstDay) / 7).toInt().coerceIn(0, 11)
-        val weekStarts = (weeksBack downTo 0).map { mondayThisWeek - it * 7L }
-        val xLabels = weekStarts.map { start ->
-            val d = LocalDate.ofEpochDay(start)
-            "%02d/%02d".format(d.dayOfMonth, d.monthValue)
-        }
-        val lines = monitoredApps.map { app ->
-            val points = weekStarts.map { start ->
-                rows.filter { it.packageName == app.packageName && it.epochDay in start..(start + 6) }
-                    .sumOf { it.usedMillis }
-                    .toFloat()
+            StatPeriod.MONTHLY -> {
+                val first = date.withDayOfMonth(1)
+                first.toEpochDay()..first.plusMonths(1).minusDays(1).toEpochDay()
             }
-            AppChartLine(appName = appNames[app.packageName] ?: app.packageName, points = points)
-        }.filter { line -> line.points.any { it > 0f } }
-        return lines to xLabels
-    }
-
-    // ── Formatação ──────────────────────────────────────────────────────────
-
-    private fun formatMillis(millis: Long): String {
-        val totalMinutes = millis / 60_000L
-        val hours = totalMinutes / 60
-        val minutes = totalMinutes % 60
-        return when {
-            hours > 0 -> "${hours}h ${minutes}m"
-            else -> "${minutes}m"
+            StatPeriod.TOTAL -> firstDay..today
         }
     }
 }

@@ -229,7 +229,6 @@
 
     <!-- Statistics -->
     <string name="statistics_title">स्टेटमेंट</string>
-    <string name="statistics_subtitle">आपके समय का खर्च, एक-एक मद में। रोज़, हफ़्ते और महीने का।</string>
 
     <!-- Profile -->
     <string name="profile_title">प्रोफ़ाइल</string>
@@ -244,38 +243,10 @@
     <string name="apps_monitoring_off">रुका हुआ</string>
 
     <!-- Statistics -->
-    <string name="stat_period_daily">रोज़</string>
     <string name="stat_period_weekly">हफ़्ता</string>
     <string name="stat_period_monthly">महीना</string>
-    <string name="stat_time_spent_daily">आज बिताया समय</string>
-    <string name="stat_time_spent_weekly">हफ़्ते में बिताया समय</string>
-    <string name="stat_time_spent_monthly">महीने में बिताया समय</string>
-    <string name="stat_money_lost_week">इस हफ़्ते का नुकसान</string>
-    <string name="stat_money_lost_month">इस महीने का नुकसान</string>
-    <string name="stat_most_used">सबसे ज़्यादा इस्तेमाल</string>
-    <string name="stat_usage_overview">इस्तेमाल का सार</string>
-    <string name="stat_statement_title">स्टेटमेंट</string>
-    <string name="stat_best_day">सबसे अच्छा दिन</string>
-    <string name="stat_worst_day">सबसे बुरा दिन</string>
-    <string name="stat_best_day_caption">सबसे कम बिल</string>
-    <string name="stat_worst_day_caption">सबसे ज़्यादा बिल</string>
-    <string name="stat_no_data">अभी इस्तेमाल का कोई डेटा नहीं।\nनिगरानी वाले ऐप्स खोलिए और खाता चलने लगेगा।</string>
-    <string name="stat_period_total">कुल</string>
-    <string name="stat_time_spent_total">कुल बिताया समय</string>
-    <string name="stat_money_lost_total">कुल नुकसान</string>
+    <string name="stat_period_total">सब</string>
     <string name="stat_info_ok">समझ गया</string>
-    <string name="stat_info_top_apps_title">टॉप ऐप्स</string>
-    <string name="stat_info_top_apps_body">इस अवधि में आपका समय कहाँ गया। हर हिस्सा एक ऐप का वह भाग है जो Android ने हर दिन आधी रात से मापे गए कुल समय में से दर्ज किया। बीच में कुल योग दिखता है।</string>
-    <string name="stat_info_overview_title">इस्तेमाल का सार</string>
-    <string name="stat_info_overview_body">अवधि भर में निगरानी वाले हर ऐप का स्क्रीन टाइम: हफ़्ते के लिए दिन-ब-दिन, महीने और कुल के लिए हफ़्ते-दर-हफ़्ते। फ़ोन ने जैसा मापा, वैसा ही समय — आपके पक्ष में कोई राउंडिंग नहीं। लाइन नीचे जाए, तो खाता भी नीचे जाता है।</string>
-    <string name="stat_info_statement_title">स्टेटमेंट</string>
-    <string name="stat_info_statement_body">हर दिन का बिल: निगरानी वाले ऐप्स पर बिताया समय, आपकी सैलरी के रेट पर पैसों में (मासिक सैलरी ÷ 43,200 मिनट)। सबसे अच्छा दिन सबसे कम बिल वाला है, सबसे बुरा सबसे ज़्यादा वाला।</string>
-    <string name="stat_info_money_lost_title">नुकसान</string>
-    <string name="stat_info_money_lost_body">इस अवधि के हर दिन के बिल का जोड़। निगरानी वाले ऐप्स पर मिनट × आपका प्रति मिनट रेट (मासिक सैलरी ÷ महीने के 43,200 मिनट)।</string>
-    <string name="stat_info_time_spent_title">बिताया समय</string>
-    <string name="stat_info_time_spent_body">इस अवधि में निगरानी वाले ऐप्स पर कुल समय, ठीक वैसा जैसा Android ने मापा। खाता आपके पक्ष में राउंड नहीं करता।</string>
-    <string name="stat_info_most_used_title">सबसे ज़्यादा इस्तेमाल</string>
-    <string name="stat_info_most_used_body">इस अवधि में सबसे ज़्यादा जमा समय वाला ऐप। बिल में किसी को तो सबसे ऊपर रहना है।</string>
     <string name="stat_day_no_usage">कोई लेन-देन नहीं</string>
 
     <!-- Profile -->
@@ -641,4 +612,39 @@
     <string name="home_budget_no_limits">अभी कोई सीमा नहीं</string>
     <string name="home_apps_empty_title">बिल पर अभी कोई ऐप नहीं</string>
     <string name="home_apps_empty_body">आप जो ऐप्स चुनेंगे, वो यहाँ दिखेंगे — आज के इस्तेमाल और बंद होने में बाक़ी समय के साथ।</string>
+    <!-- E24: Extrato calendário + passe livre do 1º dia -->
+    <string name="stat_hero_label">सीमा के भीतर दिन</string>
+    <string name="stat_hero_count">%2$d में से %1$d</string>
+    <string name="stat_streak_zero">लगातार गिनती शून्य। स्टेटमेंट भूलता नहीं।</string>
+    <string name="stat_hero_empty">किसी ऐप की सीमा नहीं है। सीमा नहीं, तो जाँचने को बिल नहीं।</string>
+    <string name="stat_hero_waiting">अभी कोई दिन बंद नहीं हुआ। स्टेटमेंट आज से गिनना शुरू करता है।</string>
+    <string name="stat_info_calendar_title">स्टेटमेंट कैसे पढ़ें</string>
+    <string name="stat_info_calendar_body">हर बिंदु एक दिन है, उस दिन के सबसे खराब ऐप के रंग में।\n\nहरा: सीमा के भीतर।\nअंबर: खाता बंद हुआ और आपने खोलने के पैसे नहीं दिए।\nरिंग: फ़्री पास या सौजन्य, कोई शुल्क नहीं।\nलाल: डे पास खरीदा।\n\nडैश वाले: DollarBlock से पहले के दिन, फ़ोन के इतिहास से। वहाँ लाल का मतलब है कि आप पैसे देते।\n\nहरा और अंबर सीमा के भीतर गिने जाते हैं। दिन हर ऐप की मौजूदा सीमा से गिने जाते हैं।</string>
+    <string name="stat_legend_within">भीतर</string>
+    <string name="stat_legend_held">टिके रहे</string>
+    <string name="stat_legend_free">फ़्री पास</string>
+    <string name="stat_legend_paid">चुकाया</string>
+    <string name="stat_legend_over">सीमा पार</string>
+    <string name="stat_legend_before">DollarBlock से पहले</string>
+    <string name="stat_tone_within">सीमा के भीतर</string>
+    <string name="stat_tone_held">खाता बंद हुआ और आप टिके रहे</string>
+    <string name="stat_tone_free">फ़्री पास, कोई शुल्क नहीं</string>
+    <string name="stat_tone_over">सीमा पार</string>
+    <string name="stat_tone_paid">डे पास चुकाया</string>
+    <string name="stat_tone_empty">कोई सीमा नहीं</string>
+    <string name="stat_tile_average">रोज़ का औसत</string>
+    <string name="stat_tile_average_caption">%1$s रोज़</string>
+    <string name="stat_tile_priciest">सबसे महँगा दिन</string>
+    <string name="stat_apps_title">ऐप्स</string>
+    <string name="stat_app_within">%1$d/%2$d दिन</string>
+    <string name="stat_day_usage">%2$s में से %1$s</string>
+    <string name="pay_method_free_pass">पहले दिन का फ़्री पास</string>
+    <string name="apps_first_day_title">पहला दिन हमारी तरफ़ से?</string>
+    <string name="apps_first_day_body">आज आप %2$s पर पहले ही %1$s खर्च कर चुके हैं, और नई सीमा %3$s है। खाता अभी बंद हो जाएगा।\n\nक्योंकि यह आपका पहला दिन है, मैनेजर कल से गिनना शुरू कर सकता है। या अभी लॉक करें, बिना छूट के।</string>
+    <string name="apps_first_day_accept">हाँ, आज मुझे फ़्री पास चाहिए</string>
+    <string name="apps_first_day_decline">नहीं, लॉक करें। मैंने ठान लिया है।</string>
+    <plurals name="stat_streak">
+        <item quantity="one">लगातार: %d दिन सीमा के भीतर</item>
+        <item quantity="other">लगातार: %d दिन सीमा के भीतर</item>
+    </plurals>
 </resources>

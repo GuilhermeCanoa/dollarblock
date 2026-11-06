@@ -4,6 +4,27 @@ Registro cronológico de mudanças funcionais significativas: features entregues
 
 **Formato:**
 ```
+## [2026-11-06] — Extrato vira calendário + histórico de 7 dias + passe livre do 1º dia
+**Tipo:** feature
+**Épico:** E24
+
+- Extrato redesenhado no visual da Home. Saíram o gráfico de linhas por app, o donut e os
+  cards Material. Entrou um calendário em que cada dia é uma bolinha na cor do desfecho:
+  verde (dentro do limite), âmbar (trancou e o usuário aguentou), anel mint (passe livre ou
+  cortesia), vermelho (pagou o passe). O herói conta "X de Y dias dentro do limite", com a
+  sequência atual.
+- Períodos Semana · Mês · Tudo (o "Diário" saiu: a Home já é o dia). Tocar num dia abre o
+  extrato daquele dia (uso, custo e desfecho por app). Os tiles mostram só o que a Home não
+  tem: média por dia e dia mais caro. Cada app ganha uma tira de dias.
+- Ao monitorar um app, os 7 dias anteriores são preenchidos com o histórico de eventos do
+  Android (sem sobrescrever dia já sincronizado). Esses dias aparecem tracejados ("antes do
+  DollarBlock") e nunca geram bloqueio nem cobrança.
+- Passe livre do 1º dia: no dia da instalação, se o limite novo já foi estourado hoje, o
+  DollarBlock pergunta antes de trancar. "Sim" libera até a meia-noite com recibo de R$ 0
+  (`passe_livre`). "Não" salva o limite e tranca na próxima abertura.
+- Recibos sem cobrança (cortesia e passe livre) não aparecem mais como "Pago ·".
+- A paleta, os tiles e o ícone de app da Home foram para `core/designsystem/components/HomeStyle.kt`.
+
 ## [YYYY-MM-DD] — Título curto
 **Tipo:** feature | bugfix | regra | refactor | config
 **Épico:** E[N] ou adhoc

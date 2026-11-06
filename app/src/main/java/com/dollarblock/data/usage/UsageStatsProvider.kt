@@ -175,6 +175,31 @@ class UsageStatsProvider @Inject constructor(
         )
     }
 
+    /**
+     * Uso de cada app em [packages] em cada um dos [days] dias anteriores a hoje (hoje fora),
+     * medido como o de hoje: eventos de foreground de meia-noite a meia-noite, com a sessão
+     * aberta na virada fechada na meia-noite seguinte. Base do backfill do Extrato (E24) —
+     * o Android só guarda alguns dias de eventos; dias sem eventos simplesmente não aparecem.
+     * Retorna epochDay → (pacote → millis), só com valores > 0.
+     */
+    suspend fun getPastDaysUsage(packages: Set<String>, days: Int): Map<Long, Map<String, Long>> =
+        withContext(Dispatchers.IO) {
+            if (!hasUsageAccess() || packages.isEmpty() || days <= 0) return@withContext emptyMap()
+            val zone = ZoneId.systemDefault()
+            val today = LocalDate.now(zone)
+            (1..days).associate { back ->
+                val date = today.minusDays(back.toLong())
+                val start = date.atStartOfDay(zone).toInstant().toEpochMilli()
+                val end = date.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
+                val closeAtMidnight = UsageAggregator.OngoingPolicy.CloseAt(now = end, lowerBound = start)
+                date.toEpochDay() to UsageAggregator.totalForPackages(
+                    targets = packages,
+                    events = readSessionEvents(start, end),
+                    ongoingByPackage = packages.associateWith { closeAtMidnight },
+                ).filterValues { it > 0L }
+            }.filterValues { it.isNotEmpty() }
+        }
+
     /** Uso total de cada app nos últimos 7 dias (millis de foreground). */
     suspend fun getWeeklyUsageByPackage(): Map<String, Long> = withContext(Dispatchers.IO) {
         if (!hasUsageAccess()) return@withContext emptyMap()
