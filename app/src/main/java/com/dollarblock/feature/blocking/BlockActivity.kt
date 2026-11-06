@@ -3,6 +3,7 @@ package com.dollarblock.feature.blocking
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.os.SystemClock
 import android.text.format.DateFormat
 import android.util.Log
 import android.widget.Toast
@@ -11,71 +12,38 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts.StartIntentSenderForResult
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.layout.boundsInRoot
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import kotlin.math.roundToInt
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
 import com.dollarblock.BuildConfig
 import com.dollarblock.MainActivity
 import com.dollarblock.R
 import com.dollarblock.core.designsystem.DollarBlockTheme
-import com.dollarblock.core.designsystem.NeutralWhite
 import com.dollarblock.core.designsystem.components.DollarBlockDialog
-import kotlinx.coroutines.delay
-import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
 import com.dollarblock.data.local.prefs.BlockPreferences
 import com.dollarblock.data.local.prefs.deviceCurrency
 import com.dollarblock.data.repository.PricingRepository
@@ -89,9 +57,20 @@ import com.dollarblock.feature.blocking.payment.PaymentConfig
 import com.dollarblock.feature.blocking.payment.PaymentProvider
 import com.dollarblock.feature.blocking.payment.PlayBillingManager
 import com.dollarblock.feature.blocking.payment.StripeToken
-import com.dollarblock.feature.onboarding.rememberAnimationsEnabled
+import com.dollarblock.feature.blocking.scene.BlockBackground
+import com.dollarblock.feature.blocking.scene.BlockGlowCenter
+import com.dollarblock.feature.blocking.scene.BlockGlowMid
+import com.dollarblock.feature.blocking.scene.BlockReceiptContent
+import com.dollarblock.feature.blocking.scene.BlockScene
+import com.dollarblock.feature.blocking.scene.BlockSceneChoreography
+import com.dollarblock.feature.blocking.scene.BlockSceneRotation
+import com.dollarblock.feature.blocking.scene.FitScene
+import com.dollarblock.feature.blocking.scene.HeldReceiptScene
+import com.dollarblock.feature.blocking.scene.MascotHeroScene
+import com.dollarblock.feature.blocking.scene.StampScene
+import com.dollarblock.feature.blocking.scene.controlsPaddingFor
+import com.dollarblock.feature.blocking.scene.rememberBlockSceneClock
 import com.dollarblock.service.nudge.NudgeEngine
-import kotlinx.coroutines.launch
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.wallet.AutoResolveHelper
@@ -100,13 +79,16 @@ import com.google.android.gms.wallet.PaymentData
 import com.google.android.gms.wallet.PaymentDataRequest
 import com.google.android.gms.wallet.PaymentsClient
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.random.Random
 
 @AndroidEntryPoint
 class BlockActivity : AppCompatActivity() {
@@ -140,6 +122,8 @@ class BlockActivity : AppCompatActivity() {
 
     private var targetPackage: String = ""
     private var appLabel: String = ""
+    private var scene: BlockScene = BlockScene.A_MASCOT
+    private var sceneStartAtSeconds: Float = 0f
 
     /**
      * Estado da cobrança (pronto / em andamento / cortesia disponível). As transições são
@@ -186,6 +170,7 @@ class BlockActivity : AppCompatActivity() {
 
         targetPackage = intent.getStringExtra(EXTRA_PACKAGE).orEmpty()
         appLabel = intent.getStringExtra(EXTRA_LABEL) ?: getString(R.string.app_name)
+        pickScene(savedInstanceState)
         dayPassPrice.value = fallbackCurrency.dayPassPrice
         when (PaymentConfig.PROVIDER) {
             PaymentProvider.PLAY_BILLING -> {
@@ -230,6 +215,8 @@ class BlockActivity : AppCompatActivity() {
                 val price by dayPassPrice.collectAsState()
                 val playPrice by billingPrice.collectAsState()
                 BlockScreen(
+                    scene = scene,
+                    sceneStartAtSeconds = sceneStartAtSeconds,
                     appLabel = appLabel,
                     unlocksPaidToday = paidToday,
                     // Preço final exibido no recibo: o localizado do Play quando disponível,
@@ -249,6 +236,33 @@ class BlockActivity : AppCompatActivity() {
                 )
             }
         }
+    }
+
+    /**
+     * Cena desta abertura (E25), escolhida já no onCreate, síncrona e em memória — nada de
+     * DataStore antes do primeiro frame (ADR-001). Recriada por mudança de configuração,
+     * mantém a cena e abre na pose final; re-afirmada pelo serviço, continua a entrada de
+     * onde a instância anterior estava ([BlockSceneRotation]). Em debug, o extra
+     * [EXTRA_SCENE] (A, B ou C) força a cena; no release o extra é ignorado.
+     */
+    private fun pickScene(savedInstanceState: Bundle?) {
+        val saved = savedInstanceState?.getString(STATE_SCENE)
+            ?.let { name -> BlockScene.entries.firstOrNull { it.name == name } }
+        if (saved != null) {
+            scene = saved
+            sceneStartAtSeconds = Float.MAX_VALUE
+            return
+        }
+        val forced = if (BuildConfig.DEBUG) BlockScene.fromExtra(intent.getStringExtra(EXTRA_SCENE)) else null
+        val now = SystemClock.elapsedRealtime()
+        val pick = BlockSceneRotation.next(targetPackage, now, Random.Default, forced)
+        scene = pick.scene
+        sceneStartAtSeconds = (now - pick.startedAtMs) / 1000f
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(STATE_SCENE, scene.name)
     }
 
     override fun onDestroy() {
@@ -471,11 +485,17 @@ class BlockActivity : AppCompatActivity() {
         private const val COURTESY_AMOUNT = "0.00"
         const val EXTRA_LABEL = "extra_label"
         const val EXTRA_PACKAGE = "extra_package"
+
+        /** Só debug: força a cena da tela (A, B ou C) para revisar cada uma por adb. */
+        const val EXTRA_SCENE = "extra_scene"
+        private const val STATE_SCENE = "block_scene"
     }
 }
 
 @Composable
 private fun BlockScreen(
+    scene: BlockScene,
+    sceneStartAtSeconds: Float,
     appLabel: String,
     unlocksPaidToday: Int,
     priceText: String,
@@ -489,8 +509,6 @@ private fun BlockScreen(
     onCourtesyUnlock: () -> Unit,
     onGoHome: () -> Unit,
 ) {
-    val quotes = stringArrayResource(R.array.home_quotes)
-    val quote = remember { quotes.random() }
     // Mensagem do recibo sorteada por situação (1ª fatura do dia, 2ª, 3ª+), para a
     // tela não repetir o mesmo texto a cada bloqueio.
     val messagesRes = when {
@@ -500,7 +518,6 @@ private fun BlockScreen(
     }
     val messages = stringArrayResource(messagesRes)
     val message = remember(messagesRes) { messages.random() }
-    val mintGlow = Color(0xFF64FFDA)
     // Nº e data do recibo: o momento em que a fatura foi emitida (decorativo, não é um id).
     val issuedAtMillis = remember { System.currentTimeMillis() }
     val invoiceNumber = remember { "%06d".format(issuedAtMillis / 1000 % 1_000_000) }
@@ -509,218 +526,78 @@ private fun BlockScreen(
         SimpleDateFormat(DateFormat.getBestDateTimePattern(locale, "ddMMyyyyHHmm"), locale)
             .format(Date(issuedAtMillis))
     }
+    val receipt = BlockReceiptContent(appLabel, priceText, message, invoiceNumber, issuedAt)
 
-    // Sequência da cena (BlockHandover.kt): o guardião entrega o recibo → o carimbo cai →
-    // a arte escurece e a frase aparece devagar. Sem animações no sistema, abre no fim.
-    val animate = rememberAnimationsEnabled()
-    val handover = remember { Animatable(if (animate) 0f else 1f) }
-    val stampScale = remember { Animatable(if (animate) 2.4f else 1f) }
-    val stampAlpha = remember { Animatable(if (animate) 0f else 1f) }
-    val epilogue = remember { Animatable(if (animate) 0f else 1f) }
-    val haptic = LocalHapticFeedback.current
-    LaunchedEffect(Unit) {
-        if (!animate) return@LaunchedEffect
-        delay(HANDOVER_DELAY_MS)
-        handover.animateTo(1f, tween(HANDOVER_MS, easing = FastOutSlowInEasing))
-        // O carimbo "cai" no recibo (escala 2.4 → 1) com haptic no impacto.
-        delay(STAMP_DELAY_MS)
-        stampAlpha.animateTo(1f, tween(120))
-        stampScale.animateTo(
-            targetValue = 1f,
-            animationSpec = spring(dampingRatio = 0.45f, stiffness = Spring.StiffnessMedium),
-        )
-        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-        delay(EPILOGUE_DELAY_MS)
-        epilogue.animateTo(1f, tween(EPILOGUE_MS, easing = LinearEasing))
+    // A cena é só o slot visual (E25): roda a coreografia dela; os botões e o rodapé são os
+    // mesmos nas três e aparecem em <= 1 s, sem depender da animação.
+    val clock = rememberBlockSceneClock(BlockSceneChoreography.forScene(scene), sceneStartAtSeconds)
+    var showEthicsDialog by remember { mutableStateOf(false) }
+    val payLabel = when (provider) {
+        // Nas cenas B e C o preço vai no botão; na A ele já está grande na tela.
+        PaymentProvider.PLAY_BILLING ->
+            if (scene == BlockScene.A_MASCOT) {
+                stringResource(R.string.pay_day_pass)
+            } else {
+                stringResource(R.string.pay_day_pass_with_price, priceText)
+            }
+        PaymentProvider.STRIPE_GOOGLE_PAY -> stringResource(R.string.pay_with_google)
     }
 
-    // Onde está o recibo em branco da arte e onde o recibo de verdade termina, na raiz.
-    var artBounds by remember { mutableStateOf<Rect?>(null) }
-    var receiptBounds by remember { mutableStateOf<Rect?>(null) }
-    val artReceipt = artBounds?.let { art ->
-        val k = art.width / ART_W
-        Rect(
-            left = art.left + ArtReceipt.left * k,
-            top = art.top + ArtReceipt.top * k,
-            right = art.left + ArtReceipt.right * k,
-            bottom = art.top + ArtReceipt.bottom * k,
-        )
-    }
-
-    BoxWithConstraints(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BlockArtBackground),
+            .blockBackground(),
     ) {
-        BlockHandoverArt(
-            handover = handover.value,
-            epilogue = epilogue.value,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(maxWidth * (ART_H / ART_W))
-                .onGloballyPositioned { artBounds = it.boundsInRoot() },
-        )
-
-        // Edge-to-edge: a arte cobre a tela toda, mas o conteúdo (inclusive o link do
-        // rodapé) fica fora das barras de status/navegação do sistema.
-        val density = LocalDensity.current
-        val insetTop = with(density) { WindowInsets.safeDrawing.getTop(density).toDp() }
-        val receiptAnchorTop = maxWidth * (ArtReceipt.top / ART_W) - insetTop
-        var showEthicsDialog by remember { mutableStateOf(false) }
-
-        BlockHandoverLayout(
-            receiptAnchorTop = receiptAnchorTop,
+        // Edge-to-edge: o fundo cobre a tela toda, o conteúdo fica fora das barras do sistema.
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .windowInsetsPadding(WindowInsets.safeDrawing),
-            title = {
-                Text(
-                    text = stringResource(R.string.block_screen_title),
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        shadow = Shadow(Color.Black.copy(alpha = 0.6f), blurRadius = 12f),
-                    ),
-                    color = NeutralWhite,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 32.dp),
-                )
-            },
-            // Frase de reflexão: a última coisa a aparecer, devagar, sobre a cena escurecida.
-            quote = {
-                Text(
-                    text = "\"$quote\"",
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontStyle = FontStyle.Italic,
-                        lineHeight = 24.sp,
-                    ),
-                    color = mintGlow,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .padding(horizontal = 32.dp)
-                        .graphicsLayer { alpha = epilogue.value },
-                )
-            },
-            stack = {
-                BlockStack(
-                    modifier = Modifier.padding(horizontal = 32.dp),
-                    receipt = {
-                        InvoiceReceipt(
-                            appLabel = appLabel,
-                            priceText = priceText,
-                            message = message,
-                            invoiceNumber = invoiceNumber,
-                            issuedAt = issuedAt,
-                            stampScale = stampScale,
-                            stampAlpha = stampAlpha,
-                            // Estreito e alinhado à mão do guardião: papel que ele segura,
-                            // não um cartão de tela inteira.
-                            modifier = Modifier
-                                .widthIn(max = RECEIPT_MAX_WIDTH)
-                                .offset {
-                                    val art = artBounds ?: return@offset IntOffset.Zero
-                                    val handX = art.left + ArtReceipt.center.x * art.width / ART_W
-                                    IntOffset((handX - art.center.x).roundToInt(), 0)
-                                }
-                                .onGloballyPositioned { receiptBounds = it.boundsInRoot() }
-                                .receiptHandover(handover.value, artReceipt, receiptBounds),
-                        )
-                    },
-                    controlsAlpha = { ((handover.value - 0.5f) / 0.5f).coerceIn(0f, 1f) },
-                ) {
-                    if (paymentInProgress) {
-                        CircularProgressIndicator(color = NeutralWhite)
-                        Spacer(Modifier.height(12.dp))
-                        Text(
-                            text = stringResource(R.string.pay_processing),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = NeutralWhite,
-                        )
-                    } else if (paymentFailed) {
-                        // Falha na cobrança: a culpa é nossa, então o passe do dia sai de graça.
-                        // O botão de tentar de novo continua disponível pra quem quiser pagar.
-                        PaymentFailedNotice(
-                            appLabel = appLabel,
-                            onCourtesyUnlock = onCourtesyUnlock,
-                            onRetry = onPay.takeIf { paymentReady },
-                        )
-                    } else {
-                        if (paymentReady) {
-                            PayButton(
-                                label = stringResource(
-                                    when (provider) {
-                                        PaymentProvider.PLAY_BILLING -> R.string.pay_day_pass
-                                        PaymentProvider.STRIPE_GOOGLE_PAY -> R.string.pay_with_google
-                                    },
-                                ),
-                                onClick = onPay,
-                            )
-                            // A dúvida "pra onde vai meu cartão?" nasce aqui — responde em uma linha.
-                            if (provider == PaymentProvider.PLAY_BILLING) {
-                                Spacer(Modifier.height(8.dp))
-                                Text(
-                                    text = stringResource(R.string.privacy_payment_note),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = NeutralWhite.copy(alpha = 0.6f),
-                                    textAlign = TextAlign.Center,
-                                )
-                            }
-                        } else {
-                            Text(
-                                text = stringResource(
-                                    when (provider) {
-                                        PaymentProvider.PLAY_BILLING -> R.string.pay_billing_unavailable
-                                        PaymentProvider.STRIPE_GOOGLE_PAY -> R.string.pay_unavailable
-                                    },
-                                ),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = NeutralWhite.copy(alpha = 0.85f),
-                                textAlign = TextAlign.Center,
-                            )
-                        }
-                        if (showDebugSimulate) {
-                            Spacer(Modifier.height(12.dp))
-                            OutlinedButton(
-                                onClick = onSimulatePayment,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(52.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = NeutralWhite),
-                                border = BorderStroke(1.dp, NeutralWhite.copy(alpha = 0.5f)),
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.pay_simulate),
-                                    style = MaterialTheme.typography.labelLarge,
-                                )
-                            }
-                        }
-                    }
-
-                    if (!paymentInProgress) {
-                        Spacer(Modifier.height(8.dp))
-                        TextButton(onClick = onGoHome) {
-                            Text(
-                                text = stringResource(R.string.block_screen_home),
-                                style = MaterialTheme.typography.labelLarge,
-                                color = NeutralWhite.copy(alpha = 0.85f),
-                            )
-                        }
-                    }
-                }
-            },
-            // Rodapé de transparência: o bloqueio é o contrato, não um sequestro. O link
-            // abre a explicação de que pagar é opcional e a monitoria pode ser desativada.
-            footer = {
-                TextButton(
-                    onClick = { showEthicsDialog = true },
-                    modifier = Modifier.padding(bottom = 10.dp),
-                ) {
-                    Text(
-                        text = stringResource(R.string.block_understand_link),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = NeutralWhite.copy(alpha = 0.6f),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            FitScene(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+            ) {
+                when (scene) {
+                    BlockScene.A_MASCOT -> MascotHeroScene(receipt = receipt, clock = clock)
+                    BlockScene.B_BEHIND -> HeldReceiptScene(receipt = receipt, clock = clock)
+                    BlockScene.C_STAMP -> StampScene(
+                        receipt = receipt,
+                        shortMessage = stringResource(R.string.block_scene_short_message),
+                        clock = clock,
+                        modifier = Modifier.padding(horizontal = 24.dp),
                     )
                 }
-            },
-        )
+            }
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = controlsPaddingFor(scene))
+                    .graphicsLayer { alpha = clock.controlsAlpha() },
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                BlockControls(
+                    appLabel = appLabel,
+                    payLabel = payLabel,
+                    provider = provider,
+                    paymentReady = paymentReady,
+                    paymentInProgress = paymentInProgress,
+                    paymentFailed = paymentFailed,
+                    showDebugSimulate = showDebugSimulate,
+                    onPay = onPay,
+                    onSimulatePayment = onSimulatePayment,
+                    onCourtesyUnlock = onCourtesyUnlock,
+                    onGoHome = onGoHome,
+                )
+            }
+            BlockFooter(
+                provider = provider,
+                onUnderstand = { showEthicsDialog = true },
+                modifier = Modifier.padding(top = 10.dp, bottom = 6.dp),
+            )
+        }
         if (showEthicsDialog) {
             DollarBlockDialog(
                 onDismissRequest = { showEthicsDialog = false },
@@ -733,87 +610,23 @@ private fun BlockScreen(
     }
 }
 
-/** O recibo e, abaixo dele, os botões — que só aparecem quando o recibo está chegando. */
-@Composable
-private fun BlockStack(
-    receipt: @Composable () -> Unit,
-    controlsAlpha: () -> Float,
-    modifier: Modifier = Modifier,
-    controls: @Composable ColumnScope.() -> Unit,
-) {
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        receipt()
-        Spacer(Modifier.height(28.dp))
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .graphicsLayer { alpha = controlsAlpha() },
-            horizontalAlignment = Alignment.CenterHorizontally,
-            content = controls,
-        )
-    }
-}
-
-@Composable
-private fun ColumnScope.PaymentFailedNotice(
-    appLabel: String,
-    onCourtesyUnlock: () -> Unit,
-    onRetry: (() -> Unit)?,
-) {
-    Text(
-        text = stringResource(R.string.pay_failed_title),
-        style = MaterialTheme.typography.titleMedium,
-        color = NeutralWhite,
-        textAlign = TextAlign.Center,
-    )
-    Spacer(Modifier.height(8.dp))
-    Text(
-        text = stringResource(R.string.pay_failed_body),
-        style = MaterialTheme.typography.bodyMedium,
-        color = NeutralWhite.copy(alpha = 0.85f),
-        textAlign = TextAlign.Center,
-    )
-    Spacer(Modifier.height(20.dp))
-    PayButton(
-        label = stringResource(R.string.pay_failed_action, appLabel),
-        onClick = onCourtesyUnlock,
-    )
-    if (onRetry != null) {
-        Spacer(Modifier.height(12.dp))
-        OutlinedButton(
-            onClick = onRetry,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = NeutralWhite),
-            border = BorderStroke(1.dp, NeutralWhite.copy(alpha = 0.5f)),
-        ) {
-            Text(
-                text = stringResource(R.string.pay_failed_retry),
-                style = MaterialTheme.typography.labelLarge,
-            )
-        }
-    }
-}
-
-@Composable
-private fun PayButton(label: String, onClick: () -> Unit) {
-    Button(
-        onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(52.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color.Black,
-            contentColor = Color.White,
-        ),
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelLarge,
+/** Fundo escuro com um brilho esmeralda elíptico um pouco acima do centro (como no mock). */
+private fun Modifier.blockBackground(): Modifier = drawBehind {
+    drawRect(BlockBackground)
+    val center = Offset(size.width * 0.5f, size.height * 0.42f)
+    val rx = size.width * 1.2f
+    val ry = size.height * 0.7f
+    scale(rx / ry, 1f, pivot = center) {
+        drawRect(
+            Brush.radialGradient(
+                0f to BlockGlowCenter,
+                0.45f to BlockGlowMid,
+                1f to BlockBackground,
+                center = center,
+                radius = ry,
+            ),
+            topLeft = Offset(center.x - ry, 0f),
+            size = Size(ry * 2f, size.height),
         )
     }
 }

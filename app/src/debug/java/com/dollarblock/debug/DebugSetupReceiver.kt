@@ -32,6 +32,8 @@ import javax.inject.Inject
  * adb shell am start -n com.dollarblock/.feature.blocking.BlockActivity \
  *     --es extra_label Instagram --es extra_package com.instagram.android
  * ```
+ * A cena da tela de bloqueio (E25) sai sorteada; para revisar uma cena específica, acrescente
+ * `--es extra_scene A` (ou `B`, `C`). O extra só vale no debug — o release o ignora.
  */
 @AndroidEntryPoint
 class DebugSetupReceiver : BroadcastReceiver() {

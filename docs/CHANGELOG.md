@@ -981,3 +981,11 @@ Substituiu o antigo gate mínimo de Usage Access por um fluxo de onboarding comp
 **Épico:** E3
 
 Campo de busca (`AppsSearchField`) no topo da lista de apps filtra em tempo real por `label`, com mensagem de "nenhum resultado" e botão de limpar. Implementado em `feature/apps/`.
+
+---
+
+## [2026-11-06] — Tela de bloqueio dinâmica: 3 cenas do mascote, sorteadas
+**Tipo:** feature / UI
+**Épico:** E25
+
+A `BlockActivity` trocou a ilustração estática (`block_handover.jpg` + `BlockHandover.kt`, removidos) pelo escudo vivo do E23, em três cenas sorteadas a cada bloqueio sem repetir a anterior (`feature/blocking/scene/`): **A** — o mascote segura um recibo em miniatura, com "%s fechou por hoje", o valor em menta e o chip "ver fatura completa" (bottom sheet com o recibo); **B** — o mascote atrás do recibo, segurando-o pela borda; **C** — recibo torto "impresso", carimbo grande e o mascote com um carimbo de borracha. Coreografias e sorteio são funções puras com testes JVM; o laço de frames só roda em RESUMED (gestos curtos com pausas de 6–12 s via `delay`) e, com "Remover animações", a cena abre parada na pose final. Os botões saíram para `BlockControls` (mesma lógica de pagar/processando/cortesia E17/Billing indisponível/simular/"Ficar com meu dinheiro") e a nota do Google Play foi para o rodapé ("Entenda o bloqueio · cobrança pelo Google Play"). Re-afirmações do serviço dentro de 2 s mantêm a cena e continuam a entrada. Em debug, `--es extra_scene A|B|C` força a cena. O smoke test passou a procurar o botão de cortesia pelo rótulo exato (os textos das cenas também dizem "de graça").

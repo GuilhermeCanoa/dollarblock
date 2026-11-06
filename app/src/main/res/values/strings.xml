@@ -654,4 +654,13 @@
         <item quantity="one">Streak: %d day within the limit</item>
         <item quantity="other">Streak: %d days within the limit</item>
     </plurals>
+    <!-- E25: tela de bloqueio dinâmica (3 cenas do mascote) -->
+    <string name="block_scene_title">%1$s is closed for today</string>
+    <string name="block_scene_subtitle">Back tomorrow for free — or now, with the day pass.</string>
+    <string name="block_scene_valid_until">valid until midnight</string>
+    <string name="block_scene_view_receipt">see full invoice</string>
+    <string name="block_scene_short_message">Daily limit reached. The app comes back tomorrow for free.</string>
+    <string name="block_footer_understand">Understand the block</string>
+    <string name="block_footer_billing">charged by Google Play</string>
+    <string name="pay_day_pass_with_price">Pay for the day pass · %1$s</string>
 </resources>

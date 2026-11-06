@@ -32,7 +32,7 @@ data class ArmPose(val shoulder: Float, val elbow: Float) {
     }
 }
 
-enum class MascotProp { NONE, MAGNIFIER, PHONE, MUG, BROOM }
+enum class MascotProp { NONE, MAGNIFIER, PHONE, MUG, BROOM, RECEIPT, STAMP }
 
 /**
  * Tudo o que muda no escudo de um quadro para o outro, em unidades da arte (o escudo tem

@@ -1,7 +1,5 @@
 package com.dollarblock.feature.blocking
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -71,9 +69,12 @@ internal fun InvoiceReceipt(
     message: String,
     invoiceNumber: String,
     issuedAt: String,
-    stampScale: Animatable<Float, AnimationVector1D>,
-    stampAlpha: Animatable<Float, AnimationVector1D>,
+    stampScale: () -> Float,
+    stampAlpha: () -> Float,
     modifier: Modifier = Modifier,
+    showMeta: Boolean = true,
+    showBarcode: Boolean = true,
+    emphasizedStamp: Boolean = false,
 ) {
     val shape = remember { ZigzagEdgeShape(ZigzagTooth, ZigzagDepth) }
     val divider = Ink.copy(alpha = 0.35f)
@@ -103,13 +104,15 @@ internal fun InvoiceReceipt(
             letterSpacing = 1.sp,
             color = Ink,
         )
-        Spacer(Modifier.height(2.dp))
-        Text(
-            text = stringResource(R.string.block_receipt_meta, invoiceNumber, issuedAt),
-            fontFamily = FontFamily.Monospace,
-            fontSize = 9.sp,
-            color = Ink.copy(alpha = 0.7f),
-        )
+        if (showMeta) {
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = stringResource(R.string.block_receipt_meta, invoiceNumber, issuedAt),
+                fontFamily = FontFamily.Monospace,
+                fontSize = 9.sp,
+                color = Ink.copy(alpha = 0.7f),
+            )
+        }
         ReceiptDivider(divider)
         // Nome do app à esquerda e o carimbo ao lado, torto e um pouco por cima da borda,
         // como um carimbo de verdade batido sobre o papel.
@@ -130,7 +133,8 @@ internal fun InvoiceReceipt(
             StampText(
                 stampScale = stampScale,
                 stampAlpha = stampAlpha,
-                modifier = Modifier.offset(x = 6.dp),
+                emphasized = emphasizedStamp,
+                modifier = Modifier.offset(x = if (emphasizedStamp) 10.dp else 6.dp),
             )
         }
         ReceiptDivider(divider)
@@ -158,41 +162,46 @@ internal fun InvoiceReceipt(
             color = Ink.copy(alpha = 0.7f),
             textAlign = TextAlign.Center,
         )
-        ReceiptDivider(divider)
-        Barcode(
-            seed = invoiceNumber.hashCode(),
-            color = Ink,
-            modifier = Modifier
-                .fillMaxWidth(0.88f)
-                .height(24.dp),
-        )
+        if (showBarcode) {
+            ReceiptDivider(divider)
+            Barcode(
+                seed = invoiceNumber.hashCode(),
+                color = Ink,
+                modifier = Modifier
+                    .fillMaxWidth(0.88f)
+                    .height(24.dp),
+            )
+        }
     }
 }
 
+/** O carimbo "BLOQUEADO"; [emphasized] é a versão maior da cena C (E25). */
 @Composable
 private fun StampText(
-    stampScale: Animatable<Float, AnimationVector1D>,
-    stampAlpha: Animatable<Float, AnimationVector1D>,
+    stampScale: () -> Float,
+    stampAlpha: () -> Float,
+    emphasized: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Text(
         text = stringResource(R.string.block_stamp),
         fontFamily = FontFamily.Monospace,
         fontWeight = FontWeight.Black,
-        fontSize = 11.sp,
+        fontSize = if (emphasized) 15.sp else 11.sp,
         letterSpacing = 1.sp,
         color = StampInk,
         maxLines = 1,
         modifier = modifier
             .graphicsLayer {
                 rotationZ = -12f
-                scaleX = stampScale.value
-                scaleY = stampScale.value
+                val s = stampScale() * if (emphasized) 1.05f else 1f
+                scaleX = s
+                scaleY = s
                 // Tinta de carimbo nunca sai 100% chapada.
-                alpha = stampAlpha.value * 0.88f
+                alpha = stampAlpha() * 0.88f
             }
-            .border(2.dp, StampInk, RoundedCornerShape(4.dp))
-            .padding(horizontal = 6.dp, vertical = 2.dp),
+            .border(if (emphasized) 2.5.dp else 2.dp, StampInk, RoundedCornerShape(4.dp))
+            .padding(horizontal = if (emphasized) 8.dp else 6.dp, vertical = 2.dp),
     )
 }
 

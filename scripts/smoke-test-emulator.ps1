@@ -210,13 +210,13 @@ Start-Sleep -Seconds 12   # espera o timeout de 8s do Billing
 & $adb shell screencap -p /sdcard/s.png | Out-Null; & $adb pull /sdcard/s.png "$out\block.png" *>$adbLog
 $t = UiText
 Check "Aviso de falha na cobrança" ($t -match "till broke|maquininha") "textos: $($t -join ' / ')"
-Check "Botão de abrir de graça" ($t -match "for free|de gra") "não há saída de cortesia — o usuário ficaria trancado"
+Check "Botão de abrir de graça" ($t -match "^Open .+ for free$|^Abrir .+ de gra") "não há saída de cortesia — o usuário ficaria trancado"
 Check "Botão de sair sem pagar" ($t -match "Keep my money|Ficar com meu dinheiro") "faltou a saída sem pagar"
 $log = & $adb logcat -d -s DollarBlockPay:*
 Check "Timeout do Billing registrado" ($log -match "Billing not ready") "esperado o log de timeout"
 
 Step "Conceder a cortesia"
-[void](TapText "for free|de gra")
+[void](TapText "^Open .+ for free$|^Abrir .+ de gra")
 Start-Sleep -Seconds 8
 $top = TopActivity
 Check "App-alvo abriu" ($top -match $target) "topResumedActivity=$top"

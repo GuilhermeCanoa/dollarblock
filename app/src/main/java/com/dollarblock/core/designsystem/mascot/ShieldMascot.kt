@@ -63,10 +63,10 @@ private fun shieldPath(top: Float): Path = Path().apply {
     close()
 }
 
-private class ArmPoints(val shoulder: Offset, val elbow: Offset, val hand: Offset, val forearmDir: Offset)
+internal class ArmPoints(val shoulder: Offset, val elbow: Offset, val hand: Offset, val forearmDir: Offset)
 
 /** [side] 1 = braço da frente, -1 = o de trás (no referencial do personagem). */
-private fun armPoints(pose: ArmPose, side: Float, swing: Float): ArmPoints {
+internal fun armPoints(pose: ArmPose, side: Float, swing: Float): ArmPoints {
     val shoulder = Offset(side * SHOULDER_X, SHOULDER_Y)
     val a = rad(pose.shoulder + swing)
     val elbow = shoulder + Offset(side * sin(a), cos(a)) * UPPER_ARM
@@ -81,7 +81,35 @@ private fun armPoints(pose: ArmPose, side: Float, swing: Float): ArmPoints {
  * escuros, tênis de sola clara com friso lima. [unit] é quantos px vale uma unidade da arte.
  * Desenha a pose [pose] como está — quem anima é a [MascotChoreography].
  */
-fun DrawScope.drawShieldMascot(pose: MascotPose, unit: Float) {
+fun DrawScope.drawShieldMascot(pose: MascotPose, unit: Float) = drawShieldMascot(pose, unit, hands = true)
+
+/**
+ * Como o [drawShieldMascot] de sempre; com [hands] = false não desenha as mãos (os adereços
+ * continuam): quem chama desenha conteúdo por cima do corpo e depois as mãos com
+ * [drawShieldMascotHands] — o mascote segura o conteúdo pela frente (E25, cena B).
+ */
+fun DrawScope.drawShieldMascot(pose: MascotPose, unit: Float, hands: Boolean) {
+    inMascotFrame(pose, unit, shadow = true) { maxSwing -> drawFigure(pose, maxSwing, hands) }
+}
+
+/** Só as duas mãos da [pose], no mesmo lugar em que o [drawShieldMascot] as poria. */
+fun DrawScope.drawShieldMascotHands(pose: MascotPose, unit: Float) {
+    inMascotFrame(pose, unit, shadow = false) { _ ->
+        val armSwing = 14f * pose.walk * sin(pose.stride)
+        rotate(pose.tilt, pivot = ShieldCenter) {
+            drawHand(armPoints(pose.backArm, -1f, -armSwing).hand)
+            drawHand(armPoints(pose.frontArm, 1f, armSwing).hand)
+        }
+    }
+}
+
+/** Posiciona, espelha, inclina e "pisa" a figura; [content] desenha em unidades da arte. */
+private inline fun DrawScope.inMascotFrame(
+    pose: MascotPose,
+    unit: Float,
+    shadow: Boolean,
+    crossinline content: DrawScope.(maxSwing: Float) -> Unit,
+) {
     withTransform({
         translate(pose.x * unit, pose.y * unit)
         scale(unit * pose.facing, unit, pivot = Offset.Zero)
@@ -89,16 +117,16 @@ fun DrawScope.drawShieldMascot(pose: MascotPose, unit: Float) {
         // Pés plantados: a perna de apoio abre e o corpo desce o que ela "encurta".
         val maxSwing = 22f * pose.walk
         val drop = LEG * (1f - cos(rad(maxSwing * abs(sin(pose.stride)))))
-        drawOval(Color.Black.copy(alpha = 0.22f), Offset(-20f, -3f), Size(40f, 6f))
+        if (shadow) drawOval(Color.Black.copy(alpha = 0.22f), Offset(-20f, -3f), Size(40f, 6f))
         rotate(pose.lean, pivot = Offset.Zero) {
             withTransform({ translate(0f, drop) }) {
-                drawFigure(pose, maxSwing)
+                content(maxSwing)
             }
         }
     }
 }
 
-private fun DrawScope.drawFigure(pose: MascotPose, maxSwing: Float) {
+private fun DrawScope.drawFigure(pose: MascotPose, maxSwing: Float, hands: Boolean = true) {
     // Pernas e tênis (a de trás primeiro).
     listOf(-1f, 1f).forEach { side ->
         val phase = pose.stride + if (side < 0) PI.toFloat() else 0f
@@ -123,14 +151,16 @@ private fun DrawScope.drawFigure(pose: MascotPose, maxSwing: Float) {
             drawLimb(arm.elbow, arm.hand)
         }
         drawShield(pose)
-        drawHand(back.hand)
+        if (hands) drawHand(back.hand)
         // Cada objeto redesenha a mão da frente por cima dele (os dedos seguram o objeto).
         when (pose.prop) {
             MascotProp.MAGNIFIER -> drawMagnifier(front.hand, front.forearmDir, pose.glint)
             MascotProp.PHONE -> drawPhone(front.hand, pose.lookDown, pose.propPhase)
             MascotProp.MUG -> drawMug(front.hand, pose.propPhase)
             MascotProp.BROOM -> drawBroom(front.hand, pose.propOpen, pose.propPhase)
-            MascotProp.NONE -> drawHand(front.hand)
+            MascotProp.RECEIPT -> drawMiniReceipt(front.hand, pose.propOpen)
+            MascotProp.STAMP -> drawRubberStamp(front.hand, pose.propPhase, pose.propOpen)
+            MascotProp.NONE -> if (hands) drawHand(front.hand)
         }
         if (pose.question > 0f) {
             val bob = sin(pose.question * PI.toFloat()) * 1.5f
@@ -346,6 +376,120 @@ private fun DrawScope.drawPhone(hand: Offset, looking: Float, time: Float) {
             }
         }
         drawCircle(LimbLine, 0.55f, Offset(c.x, body.y + 1.1f))
+    }
+    drawHand(hand)
+}
+
+// ── Adereços da tela de bloqueio (E25) ───────────────────────────────────────────────────
+
+private val ReceiptPaper = Color(0xFFF4F1E8)
+private val ReceiptInk = Color(0xFF14231E)
+private val StampRed = Color(0xFFC62828)
+private val StampHandle = Color(0xFF5A3A22)
+private val StampKnob = Color(0xFF7A5232)
+private val StampBase = Color(0xFF2A2F2C)
+
+/**
+ * Onde fica a mão ([front] = a da frente) da [pose], em unidades da arte no referencial da
+ * cena (o mesmo de [MascotPose.x]/[MascotPose.y]) — para alinhar conteúdo às mãos ou saber
+ * onde ele segura um adereço.
+ */
+fun shieldMascotHand(pose: MascotPose, front: Boolean): Offset {
+    val maxSwing = 22f * pose.walk
+    val drop = LEG * (1f - cos(rad(maxSwing * abs(sin(pose.stride)))))
+    val armSwing = 14f * pose.walk * sin(pose.stride)
+    val local = if (front) armPoints(pose.frontArm, 1f, armSwing).hand else armPoints(pose.backArm, -1f, -armSwing).hand
+    val tilted = rotateAround(local, ShieldCenter, pose.tilt) + Offset(0f, drop)
+    val leaned = rotateAround(tilted, Offset.Zero, pose.lean)
+    return Offset(pose.x + leaned.x * pose.facing, pose.y + leaned.y)
+}
+
+private fun rotateAround(p: Offset, pivot: Offset, degrees: Float): Offset {
+    val a = rad(degrees)
+    val d = p - pivot
+    return pivot + Offset(d.x * cos(a) - d.y * sin(a), d.x * sin(a) + d.y * cos(a))
+}
+
+/**
+ * Escala do recibinho ao ser tocado, por [pop] (0..1): cresce um pouco e some na mão
+ * (1 → 1,15 → 0) — o recibo de verdade abre numa sheet.
+ */
+internal fun miniReceiptScale(pop: Float): Float = when {
+    pop <= 0f -> 1f
+    pop < 0.3f -> 1f + 0.15f * pop / 0.3f
+    else -> (1.15f * (1f - (pop - 0.3f) / 0.7f)).coerceAtLeast(0f)
+}
+
+/**
+ * Recibo em miniatura na mão da frente: papel com borda serrilhada embaixo, duas linhas,
+ * o carimbo vermelho torto e o valor em negrito. Os dedos ficam por cima. [pop] (0..1) é o
+ * "salto" do toque ([miniReceiptScale]).
+ */
+private fun DrawScope.drawMiniReceipt(hand: Offset, pop: Float) {
+    val s = miniReceiptScale(pop)
+    if (s <= 0f) {
+        drawHand(hand)
+        return
+    }
+    scale(s, pivot = hand) {
+        rotate(-8f, pivot = hand) {
+            val w = 22f
+            val h = 30f
+            val l = hand.x - w / 2f + 3f
+            val t = hand.y - 4f
+            val n = 6
+            val step = w / n
+            val paper = Path().apply {
+                moveTo(l, t)
+                lineTo(l + w, t)
+                lineTo(l + w, t + h)
+                for (i in n downTo 1) {
+                    lineTo(l + i * step - step / 2f, t + h - 2f)
+                    lineTo(l + (i - 1) * step, t + h)
+                }
+                close()
+            }
+            drawPath(paper, ReceiptPaper)
+            drawPath(paper, Color.Black.copy(alpha = 0.25f), style = Stroke(0.5f))
+            listOf(0.14f to 0.5f, 0.24f to 0.7f).forEach { (y, span) ->
+                drawLine(
+                    ReceiptInk.copy(alpha = 0.5f),
+                    Offset(l + w * (1f - span) / 2f, t + h * y),
+                    Offset(l + w * (1f + span) / 2f, t + h * y),
+                    strokeWidth = 0.9f,
+                )
+            }
+            rotate(-14f, pivot = Offset(l + w * 0.5f, t + h * 0.4f)) {
+                drawRoundRect(StampRed, Offset(l + w * 0.22f, t + h * 0.33f), Size(w * 0.6f, h * 0.13f), CornerRadius(0.8f), style = Stroke(1f))
+            }
+            drawLine(ReceiptInk, Offset(l + w * 0.22f, t + h * 0.68f), Offset(l + w * 0.78f, t + h * 0.68f), strokeWidth = 2.6f)
+            drawLine(ReceiptInk.copy(alpha = 0.4f), Offset(l + w * 0.15f, t + h * 0.8f), Offset(l + w * 0.85f, t + h * 0.8f), strokeWidth = 0.8f)
+        }
+    }
+    drawHand(hand + Offset(-4f, 1f))
+    drawHand(hand)
+}
+
+/**
+ * Carimbo de borracha na mão da frente: cabo de madeira com pegador, base escura e a
+ * almofada vermelha embaixo. [spin] (graus) gira o carimbo em torno da mão; [puff] (0..1)
+ * solta 3 bolinhas de "fumaça" subindo da almofada — ele assoprando depois de carimbar.
+ */
+private fun DrawScope.drawRubberStamp(hand: Offset, spin: Float, puff: Float) {
+    rotate(spin, pivot = hand) {
+        drawRoundRect(StampHandle, Offset(hand.x - 3f, hand.y - 13f), Size(6f, 11f), CornerRadius(3f))
+        drawCircle(StampKnob, 4.4f, Offset(hand.x, hand.y - 14f))
+        drawRoundRect(StampBase, Offset(hand.x - 7.5f, hand.y + 1f), Size(15f, 5f), CornerRadius(1.2f))
+        drawRect(StampRed, Offset(hand.x - 7f, hand.y + 5.6f), Size(14f, 1.8f))
+    }
+    if (puff > 0f && puff < 1f) {
+        val pad = hand + Offset(0f, 7f)
+        for (i in 0 until 3) {
+            val q = ((puff * 1.4f) - i * 0.2f).coerceIn(0f, 1f)
+            if (q <= 0f || q >= 1f) continue
+            val at = pad + Offset(-3f + i * 3f + sin(q * 5f + i) * 1.5f, -4f - q * 16f)
+            drawCircle(Steam.copy(alpha = 0.55f * sin(q * PI.toFloat())), 1.2f + 1.8f * q, at)
+        }
     }
     drawHand(hand)
 }
