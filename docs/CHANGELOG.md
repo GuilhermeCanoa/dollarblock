@@ -4,6 +4,18 @@ Registro cronológico de mudanças funcionais significativas: features entregues
 
 **Formato:**
 ```
+## [2026-11-06] — Topo único nas quatro abas
+**Tipo:** refactor
+**Épico:** adhoc
+
+- Home, Apps, Extrato e Perfil agora abrem com o mesmo topo: a data de hoje à esquerda e o
+  escudo à direita, que leva ao Perfil (no próprio Perfil ele só aparece). O topo virou
+  `HomeTopRow` em `core/designsystem/components/HomeStyle.kt`.
+- O título "Extrato" saiu do topo do Extrato. Os títulos "Apps" e "Perfil" também saíram.
+  No Apps, a frase "Escolha os ralos de tempo…" ficou como chamada.
+- Apps e Perfil ganharam o fundo e o brilho verde da Home, margem de 20dp e cartões na cor
+  da carteira da Home. A busca do Apps ficou com cantos arredondados.
+
 ## [2026-11-06] — Extrato vira calendário + histórico de 7 dias + passe livre do 1º dia
 **Tipo:** feature
 **Épico:** E24

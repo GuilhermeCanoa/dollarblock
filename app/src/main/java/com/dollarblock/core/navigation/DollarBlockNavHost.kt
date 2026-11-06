@@ -46,8 +46,8 @@ fun DollarBlockNavHost(
             onOpenStatement = { toTab(STATISTICS_ROUTE) },
             onOpenProfile = { toTab(PROFILE_ROUTE) },
         )
-        appsScreen()
-        statisticsScreen()
+        appsScreen(onOpenProfile = { toTab(PROFILE_ROUTE) })
+        statisticsScreen(onOpenProfile = { toTab(PROFILE_ROUTE) })
         profileScreen(onOpenHistory = { navController.navigate(HISTORY_ROUTE) })
         historyScreen(onBack = { navController.popBackStack() })
     }

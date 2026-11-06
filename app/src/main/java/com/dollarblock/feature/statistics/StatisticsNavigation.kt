@@ -7,6 +7,6 @@ import androidx.navigation.compose.composable
 const val STATISTICS_ROUTE = "statistics"
 
 /** Registra a tela Statistics no grafo. Adicione/edite aqui sem tocar no NavHost compartilhado. */
-fun NavGraphBuilder.statisticsScreen() {
-    composable(STATISTICS_ROUTE) { StatisticsScreen() }
+fun NavGraphBuilder.statisticsScreen(onOpenProfile: () -> Unit) {
+    composable(STATISTICS_ROUTE) { StatisticsScreen(onOpenProfile = onOpenProfile) }
 }

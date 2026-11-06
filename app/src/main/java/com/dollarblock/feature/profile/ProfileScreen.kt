@@ -2,6 +2,10 @@ package com.dollarblock.feature.profile
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -68,7 +72,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dollarblock.R
 import com.dollarblock.core.designsystem.DollarBlockTheme
 import com.dollarblock.core.designsystem.components.DollarBlockDialog
-import com.dollarblock.core.designsystem.components.ScreenHeader
+import com.dollarblock.core.designsystem.components.HomeTopRow
+import com.dollarblock.core.designsystem.components.homePalette
 import com.dollarblock.core.designsystem.components.SectionHeader
 import com.dollarblock.data.local.prefs.CurrencyPreference
 import com.dollarblock.data.permissions.AppPermission
@@ -221,14 +226,25 @@ private fun ProfileScreenContent(
         )
     }
 
+    val palette = homePalette()
+    val scrollState = rememberScrollState()
+    val statusBarPx = WindowInsets.statusBars.getTop(LocalDensity.current).toFloat()
+
     Column(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+            .background(palette.background)
+            .drawBehind {
+                with(palette) {
+                    drawHeroGlow(centerY = 90.dp.toPx() - scrollState.value, radius = 380.dp.toPx(), extendUp = statusBarPx)
+                }
+            }
+            .verticalScroll(scrollState)
+            .padding(start = 20.dp, end = 20.dp, bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        ScreenHeader(title = stringResource(R.string.profile_title))
+        // Já estamos no Perfil: o escudo aparece só para manter o topo igual às outras abas.
+        HomeTopRow(palette = palette, onOpenProfile = null, horizontalPadding = 0.dp)
 
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             StatTile(
@@ -259,10 +275,8 @@ private fun ProfileScreenContent(
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
-            ),
-            border = BorderStroke(1.dp, DollarBlockTheme.colors.glow.copy(alpha = 0.15f)),
+            colors = CardDefaults.cardColors(containerColor = homePalette().walletBg),
+            border = BorderStroke(1.dp, homePalette().walletBorder),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         ) {
             Column {
@@ -307,10 +321,8 @@ private fun ProfileScreenContent(
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
-            ),
-            border = BorderStroke(1.dp, DollarBlockTheme.colors.glow.copy(alpha = 0.15f)),
+            colors = CardDefaults.cardColors(containerColor = homePalette().walletBg),
+            border = BorderStroke(1.dp, homePalette().walletBorder),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         ) {
             Column {
@@ -410,10 +422,8 @@ private fun StatTile(
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
-        ),
-        border = BorderStroke(1.dp, DollarBlockTheme.colors.glow.copy(alpha = 0.15f)),
+        colors = CardDefaults.cardColors(containerColor = homePalette().walletBg),
+        border = BorderStroke(1.dp, homePalette().walletBorder),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Column(
@@ -673,9 +683,7 @@ private fun PrivacyCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
-        ),
+        colors = CardDefaults.cardColors(containerColor = homePalette().walletBg),
         border = BorderStroke(1.dp, DollarBlockTheme.colors.success.copy(alpha = 0.35f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {

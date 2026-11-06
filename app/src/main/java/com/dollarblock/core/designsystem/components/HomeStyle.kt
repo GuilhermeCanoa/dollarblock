@@ -8,14 +8,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,20 +29,28 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.dollarblock.R
 import com.dollarblock.core.designsystem.AlertAmber
 import com.dollarblock.core.designsystem.BlockingRed
 import com.dollarblock.core.designsystem.EmeraldPremium
 import com.dollarblock.core.designsystem.InterFamily
 import com.dollarblock.core.designsystem.JakartaFamily
 import com.dollarblock.core.designsystem.MintGlow
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 /*
  * Linguagem visual da Home (redesenho de out/2026), compartilhada com o Extrato (E24):
@@ -136,6 +147,51 @@ internal fun homePalette(): HomePalette {
 }
 
 internal val Mono = FontFamily.Monospace
+
+// ── Topo ──────────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Topo comum às quatro abas: a data de hoje à esquerda e o escudo do app à direita, que abre
+ * o Perfil. [onOpenProfile] null (no próprio Perfil) mostra o escudo sem ação.
+ */
+@Composable
+internal fun HomeTopRow(
+    palette: HomePalette,
+    onOpenProfile: (() -> Unit)?,
+    horizontalPadding: Dp = 20.dp,
+) {
+    val locale = LocalConfiguration.current.locales[0]
+    val date = remember(locale) {
+        val pattern = android.text.format.DateFormat.getBestDateTimePattern(locale, "EEEEdMMMM")
+        LocalDate.now().format(DateTimeFormatter.ofPattern(pattern, locale))
+            .replaceFirstChar { it.titlecase(locale) }
+    }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = horizontalPadding, end = horizontalPadding, top = 14.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(date, fontFamily = InterFamily, fontWeight = FontWeight.Medium, fontSize = 13.sp, color = palette.muted)
+        // Escudo do app no lugar de um avatar: o app não guarda nome; tocar abre o Perfil.
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .clip(CircleShape)
+                .background(if (palette.dark) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant)
+                .then(if (onOpenProfile != null) Modifier.clickable(onClick = onOpenProfile) else Modifier),
+            contentAlignment = Alignment.Center,
+        ) {
+            Image(
+                painter = painterResource(R.drawable.db_logo),
+                contentDescription = if (onOpenProfile != null) stringResource(R.string.home_open_profile) else null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+    }
+}
 
 // ── Atalhos ───────────────────────────────────────────────────────────────────────────────
 

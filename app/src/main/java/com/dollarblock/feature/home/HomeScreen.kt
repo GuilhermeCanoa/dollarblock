@@ -96,6 +96,7 @@ import com.dollarblock.core.designsystem.MintGlow
 import com.dollarblock.core.designsystem.components.DollarBlockDialog
 import com.dollarblock.core.designsystem.components.AppIcon
 import com.dollarblock.core.designsystem.components.HomePalette
+import com.dollarblock.core.designsystem.components.HomeTopRow
 import com.dollarblock.core.designsystem.components.Mono
 import com.dollarblock.core.designsystem.components.StatTile
 import com.dollarblock.core.designsystem.components.TileColors
@@ -148,7 +149,7 @@ fun HomeScreen(
             .verticalScroll(scrollState)
             .padding(bottom = 24.dp),
     ) {
-        TopRow(onOpenProfile = onOpenProfile, palette = palette)
+        HomeTopRow(palette = palette, onOpenProfile = onOpenProfile)
 
         // O escudo passa de vez em quando por trás do número (E23); os pés pisam na linha
         // de base dos dígitos.
@@ -259,43 +260,6 @@ fun HomeScreen(
     }
 }
 
-
-// ── Topo ──────────────────────────────────────────────────────────────────────────────────
-
-@Composable
-private fun TopRow(onOpenProfile: () -> Unit, palette: HomePalette) {
-    val locale = LocalConfiguration.current.locales[0]
-    val date = remember(locale) {
-        val pattern = android.text.format.DateFormat.getBestDateTimePattern(locale, "EEEEdMMMM")
-        LocalDate.now().format(DateTimeFormatter.ofPattern(pattern, locale))
-            .replaceFirstChar { it.titlecase(locale) }
-    }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 20.dp, end = 20.dp, top = 14.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(date, fontFamily = InterFamily, fontWeight = FontWeight.Medium, fontSize = 13.sp, color = palette.muted)
-        // Escudo do app no lugar de um avatar: o app não guarda nome; tocar abre o Perfil.
-        Box(
-            modifier = Modifier
-                .size(32.dp)
-                .clip(CircleShape)
-                .background(if (palette.dark) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant)
-                .clickable(onClick = onOpenProfile),
-            contentAlignment = Alignment.Center,
-        ) {
-            Image(
-                painter = painterResource(R.drawable.db_logo),
-                contentDescription = stringResource(R.string.home_open_profile),
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-            )
-        }
-    }
-}
 
 // ── Herói: a conta de hoje ────────────────────────────────────────────────────────────────
 

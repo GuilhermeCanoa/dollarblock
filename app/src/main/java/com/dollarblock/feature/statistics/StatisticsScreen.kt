@@ -71,6 +71,7 @@ import com.dollarblock.core.designsystem.MintGlow
 import com.dollarblock.core.designsystem.components.AppIcon
 import com.dollarblock.core.designsystem.components.DollarBlockDialog
 import com.dollarblock.core.designsystem.components.HomePalette
+import com.dollarblock.core.designsystem.components.HomeTopRow
 import com.dollarblock.core.designsystem.components.Mono
 import com.dollarblock.core.designsystem.components.TileColors
 import com.dollarblock.core.designsystem.components.homePalette
@@ -90,6 +91,7 @@ import java.util.Locale
 @Composable
 fun StatisticsScreen(
     modifier: Modifier = Modifier,
+    onOpenProfile: () -> Unit = {},
     viewModel: StatisticsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -116,6 +118,7 @@ fun StatisticsScreen(
             .verticalScroll(scrollState)
             .padding(bottom = 24.dp),
     ) {
+        HomeTopRow(palette = palette, onOpenProfile = onOpenProfile)
         Header(period = state.period, palette = palette, onPeriod = { viewModel.period.value = it })
         Hero(state, palette, onInfo = { showInfo = true })
 
@@ -167,16 +170,8 @@ fun StatisticsScreen(
 
 @Composable
 private fun Header(period: StatPeriod, palette: HomePalette, onPeriod: (StatPeriod) -> Unit) {
-    Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 14.dp)) {
-        Text(
-            stringResource(R.string.statistics_title),
-            fontFamily = JakartaFamily,
-            fontWeight = FontWeight.Bold,
-            fontSize = 22.sp,
-            color = palette.text,
-        )
+    Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 16.dp)) {
         Row(
-            modifier = Modifier.padding(top = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             StatPeriod.entries.forEach { entry ->

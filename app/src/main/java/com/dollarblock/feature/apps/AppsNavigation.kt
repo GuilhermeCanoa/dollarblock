@@ -7,6 +7,6 @@ import androidx.navigation.compose.composable
 const val APPS_ROUTE = "apps"
 
 /** Registra a tela Apps no grafo. Adicione/edite aqui sem tocar no NavHost compartilhado. */
-fun NavGraphBuilder.appsScreen() {
-    composable(APPS_ROUTE) { AppsScreen() }
+fun NavGraphBuilder.appsScreen(onOpenProfile: () -> Unit) {
+    composable(APPS_ROUTE) { AppsScreen(onOpenProfile = onOpenProfile) }
 }

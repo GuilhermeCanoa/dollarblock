@@ -15,6 +15,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,6 +28,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -43,6 +47,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
@@ -52,13 +58,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dollarblock.R
 import com.dollarblock.core.designsystem.DollarBlockTheme
 import com.dollarblock.core.designsystem.components.DollarBlockDialog
 import com.dollarblock.core.designsystem.mascot.LimitReactionMascot
-import com.dollarblock.core.designsystem.components.ScreenHeader
+import com.dollarblock.core.designsystem.JakartaFamily
+import com.dollarblock.core.designsystem.components.HomeTopRow
+import com.dollarblock.core.designsystem.components.homePalette
 
 /**
  * Apps — busca para adicionar apps ao monitoramento; lista apenas os apps já monitorados.
@@ -66,6 +75,7 @@ import com.dollarblock.core.designsystem.components.ScreenHeader
 @Composable
 fun AppsScreen(
     modifier: Modifier = Modifier,
+    onOpenProfile: () -> Unit = {},
     viewModel: AppsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -73,19 +83,38 @@ fun AppsScreen(
     val firstDayOffer by viewModel.firstDayOffer.collectAsStateWithLifecycle()
     var pendingDelete by remember { mutableStateOf<AppUsageRow?>(null) }
 
+    val palette = homePalette()
+    val listState = rememberLazyListState()
+    val statusBarPx = WindowInsets.statusBars.getTop(LocalDensity.current).toFloat()
+
     LazyColumn(
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
+        state = listState,
+        modifier = modifier
+            .fillMaxSize()
+            .background(palette.background)
+            // Mesmo brilho do topo da Home/Extrato; some quando o topo sai da tela.
+            .drawBehind {
+                val offset = if (listState.firstVisibleItemIndex == 0) listState.firstVisibleItemScrollOffset.toFloat() else size.height
+                with(palette) {
+                    drawHeroGlow(centerY = 90.dp.toPx() - offset, radius = 380.dp.toPx(), extendUp = statusBarPx)
+                }
+            },
+        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item {
-            ScreenHeader(
-                title = stringResource(R.string.apps_title),
-                subtitle = stringResource(R.string.apps_subtitle),
-                subtitleStyle = MaterialTheme.typography.titleLarge,
-                subtitleColor = MaterialTheme.colorScheme.primary,
-                subtitleTextAlign = androidx.compose.ui.text.style.TextAlign.Center,
-            )
+            Column {
+                HomeTopRow(palette = palette, onOpenProfile = onOpenProfile, horizontalPadding = 0.dp)
+                Text(
+                    text = stringResource(R.string.apps_subtitle),
+                    fontFamily = JakartaFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    lineHeight = 26.sp,
+                    color = palette.text,
+                    modifier = Modifier.padding(top = 20.dp, bottom = 4.dp),
+                )
+            }
         }
 
         item {
@@ -247,6 +276,12 @@ private fun AppsSearchField(
         onValueChange = onQueryChange,
         modifier = modifier.fillMaxWidth(),
         singleLine = true,
+        shape = RoundedCornerShape(18.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            unfocusedContainerColor = homePalette().walletBg,
+            focusedContainerColor = homePalette().walletBg,
+            unfocusedBorderColor = homePalette().walletBorder,
+        ),
         placeholder = { Text(stringResource(R.string.apps_search_placeholder)) },
         leadingIcon = {
             Icon(
@@ -278,10 +313,8 @@ private fun AppSuggestionItem(
     Card(
         modifier = modifier.fillMaxWidth().clickable(onClick = onAdd),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
-        ),
-        border = BorderStroke(1.dp, DollarBlockTheme.colors.glow.copy(alpha = 0.15f)),
+        colors = CardDefaults.cardColors(containerColor = homePalette().walletBg),
+        border = BorderStroke(1.dp, homePalette().walletBorder),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Row(
@@ -330,10 +363,8 @@ private fun AppListItem(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
-        ),
-        border = BorderStroke(1.dp, DollarBlockTheme.colors.glow.copy(alpha = 0.15f)),
+        colors = CardDefaults.cardColors(containerColor = homePalette().walletBg),
+        border = BorderStroke(1.dp, homePalette().walletBorder),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
