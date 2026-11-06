@@ -12,6 +12,23 @@ Descrição funcional.
 
 ---
 
+## [2026-11-05] — Mascote vivo na Home e no aviso de troca de limite
+**Tipo:** feature
+**Épico:** E23
+
+- Novo personagem desenhado em código (`core/designsystem/mascot/`), no estilo do
+  onboarding: escudo em camadas com óculos wayfarer, sobrancelhas, `$` no peito, braços e
+  pernas finos e tênis com friso lima. Coreografia em funções puras (`MascotChoreography`)
+  com testes.
+- Home: de vez em quando (a cada ~12–25 s) o escudo passa por trás do número da conta. Há
+  três atos sorteados, sem repetir o anterior: espiar do canto, atravessar e parar para
+  conferir com a lupa, ou investigar e coçar a cabeça com um "?".
+- Aviso de troca de limite: o escudo fica no topo do diálogo. Quando o limite sobe, fica
+  inconformado e em dúvida (coça a cabeça, "?", mãos na cintura, balança a cabeça). Quando
+  desce, comemora (os dois braços para cima socando o ar, brilho nos óculos). `DollarBlockDialog` ganhou o
+  slot opcional `illustration`.
+- Com "Remover animações" ligado, a Home não mostra o personagem e o diálogo usa uma pose parada.
+
 ## [2026-11-04] — Home mostra "passe do dia" em vez de "trancado"
 **Tipo:** bugfix
 **Épico:** adhoc

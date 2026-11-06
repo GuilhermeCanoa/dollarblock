@@ -57,6 +57,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dollarblock.R
 import com.dollarblock.core.designsystem.DollarBlockTheme
 import com.dollarblock.core.designsystem.components.DollarBlockDialog
+import com.dollarblock.core.designsystem.mascot.LimitReactionMascot
 import com.dollarblock.core.designsystem.components.ScreenHeader
 
 /**
@@ -607,6 +608,14 @@ private fun LimitChangeNoticeDialog(
         ),
         confirmText = stringResource(R.string.apps_limit_notice_ok),
         onConfirm = onDismiss,
+        illustration = {
+            LimitReactionMascot(
+                increased = notice.increased,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(124.dp),
+            )
+        },
     )
 }
 

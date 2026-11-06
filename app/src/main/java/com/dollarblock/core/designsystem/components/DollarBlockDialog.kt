@@ -40,6 +40,7 @@ import com.dollarblock.core.designsystem.DollarBlockTheme
  * - [confirmText]/[onConfirm] renderizam a ação primária; [confirmDestructive] a pinta
  *   com a cor de penalidade (exclusões, sabotagens).
  * - [dismissText] renderiza a ação secundária como texto.
+ * - [illustration] entra logo abaixo do divisor, antes do texto (ex.: o escudo reagindo).
  */
 @Composable
 fun DollarBlockDialog(
@@ -54,6 +55,7 @@ fun DollarBlockDialog(
     confirmDestructive: Boolean = false,
     dismissText: String? = null,
     onDismiss: (() -> Unit)? = null,
+    illustration: (@Composable ColumnScope.() -> Unit)? = null,
     content: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
     val shape = RoundedCornerShape(24.dp)
@@ -84,6 +86,10 @@ fun DollarBlockDialog(
             Spacer(Modifier.height(12.dp))
             DialogDashedDivider(DollarBlockTheme.colors.glow.copy(alpha = 0.3f))
             Spacer(Modifier.height(14.dp))
+            if (illustration != null) {
+                illustration()
+                Spacer(Modifier.height(10.dp))
+            }
             if (body != null) {
                 Text(
                     text = body,

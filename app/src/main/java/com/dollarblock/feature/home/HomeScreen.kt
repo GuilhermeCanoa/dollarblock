@@ -85,6 +85,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dollarblock.R
+import com.dollarblock.core.designsystem.mascot.HomeMascot
 import com.dollarblock.core.designsystem.AlertAmber
 import com.dollarblock.core.designsystem.BlockingRed
 import com.dollarblock.core.designsystem.DollarBlockTheme
@@ -143,15 +144,20 @@ fun HomeScreen(
     ) {
         TopRow(onOpenProfile = onOpenProfile, palette = palette)
 
-        Hero(
-            moneyLost = uiState.moneyLostToday,
-            currency = uiState.moneySettings.currency,
-            budget = uiState.budget,
-            visuals = visuals,
-            palette = palette,
-            onClick = { infoCard = HomeCardInfo.DAMAGE },
-            onPickApps = onNavigateToApps,
-        )
+        // O escudo passa de vez em quando por trás do número (E23); os pés pisam na linha
+        // de base dos dígitos.
+        Box(Modifier.fillMaxWidth()) {
+            HomeMascot(Modifier.matchParentSize())
+            Hero(
+                moneyLost = uiState.moneyLostToday,
+                currency = uiState.moneySettings.currency,
+                budget = uiState.budget,
+                visuals = visuals,
+                palette = palette,
+                onClick = { infoCard = HomeCardInfo.DAMAGE },
+                onPickApps = onNavigateToApps,
+            )
+        }
 
         // Primeiro acesso: os atalhos já aparecem zerados, para a tela ter a cara final.
         Row(
