@@ -48,6 +48,29 @@ com brilho, sobrancelhas grossas) e do guia `docs/DollarBlock-Illustrations-Visu
 - D2: na travessia, a parada para conferir o número fica perto da borda (13% / 87% da largura), ao lado do número e não atrás. Atrás do "$", o rosto sumia.
 - D3 (2026-11-05): o polegar para cima da aprovação, no tamanho do diálogo, parecia o dedo do meio. A pedido do usuário, virou comemoração com os dois braços para cima, mais óbvia (exceção pontual ao "sem euforia" do guia §4).
 
+## Fase 2 (2026-11-05): mais cenas na Home
+
+Pedido: chegar a ~10 animações. Foram feitas sete novas; depois de assistir no emulador, o
+usuário manteve quatro e cortou três (D4). A Home fica com **sete atos**:
+
+- **Espiar do canto** — sempre o **primeiro** ato (D5).
+- **Atravessar** e **Investigar** (fase 1).
+- **Tchauzinho**: para, vira o rosto para quem olha a tela e acena devagar.
+- **Trombada**: anda olhando o celular (feed rolando na tela), bate na borda do número
+  ("!", corpo para trás), franze a sobrancelha para o número e volta, de novo no celular. A
+  borda é medida na tela (`BigMoney` → `onInkSpan`: do símbolo ao último dígito).
+- **Café**: para e toma dois goles; o vapor sobe da caneca.
+- **Varrer**: entra varrendo, varre na linha do número e sai pelo outro lado.
+
+Depois do primeiro, os atos são sorteados sem repetir nenhum dos últimos 3; as pausas
+entre eles continuam sorteadas entre 12 e 25 s.
+
+- D4 (2026-11-05): cortadas a cadeira de praia (montar a cadeira ficou estranho), o livro
+  (as páginas viravam para a frente, não para trás) e o extrato/fatura. O celular da
+  trombada ganhou o tamanho de um celular de verdade e tela com feed rolando (o quadradinho
+  pequeno não lia como celular).
+- D5 (2026-11-05): a espiada é sempre o primeiro ato da tela.
+
 ## Fora de escopo
 
 - Outras telas (Estatísticas, Perfil, tela de bloqueio) — só depois de validar esta.

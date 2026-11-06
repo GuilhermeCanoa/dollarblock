@@ -147,8 +147,18 @@ fun HomeScreen(
         // O escudo passa de vez em quando por trás do número (E23); os pés pisam na linha
         // de base dos dígitos.
         Box(Modifier.fillMaxWidth()) {
-            HomeMascot(Modifier.matchParentSize())
+            // Onde a tinta do número está, para a trombada acertar a borda dos dígitos. Lido
+            // só no início de cada ato (não recompõe nada).
+            val numberSpan = remember { floatArrayOf(Float.NaN, Float.NaN) }
+            HomeMascot(
+                Modifier.matchParentSize(),
+                numberSpan = { if (numberSpan[0].isNaN()) null else numberSpan[0] to numberSpan[1] },
+            )
             Hero(
+                onNumberSpan = { start, end ->
+                    numberSpan[0] = start
+                    numberSpan[1] = end
+                },
                 moneyLost = uiState.moneyLostToday,
                 currency = uiState.moneySettings.currency,
                 budget = uiState.budget,
@@ -382,6 +392,7 @@ private fun Hero(
     palette: HomePalette,
     onClick: () -> Unit,
     onPickApps: () -> Unit,
+    onNumberSpan: (startPx: Float, endPx: Float) -> Unit = { _, _ -> },
 ) {
     // Count-up de odômetro ao entrar na tela, com haptic a cada café inteiro cruzado.
     val animatedValue = remember { Animatable(0f) }
@@ -400,11 +411,13 @@ private fun Hero(
         }
     }
 
+    val heroStart = 24.dp
+    val heroStartPx = with(LocalDensity.current) { heroStart.toPx() }
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(start = 24.dp, end = 24.dp, top = 34.dp, bottom = 22.dp),
+            .padding(start = heroStart, end = 24.dp, top = 34.dp, bottom = 22.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         // "ⓘ" ao lado do rótulo: avisa que o bloco é tocável e explica o número.
@@ -427,7 +440,12 @@ private fun Hero(
         }
         Spacer(Modifier.height(14.dp))
         // Sem apps ainda, a conta mostra R$ 0,00 (não um traço): é o mesmo número, só zerado.
-        BigMoney(value = animatedValue.value.toDouble(), currency = currency, color = palette.text)
+        BigMoney(
+            value = animatedValue.value.toDouble(),
+            currency = currency,
+            color = palette.text,
+            onInkSpan = { start, end -> onNumberSpan(heroStartPx + start, heroStartPx + end) },
+        )
         Spacer(Modifier.height(10.dp))
 
         if (moneyLost == null) {
@@ -468,7 +486,12 @@ private fun Hero(
  * esquerda dele — o olho cai no valor, não no conjunto "R$ + valor".
  */
 @Composable
-private fun BigMoney(value: Double, currency: AppCurrency, color: Color) {
+private fun BigMoney(
+    value: Double,
+    currency: AppCurrency,
+    color: Color,
+    onInkSpan: (startPx: Float, endPx: Float) -> Unit = { _, _ -> },
+) {
     val formatted = MoneyFormat.format(value, currency)
     val firstDigit = formatted.indexOfFirst { it.isDigit() }.coerceAtLeast(0)
     val symbol = formatted.substring(0, firstDigit).trim()
@@ -511,6 +534,8 @@ private fun BigMoney(value: Double, currency: AppCurrency, color: Color) {
         val numberBaseline = numberPlaceable[FirstBaseline]
         val symbolBaseline = symbolPlaceable[FirstBaseline]
         val symbolY = numberBaseline - symbolRise.roundToPx() - symbolBaseline
+        // Do começo do símbolo ao fim do último dígito: a "parede" em que o escudo tromba.
+        onInkSpan((numberX - gapPx - symbolPlaceable.width).toFloat(), (numberX + numberPlaceable.width).toFloat())
         layout(width, numberPlaceable.height) {
             numberPlaceable.placeRelative(numberX, 0)
             symbolPlaceable.placeRelative(numberX - gapPx - symbolPlaceable.width, symbolY)

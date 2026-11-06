@@ -30,11 +30,13 @@ private fun rememberMotionEnabled(): Boolean {
 }
 
 /**
- * O escudo que aparece de vez em quando na Home, por trás do número da conta: espia do canto,
- * atravessa a parte de cima ou para para investigar com a lupa (ver [MascotChoreography]).
- * Fica atrás do conteúdo — o chamador o põe primeiro num `Box`, do tamanho do bloco. Os pés
- * pisam em [ground] (medido do topo); [unit] é o tamanho de uma unidade da arte. Sem
- * animações do sistema, não aparece. Decorativo: sem semântica e sem toque.
+ * O escudo que aparece de vez em quando na Home, por trás do número da conta — primeiro
+ * espiando do canto, depois cenas sorteadas (atravessar, investigar, tchau, trombada no
+ * número, café, varrer; ver [MascotChoreography]), com pausas sorteadas entre elas. Fica atrás do conteúdo — o chamador o põe
+ * primeiro num `Box`, do tamanho do bloco. Os pés pisam em [ground] (medido do topo); [unit]
+ * é o tamanho de uma unidade da arte. [numberSpan] dá, em px deste bloco, onde a tinta do
+ * número começa e termina (para a trombada acertar a borda). Sem animações do sistema, não
+ * aparece. Decorativo: sem semântica e sem toque.
  */
 @Composable
 fun HomeMascot(
@@ -42,45 +44,58 @@ fun HomeMascot(
     ground: Dp = 140.dp,
     unit: Dp = 0.8.dp,
     firstDelayMs: Long = 4_000L,
+    numberSpan: () -> Pair<Float, Float>? = { null },
 ) {
     if (!rememberMotionEnabled()) return
     var act by remember { mutableStateOf<HomeAct?>(null) }
+    var stage by remember { mutableStateOf<HomeStage?>(null) }
     var elapsed by remember { mutableFloatStateOf(0f) }
-    var sceneWidth by remember { mutableFloatStateOf(0f) }
+    var sceneWidthPx by remember { mutableFloatStateOf(0f) }
+    val density = LocalDensity.current
+    val unitPx = with(density) { unit.toPx() }
+    val groundPx = with(density) { ground.toPx() }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(unitPx, groundPx) {
         val random = Random(System.nanoTime())
         delay(firstDelayMs + random.nextLong(3_000L))
-        var previous: HomeAct? = null
+        val recent = ArrayDeque<HomeActKind>()
         while (true) {
-            if (sceneWidth <= 0f) {
+            if (sceneWidthPx <= 0f) {
                 delay(500L)
                 continue
             }
-            val next = MascotChoreography.nextHomeAct(previous, random)
-            val duration = MascotChoreography.homeDuration(next, sceneWidth)
+            // O palco é congelado no início do ato: se o número mudar no meio, nada pula.
+            val width = sceneWidthPx / unitPx
+            val span = numberSpan()
+            val now = if (span != null) {
+                HomeStage(width, groundPx / unitPx, span.first / unitPx, span.second / unitPx)
+            } else {
+                HomeStage(width, groundPx / unitPx)
+            }
+            val next = MascotChoreography.nextHomeAct(recent, random)
+            val duration = MascotChoreography.homeDuration(next, now)
             val start = withFrameNanos { it }
             elapsed = 0f
+            stage = now
             act = next
             while (elapsed < duration) {
                 withFrameNanos { elapsed = (it - start) / 1e9f }
             }
             act = null
-            previous = next
+            recent.addLast(next.kind)
+            if (recent.size > MascotChoreography.RECENT_MEMORY) recent.removeFirst()
             delay((MascotChoreography.homeGapSeconds(random) * 1000).toLong())
         }
     }
 
-    val density = LocalDensity.current
     Canvas(
         modifier
             .clipToBounds()
-            .onSizeChanged { sceneWidth = it.width / with(density) { unit.toPx() } },
+            .onSizeChanged { sceneWidthPx = it.width.toFloat() },
     ) {
-        val unitPx = unit.toPx()
         val current = act ?: return@Canvas
-        val pose = MascotChoreography.homePose(current, elapsed, size.width / unitPx, ground.toPx() / unitPx)
-        drawShieldMascot(pose, unitPx)
+        val scene = stage ?: return@Canvas
+        drawShieldMascot(MascotChoreography.homePose(current, elapsed, scene), unitPx)
     }
 }
 

@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.withTransform
@@ -34,6 +35,9 @@ private val Brass = Color(0xFFD9A94E)
 private val BrassDark = Color(0xFF8F6A22)
 private val Lens = Color(0xFFB9FBE0)
 private val QuestionInk = Color(0xFF64FFDA)
+private val Screen = Color(0xFF00E88A)
+private val Steam = Color(0xFF75FFC0)
+private val Dust = Color(0xFFA9C0B8)
 
 // Esqueleto, em unidades da arte, com os pés na origem e o y crescendo para baixo.
 private const val SHIELD_TOP = -86f
@@ -120,15 +124,19 @@ private fun DrawScope.drawFigure(pose: MascotPose, maxSwing: Float) {
         }
         drawShield(pose)
         drawHand(back.hand)
-        drawHand(front.hand)
+        // Cada objeto redesenha a mão da frente por cima dele (os dedos seguram o objeto).
         when (pose.prop) {
             MascotProp.MAGNIFIER -> drawMagnifier(front.hand, front.forearmDir, pose.glint)
-            MascotProp.NONE -> Unit
+            MascotProp.PHONE -> drawPhone(front.hand, pose.lookDown, pose.propPhase)
+            MascotProp.MUG -> drawMug(front.hand, pose.propPhase)
+            MascotProp.BROOM -> drawBroom(front.hand, pose.propOpen, pose.propPhase)
+            MascotProp.NONE -> drawHand(front.hand)
         }
         if (pose.question > 0f) {
             val bob = sin(pose.question * PI.toFloat()) * 1.5f
             drawQuestion(Offset(-17f, SHIELD_TOP - 18f - bob), pose.question, pose.facing)
         }
+        if (pose.exclaim > 0f) drawExclaim(Offset(14f, SHIELD_TOP - 14f), pose.exclaim)
     }
 }
 
@@ -165,9 +173,10 @@ private fun DrawScope.drawShield(pose: MascotPose) {
     drawLine(Color.White.copy(alpha = 0.35f), Offset(-3f, top - 1f), Offset(-19f, top + 6f), strokeWidth = 1.6f, cap = StrokeCap.Round)
 
     val dx = pose.look * 2.6f
+    val down = pose.lookDown * 3.2f
 
     // Sobrancelhas: [brow] ergue (ou franze) as duas; [quirk] só a da frente, em arco.
-    val browY = top + 12f
+    val browY = top + 12f + down
     val frown = maxOf(0f, -pose.brow)
     listOf(-1f, 1f).forEach { side ->
         val lift = maxOf(0f, pose.brow) * 2.5f + if (side > 0) pose.quirk * 4f else 0f
@@ -186,7 +195,7 @@ private fun DrawScope.drawShield(pose: MascotPose) {
     }
 
     // Óculos wayfarer com reflexos fixos e o brilho que atravessa a lente da frente.
-    val gy = top + 17f
+    val gy = top + 17f + down
     listOf(-1f, 1f).forEach { side ->
         val lens = Path().apply {
             moveTo(dx + side * 1.5f, gy)
@@ -250,4 +259,93 @@ private fun DrawScope.drawQuestion(at: Offset, alpha: Float, facing: Float) {
         drawPath(q, QuestionInk.copy(alpha = alpha), style = Stroke(2.6f, cap = StrokeCap.Round))
         drawCircle(QuestionInk.copy(alpha = alpha), 1.6f, Offset(at.x, at.y + 7.5f))
     }
+}
+
+/** "!" no ar, em menta (a trombada). */
+private fun DrawScope.drawExclaim(at: Offset, alpha: Float) {
+    val top = at + Offset(0f, -10f)
+    val bottom = at + Offset(0f, 1.5f)
+    drawLine(Ink.copy(alpha = alpha * 0.5f), top, bottom, strokeWidth = 4.6f, cap = StrokeCap.Round)
+    drawLine(QuestionInk.copy(alpha = alpha), top, bottom, strokeWidth = 2.6f, cap = StrokeCap.Round)
+    drawCircle(QuestionInk.copy(alpha = alpha), 1.6f, at + Offset(0f, 7f))
+}
+
+/** Caneca petróleo com friso lima e o vapor subindo devagar (ciclo de 2,8 s). */
+private fun DrawScope.drawMug(hand: Offset, time: Float) {
+    val body = Offset(hand.x - 1f, hand.y - 9f)
+    drawArc(Rim, startAngle = -90f, sweepAngle = 180f, useCenter = false, topLeft = Offset(body.x + 5.6f, body.y + 1.8f), size = Size(4.6f, 5f), style = Stroke(1.5f))
+    drawRoundRect(Rim, body, Size(8f, 9f), CornerRadius(1.4f))
+    drawLine(Lime.copy(alpha = 0.8f), Offset(body.x + 0.6f, body.y + 3f), Offset(body.x + 7.4f, body.y + 3f), strokeWidth = 1f)
+    for (i in 0 until 2) {
+        val p = (time / 2.8f + i * 0.5f) % 1f
+        val baseX = body.x + 2.5f + i * 3f
+        val y0 = body.y - 1f - p * 6f
+        val wisp = Path().apply {
+            moveTo(baseX, y0)
+            cubicTo(baseX - 1.8f, y0 - 2f, baseX + 1.8f, y0 - 4f, baseX, y0 - 6f)
+        }
+        drawPath(wisp, Steam.copy(alpha = 0.55f * sin(p * PI.toFloat())), style = Stroke(1.1f, cap = StrokeCap.Round))
+    }
+    drawHand(hand)
+}
+
+/**
+ * Vassoura: o cabo vai da mão até o chão, à frente; a palha em latão. Varrendo ([sweeping]),
+ * solta uns fiapos de poeira que somem à frente.
+ */
+private fun DrawScope.drawBroom(hand: Offset, sweeping: Float, time: Float) {
+    val floor = Offset(hand.x + 12f, -3f)
+    drawLine(LimbLine, hand, floor, strokeWidth = 2.6f, cap = StrokeCap.Round)
+    drawLine(BrassDark, hand, floor, strokeWidth = 1.6f, cap = StrokeCap.Round)
+    val head = Path().apply {
+        moveTo(floor.x - 4f, floor.y - 3f)
+        lineTo(floor.x + 4f, floor.y - 3f)
+        lineTo(floor.x + 8f, floor.y + 3f)
+        lineTo(floor.x - 7f, floor.y + 3f)
+        close()
+    }
+    drawPath(head, Brass)
+    drawPath(head, BrassDark, style = Stroke(0.7f))
+    if (sweeping > 0f) {
+        for (i in 0 until 3) {
+            val p = (time * 0.9f + i / 3f) % 1f
+            drawCircle(Dust.copy(alpha = 0.35f * (1f - p) * sweeping), 1.4f + 2.2f * p, floor + Offset(9f + 14f * p, 1f - 6f * p))
+        }
+    }
+    drawHand(hand)
+}
+
+/**
+ * Celular na mão da frente, em pé e do tamanho de um celular de verdade na mão dele: corpo
+ * escuro, câmera no topo e a tela acesa com um feed rolando sem fim ([time], em s) — cartões
+ * com imagem e linhas de texto. A tela acende mais quando ele está olhando ([looking]); a mão
+ * segura por baixo.
+ */
+private fun DrawScope.drawPhone(hand: Offset, looking: Float, time: Float) {
+    val w = 12f
+    val h = 21f
+    val c = hand + Offset(2f, -6.5f)
+    rotate(-8f, pivot = c) {
+        val body = Offset(c.x - w / 2f, c.y - h / 2f)
+        drawRoundRect(Shades, body, Size(w, h), CornerRadius(2.4f))
+        drawRoundRect(LimbLine, body, Size(w, h), CornerRadius(2.4f), style = Stroke(0.9f))
+        val screen = Offset(body.x + 1.1f, body.y + 2.2f)
+        val sw = w - 2.2f
+        val sh = h - 3.6f
+        val glow = 0.45f + 0.4f * looking
+        drawRoundRect(Ink, screen, Size(sw, sh), CornerRadius(1.2f))
+        clipRect(screen.x, screen.y, screen.x + sw, screen.y + sh) {
+            // Feed: um cartão a cada 9 unidades, rolando para cima.
+            val card = 9f
+            var y = screen.y - (time * 6f) % card
+            while (y < screen.y + sh) {
+                drawRoundRect(Screen.copy(alpha = 0.55f * glow), Offset(screen.x + 0.9f, y + 0.8f), Size(sw - 1.8f, 4.4f), CornerRadius(0.6f))
+                drawLine(FaceLight.copy(alpha = 0.6f * glow), Offset(screen.x + 0.9f, y + 6.4f), Offset(screen.x + sw - 2.4f, y + 6.4f), strokeWidth = 0.7f)
+                drawLine(FaceLight.copy(alpha = 0.4f * glow), Offset(screen.x + 0.9f, y + 7.8f), Offset(screen.x + sw * 0.55f, y + 7.8f), strokeWidth = 0.7f)
+                y += card
+            }
+        }
+        drawCircle(LimbLine, 0.55f, Offset(c.x, body.y + 1.1f))
+    }
+    drawHand(hand)
 }

@@ -12,6 +12,17 @@ Descrição funcional.
 
 ---
 
+## [2026-11-05] — Mascote da Home: mais quatro cenas
+**Tipo:** feature
+**Épico:** E23
+
+- A Home passa de três para sete cenas do escudo: além de espiar, atravessar e investigar,
+  agora ele dá tchauzinho, anda olhando o celular e tromba na borda do número da conta,
+  toma um café (com vapor) e atravessa varrendo o chão.
+- A espiada do canto é sempre a primeira cena. Depois, as cenas são sorteadas sem repetir
+  nenhuma das últimas três, com pausas sorteadas de 12 a 25 s.
+- A trombada mede onde o número está na tela (do símbolo ao último dígito) e para na borda.
+
 ## [2026-11-05] — Mascote vivo na Home e no aviso de troca de limite
 **Tipo:** feature
 **Épico:** E23
