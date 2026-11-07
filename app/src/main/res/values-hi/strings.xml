@@ -629,12 +629,15 @@
     <string name="stat_info_calendar_footer">भीतर और टिके रहे, दोनों सीमा के भीतर गिने जाते हैं। दिन हर ऐप की मौजूदा सीमा से गिने जाते हैं।</string>
     <string name="stat_legend_within">भीतर</string>
     <string name="stat_legend_held">टिके रहे</string>
+    <string name="stat_legend_held_today">लॉक हुआ</string>
     <string name="stat_legend_free">फ़्री पास</string>
     <string name="stat_legend_paid">चुकाया</string>
     <string name="stat_legend_over">सीमा पार</string>
     <string name="stat_legend_before">DollarBlock से पहले</string>
     <string name="stat_tone_within">सीमा के भीतर</string>
+    <string name="stat_tone_within_today">अब तक सीमा के भीतर</string>
     <string name="stat_tone_held">खाता बंद हुआ और आप टिके रहे</string>
+    <string name="stat_tone_held_today">आज लॉक हुआ, अब तक भुगतान नहीं</string>
     <string name="stat_tone_free">फ़्री पास, कोई शुल्क नहीं</string>
     <string name="stat_tone_over">सीमा पार</string>
     <string name="stat_tone_paid">डे पास चुकाया</string>

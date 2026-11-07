@@ -12,6 +12,16 @@ Descrição funcional.
 
 ---
 
+## [2026-11-07] — Extrato: hoje não leva veredito antes da meia-noite
+**Tipo:** bugfix
+**Épico:** E24
+
+- O dia de hoje que já trancou sem pagamento aparecia como "A conta fechou e você aguentou"
+  (e "aguentou" na linha do app), como se o dia já tivesse acabado. Para hoje, a folha do dia
+  agora diz "Trancou hoje, sem pagar até agora" e a linha do app diz "trancou"; hoje dentro do
+  limite vira "Dentro do limite, por enquanto". A cor (âmbar/verde) e as regras de contagem não
+  mudaram; dias passados mantêm os textos de antes.
+
 ## [2026-11-07] — "Como ler o extrato" com as bolinhas na legenda
 **Tipo:** refactor
 **Épico:** E24

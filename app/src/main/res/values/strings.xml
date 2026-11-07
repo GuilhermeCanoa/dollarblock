@@ -636,12 +636,15 @@
     <string name="stat_info_calendar_footer">Within and held out both count as within the limit. Days use each app\'s current limit.</string>
     <string name="stat_legend_within">within</string>
     <string name="stat_legend_held">held out</string>
+    <string name="stat_legend_held_today">locked</string>
     <string name="stat_legend_free">free pass</string>
     <string name="stat_legend_paid">paid</string>
     <string name="stat_legend_over">over</string>
     <string name="stat_legend_before">before DollarBlock</string>
     <string name="stat_tone_within">Within the limit</string>
+    <string name="stat_tone_within_today">Within the limit so far</string>
     <string name="stat_tone_held">The tab closed and you held out</string>
+    <string name="stat_tone_held_today">Locked today, not paid so far</string>
     <string name="stat_tone_free">Free pass, nothing charged</string>
     <string name="stat_tone_over">Over the limit</string>
     <string name="stat_tone_paid">Paid the day pass</string>

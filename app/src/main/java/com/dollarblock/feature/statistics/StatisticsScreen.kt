@@ -164,7 +164,7 @@ fun StatisticsScreen(
     }
 
     state.selected?.let { detail ->
-        DaySheet(detail, currency, palette, locale, onDismiss = { viewModel.selectDay(null) })
+        DaySheet(detail, state.today, currency, palette, locale, onDismiss = { viewModel.selectDay(null) })
     }
 }
 
@@ -661,11 +661,14 @@ private fun AppStripRow(app: StatementAppRow, period: StatPeriod, palette: HomeP
 @Composable
 private fun DaySheet(
     detail: DayDetail,
+    today: Long,
     currency: AppCurrency,
     palette: HomePalette,
     locale: Locale,
     onDismiss: () -> Unit,
 ) {
+    // Hoje ainda não fechou: o desfecho é parcial ("até agora"), não um veredito do dia.
+    val isToday = detail.day.epochDay == today
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -684,7 +687,7 @@ private fun DaySheet(
                 Spacer(Modifier.width(6.dp))
                 Text(
                     buildString {
-                        append(stringResource(detail.day.tone.labelRes))
+                        append(stringResource(detail.day.tone.labelRes(isToday)))
                         if (detail.day.beforeDollarBlock) append(" · ").append(stringResource(R.string.stat_legend_before))
                     },
                     fontFamily = InterFamily,
@@ -716,7 +719,7 @@ private fun DaySheet(
                 )
             }
             detail.rows.forEachIndexed { i, row ->
-                DayRow(row, currency, palette)
+                DayRow(row, isToday, currency, palette)
                 if (i < detail.rows.lastIndex) Box(Modifier.fillMaxWidth().height(1.dp).background(palette.divider))
             }
         }
@@ -724,7 +727,7 @@ private fun DaySheet(
 }
 
 @Composable
-private fun DayRow(row: DayDetailRow, currency: AppCurrency, palette: HomePalette) {
+private fun DayRow(row: DayDetailRow, isToday: Boolean, currency: AppCurrency, palette: HomePalette) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -764,7 +767,7 @@ private fun DayRow(row: DayDetailRow, currency: AppCurrency, palette: HomePalett
             Row(verticalAlignment = Alignment.CenterVertically) {
                 ToneDot(toneStyle(row.tone, palette), size = 8)
                 Spacer(Modifier.width(4.dp))
-                Text(stringResource(row.tone.shortLabelRes), fontFamily = InterFamily, fontSize = 11.5.sp, color = palette.muted)
+                Text(stringResource(row.tone.shortLabelRes(isToday)), fontFamily = InterFamily, fontSize = 11.5.sp, color = palette.muted)
             }
         }
     }
@@ -798,20 +801,21 @@ private val StatPeriod.labelRes: Int
         StatPeriod.TOTAL -> R.string.stat_period_total
     }
 
-private val DayTone.labelRes: Int
-    @StringRes get() = when (this) {
-        DayTone.WITHIN -> R.string.stat_tone_within
-        DayTone.HELD -> R.string.stat_tone_held
+/** [isToday]: o dia não acabou, então "dentro"/"aguentou" ainda são parciais. */
+@StringRes
+private fun DayTone.labelRes(isToday: Boolean): Int = when (this) {
+        DayTone.WITHIN -> if (isToday) R.string.stat_tone_within_today else R.string.stat_tone_within
+        DayTone.HELD -> if (isToday) R.string.stat_tone_held_today else R.string.stat_tone_held
         DayTone.FREE -> R.string.stat_tone_free
         DayTone.OVER -> R.string.stat_tone_over
         DayTone.PAID -> R.string.stat_tone_paid
         DayTone.EMPTY -> R.string.stat_tone_empty
     }
 
-private val DayTone.shortLabelRes: Int
-    @StringRes get() = when (this) {
+@StringRes
+private fun DayTone.shortLabelRes(isToday: Boolean): Int = when (this) {
         DayTone.WITHIN -> R.string.stat_legend_within
-        DayTone.HELD -> R.string.stat_legend_held
+        DayTone.HELD -> if (isToday) R.string.stat_legend_held_today else R.string.stat_legend_held
         DayTone.FREE -> R.string.stat_legend_free
         DayTone.OVER -> R.string.stat_legend_over
         DayTone.PAID -> R.string.stat_legend_paid

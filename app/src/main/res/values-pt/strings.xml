@@ -663,12 +663,15 @@
     <string name="stat_info_calendar_footer">Dentro e aguentou contam como dentro do limite. Os dias usam o limite atual de cada app.</string>
     <string name="stat_legend_within">dentro</string>
     <string name="stat_legend_held">aguentou</string>
+    <string name="stat_legend_held_today">trancou</string>
     <string name="stat_legend_free">passe livre</string>
     <string name="stat_legend_paid">pagou</string>
     <string name="stat_legend_over">passou</string>
     <string name="stat_legend_before">antes do DollarBlock</string>
     <string name="stat_tone_within">Dentro do limite</string>
+    <string name="stat_tone_within_today">Dentro do limite, por enquanto</string>
     <string name="stat_tone_held">A conta fechou e você aguentou</string>
+    <string name="stat_tone_held_today">Trancou hoje, sem pagar até agora</string>
     <string name="stat_tone_free">Passe livre, sem cobrança</string>
     <string name="stat_tone_over">Passou do limite</string>
     <string name="stat_tone_paid">Pagou o passe do dia</string>
