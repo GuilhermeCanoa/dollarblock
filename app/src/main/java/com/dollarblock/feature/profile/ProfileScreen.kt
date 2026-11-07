@@ -216,7 +216,7 @@ private fun ProfileScreenContent(
     if (showResetDialog) {
         DollarBlockDialog(
             onDismissRequest = { showResetDialog = false },
-            overline = "DOLLARBLOCK · DEBUG",
+            overline = "DEBUG",
             title = "Resetar todos os dados?",
             body = "Apaga o banco de dados, onboarding e preferências. O app voltará à tela inicial na próxima abertura.",
             confirmText = "Resetar",
@@ -666,7 +666,7 @@ private fun ThemePickerDialog(
 private fun AboutDialog(onDismiss: () -> Unit) {
     DollarBlockDialog(
         onDismissRequest = onDismiss,
-        overline = "DOLLARBLOCK · " + stringResource(R.string.app_slogan).uppercase(),
+        overline = stringResource(R.string.app_slogan),
         title = stringResource(R.string.pref_about),
         body = stringResource(R.string.about_body),
         confirmText = stringResource(R.string.home_card_info_ok),
@@ -728,7 +728,7 @@ private fun PrivacyCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
 private fun PrivacyDialog(onDismiss: () -> Unit) {
     DollarBlockDialog(
         onDismissRequest = onDismiss,
-        overline = "DOLLARBLOCK · " + stringResource(R.string.privacy_title).uppercase(),
+        overline = stringResource(R.string.privacy_title),
         title = stringResource(R.string.privacy_dialog_title),
         body = stringResource(R.string.privacy_dialog_body),
         confirmText = stringResource(R.string.home_card_info_ok),

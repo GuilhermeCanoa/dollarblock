@@ -33,8 +33,9 @@ import com.dollarblock.core.designsystem.DollarBlockTheme
 /**
  * Diálogo padrão do DollarBlock — regra da casa: **nenhum** pop-up genérico do Android.
  * Todo aviso/confirmação/formulário em janela usa este componente: superfície de vidro
- * com stroke Mint Glow, overline mono estilo recibo ("DOLLARBLOCK · AVISO") e divisor
- * tracejado, ecoando a estética da fatura da tela de bloqueio.
+ * com stroke Mint Glow, título e divisor tracejado, ecoando a estética da fatura da tela
+ * de bloqueio. O [overline] mono (estilo recibo) é opcional e nunca leva o nome da marca —
+ * o usuário já sabe em que app está.
  *
  * - [body] cobre o caso comum de texto; [content] injeta campos/listas customizadas.
  * - [confirmText]/[onConfirm] renderizam a ação primária; [confirmDestructive] a pinta
@@ -47,7 +48,7 @@ fun DollarBlockDialog(
     onDismissRequest: () -> Unit,
     title: String,
     modifier: Modifier = Modifier,
-    overline: String = "DOLLARBLOCK",
+    overline: String? = null,
     body: String? = null,
     confirmText: String? = null,
     onConfirm: () -> Unit = {},
@@ -70,14 +71,16 @@ fun DollarBlockDialog(
                 .padding(horizontal = 24.dp, vertical = 22.dp)
                 .verticalScroll(rememberScrollState()),
         ) {
-            Text(
-                text = overline.uppercase(),
-                fontFamily = FontFamily.Monospace,
-                fontSize = 11.sp,
-                letterSpacing = 2.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-            )
-            Spacer(Modifier.height(8.dp))
+            if (overline != null) {
+                Text(
+                    text = overline.uppercase(),
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 11.sp,
+                    letterSpacing = 2.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                )
+                Spacer(Modifier.height(8.dp))
+            }
             Text(
                 text = title,
                 style = MaterialTheme.typography.headlineSmall,

@@ -245,6 +245,13 @@ fun HomeScreen(
                     onNavigateToApps()
                 }
             } else null,
+            // Com apps, o número vai gerar dúvida: o Extrato (toque no dia) mostra de onde saiu.
+            onOpenStatement = if (card == HomeCardInfo.DAMAGE && hasApps) {
+                {
+                    infoCard = null
+                    onOpenStatement()
+                }
+            } else null,
         )
     }
 
@@ -1083,20 +1090,45 @@ private fun HomeCardInfoDialog(
     onDismiss: () -> Unit,
     /** Quando presente, o diálogo ganha "Ver apps" (primeiro acesso, sem apps na conta). */
     onPickApps: (() -> Unit)? = null,
+    /**
+     * Quando presente (DAMAGE com apps na conta), o diálogo aponta o Extrato como o lugar
+     * onde o número se explica — dia a dia, app a app — e a ação principal leva até lá.
+     */
+    onOpenStatement: (() -> Unit)? = null,
 ) {
     val (titleRes, bodyRes) = when (card) {
         HomeCardInfo.DAMAGE -> R.string.home_info_damage_title to R.string.home_info_damage_body
         HomeCardInfo.ADDICTION -> R.string.home_info_addiction_title to R.string.home_info_addiction_body
     }
-    DollarBlockDialog(
-        onDismissRequest = onDismiss,
-        title = stringResource(titleRes),
-        body = if (card == HomeCardInfo.DAMAGE) stringResource(bodyRes, referenceSalary) else stringResource(bodyRes),
-        confirmText = stringResource(R.string.home_card_info_ok),
-        onConfirm = onDismiss,
-        dismissText = onPickApps?.let { stringResource(R.string.home_card_info_open_apps) },
-        onDismiss = onPickApps,
-    )
+    val body = if (card == HomeCardInfo.DAMAGE) stringResource(bodyRes, referenceSalary) else stringResource(bodyRes)
+    if (onOpenStatement != null) {
+        DollarBlockDialog(
+            onDismissRequest = onDismiss,
+            title = stringResource(titleRes),
+            body = body,
+            confirmText = stringResource(R.string.home_info_damage_open_statement),
+            onConfirm = onOpenStatement,
+            dismissText = stringResource(R.string.home_card_info_ok),
+            onDismiss = onDismiss,
+        ) {
+            Text(
+                text = stringResource(R.string.home_info_damage_statement_hint),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        }
+    } else {
+        DollarBlockDialog(
+            onDismissRequest = onDismiss,
+            title = stringResource(titleRes),
+            body = body,
+            confirmText = stringResource(R.string.home_card_info_ok),
+            onConfirm = onDismiss,
+            dismissText = onPickApps?.let { stringResource(R.string.home_card_info_open_apps) },
+            onDismiss = onPickApps,
+        )
+    }
 }
 
 @Preview(showBackground = true)

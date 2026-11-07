@@ -25,6 +25,8 @@
     <string name="home_card_info_open_apps">See apps</string>
     <string name="home_info_damage_title">Today\'s Damage</string>
     <string name="home_info_damage_body">Your minutes in monitored apps today, converted to money: your net monthly salary (%1$s by default — enter yours in the wallet, further down) spread over the 43,200 minutes of the month. Not a fine — the market price of your scroll.</string>
+    <string name="home_info_damage_statement_hint">Want to know where this number came from? Open the Statement and tap the day: it shows how long you spent in each app and what each one cost.</string>
+    <string name="home_info_damage_open_statement">Open statement</string>
     <string name="home_info_spent_title">Money Spent</string>
     <string name="home_info_spent_body">Everything you actually paid for day passes, since day one. Pulled straight from your unlock receipts. Real money — that was the deal.</string>
     <string name="home_info_saved_title">Money Saved</string>
