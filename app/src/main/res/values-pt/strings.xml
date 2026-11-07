@@ -654,7 +654,13 @@
     <string name="stat_hero_empty">Nenhum app com limite. Sem limite, não há fatura para conferir.</string>
     <string name="stat_hero_waiting">Nenhum dia fechado ainda. O extrato começa a contar hoje.</string>
     <string name="stat_info_calendar_title">Como ler o extrato</string>
-    <string name="stat_info_calendar_body">Cada bolinha é um dia, na cor do pior app daquele dia.\n\nVerde: abaixo do limite.\nÂmbar: a conta fechou e você não pagou o resgate.\nAnel: passe livre ou cortesia, sem cobrança.\nVermelho: pagou o passe do dia.\n\nTracejado: dias de antes do DollarBlock, tirados do histórico do celular. Lá, vermelho quer dizer que você teria pagado.\n\nVerde e âmbar contam como dentro do limite. Os dias usam o limite atual de cada app.</string>
+    <string name="stat_info_calendar_intro">Cada bolinha é um dia, na cor do pior app daquele dia.</string>
+    <string name="stat_info_within_desc">Ficou abaixo do limite.</string>
+    <string name="stat_info_held_desc">A conta fechou e você não pagou o resgate.</string>
+    <string name="stat_info_free_desc">Passe do 1º dia ou cortesia. Nada cobrado.</string>
+    <string name="stat_info_paid_desc">Pagou o passe do dia para reabrir o app.</string>
+    <string name="stat_info_before_desc">Dias de antes do DollarBlock, tirados do histórico do celular. Lá, vermelho quer dizer que você teria pagado.</string>
+    <string name="stat_info_calendar_footer">Dentro e aguentou contam como dentro do limite. Os dias usam o limite atual de cada app.</string>
     <string name="stat_legend_within">dentro</string>
     <string name="stat_legend_held">aguentou</string>
     <string name="stat_legend_free">passe livre</string>

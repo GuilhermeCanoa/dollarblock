@@ -620,7 +620,13 @@
     <string name="stat_hero_empty">किसी ऐप की सीमा नहीं है। सीमा नहीं, तो जाँचने को बिल नहीं।</string>
     <string name="stat_hero_waiting">अभी कोई दिन बंद नहीं हुआ। स्टेटमेंट आज से गिनना शुरू करता है।</string>
     <string name="stat_info_calendar_title">स्टेटमेंट कैसे पढ़ें</string>
-    <string name="stat_info_calendar_body">हर बिंदु एक दिन है, उस दिन के सबसे खराब ऐप के रंग में।\n\nहरा: सीमा के भीतर।\nअंबर: खाता बंद हुआ और आपने खोलने के पैसे नहीं दिए।\nरिंग: फ़्री पास या सौजन्य, कोई शुल्क नहीं।\nलाल: डे पास खरीदा।\n\nडैश वाले: DollarBlock से पहले के दिन, फ़ोन के इतिहास से। वहाँ लाल का मतलब है कि आप पैसे देते।\n\nहरा और अंबर सीमा के भीतर गिने जाते हैं। दिन हर ऐप की मौजूदा सीमा से गिने जाते हैं।</string>
+    <string name="stat_info_calendar_intro">हर बिंदु एक दिन है, उस दिन के सबसे खराब ऐप के रंग में।</string>
+    <string name="stat_info_within_desc">सीमा के भीतर रहे।</string>
+    <string name="stat_info_held_desc">खाता बंद हुआ और आपने खोलने के पैसे नहीं दिए।</string>
+    <string name="stat_info_free_desc">पहले दिन का पास या सौजन्य। कोई शुल्क नहीं।</string>
+    <string name="stat_info_paid_desc">ऐप दोबारा खोलने के लिए डे पास खरीदा।</string>
+    <string name="stat_info_before_desc">DollarBlock से पहले के दिन, फ़ोन के इतिहास से। वहाँ लाल का मतलब है कि आप पैसे देते।</string>
+    <string name="stat_info_calendar_footer">भीतर और टिके रहे, दोनों सीमा के भीतर गिने जाते हैं। दिन हर ऐप की मौजूदा सीमा से गिने जाते हैं।</string>
     <string name="stat_legend_within">भीतर</string>
     <string name="stat_legend_held">टिके रहे</string>
     <string name="stat_legend_free">फ़्री पास</string>

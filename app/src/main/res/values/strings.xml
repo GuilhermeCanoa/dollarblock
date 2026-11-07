@@ -627,7 +627,13 @@
     <string name="stat_hero_empty">No app has a limit. No limit, no bill to check.</string>
     <string name="stat_hero_waiting">No day closed yet. The statement starts counting today.</string>
     <string name="stat_info_calendar_title">How to read the statement</string>
-    <string name="stat_info_calendar_body">Each dot is a day, in the color of that day\'s worst app.\n\nGreen: under the limit.\nAmber: the tab closed and you didn\'t pay to reopen it.\nRing: free pass or courtesy, nothing charged.\nRed: paid the day pass.\n\nDashed: days before DollarBlock, taken from the phone\'s history. There, red means you would have paid.\n\nGreen and amber count as within the limit. Days use each app\'s current limit.</string>
+    <string name="stat_info_calendar_intro">Each dot is a day, in the color of that day\'s worst app.</string>
+    <string name="stat_info_within_desc">Stayed under the limit.</string>
+    <string name="stat_info_held_desc">The tab closed and you didn\'t pay to reopen it.</string>
+    <string name="stat_info_free_desc">First-day pass or courtesy. Nothing charged.</string>
+    <string name="stat_info_paid_desc">Paid the day pass to reopen the app.</string>
+    <string name="stat_info_before_desc">Days before DollarBlock, taken from the phone\'s history. There, red means you would have paid.</string>
+    <string name="stat_info_calendar_footer">Within and held out both count as within the limit. Days use each app\'s current limit.</string>
     <string name="stat_legend_within">within</string>
     <string name="stat_legend_held">held out</string>
     <string name="stat_legend_free">free pass</string>

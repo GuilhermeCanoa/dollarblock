@@ -30,6 +30,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -155,9 +156,10 @@ fun StatisticsScreen(
         DollarBlockDialog(
             onDismissRequest = { showInfo = false },
             title = stringResource(R.string.stat_info_calendar_title),
-            body = stringResource(R.string.stat_info_calendar_body),
+            body = stringResource(R.string.stat_info_calendar_intro),
             confirmText = stringResource(R.string.stat_info_ok),
             onConfirm = { showInfo = false },
+            content = { CalendarInfoLegend(palette) },
         )
     }
 
@@ -470,6 +472,59 @@ private fun LegendItem(tone: DayTone, @StringRes label: Int, palette: HomePalett
         ToneDot(style, size = 10)
         Spacer(Modifier.width(5.dp))
         Text(stringResource(label), fontFamily = InterFamily, fontSize = 11.5.sp, color = palette.muted)
+    }
+}
+
+/**
+ * Legenda do popup "Como ler o extrato": cada cor aparece com a própria bolinha, igual à do
+ * calendário — ler "verde"/"âmbar" sem ver a cor não ajuda.
+ */
+@Composable
+private fun CalendarInfoLegend(palette: HomePalette) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        InfoLegendRow(R.string.stat_legend_within, R.string.stat_info_within_desc) { ToneDot(toneStyle(DayTone.WITHIN, palette), size = 18) }
+        InfoLegendRow(R.string.stat_legend_held, R.string.stat_info_held_desc) { ToneDot(toneStyle(DayTone.HELD, palette), size = 18) }
+        InfoLegendRow(R.string.stat_legend_free, R.string.stat_info_free_desc) { ToneDot(toneStyle(DayTone.FREE, palette), size = 18) }
+        InfoLegendRow(R.string.stat_legend_paid, R.string.stat_info_paid_desc) { ToneDot(toneStyle(DayTone.PAID, palette), size = 18) }
+        InfoLegendRow(R.string.stat_legend_before, R.string.stat_info_before_desc) {
+            // Igual ao calendário: cor esmaecida + contorno tracejado.
+            Canvas(Modifier.size(18.dp)) {
+                val r = size.minDimension / 2
+                drawCircle(palette.emerald.copy(alpha = 0.45f), radius = r)
+                drawCircle(
+                    palette.emerald,
+                    radius = r - 0.75.dp.toPx(),
+                    style = Stroke(1.5.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(5f, 4f))),
+                )
+            }
+        }
+        Text(
+            stringResource(R.string.stat_info_calendar_footer),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 4.dp),
+        )
+    }
+}
+
+@Composable
+private fun InfoLegendRow(@StringRes label: Int, @StringRes desc: Int, dot: @Composable () -> Unit) {
+    Row(verticalAlignment = Alignment.Top) {
+        Box(Modifier.padding(top = 1.dp)) { dot() }
+        Spacer(Modifier.width(12.dp))
+        Column {
+            Text(
+                stringResource(label).replaceFirstChar { it.uppercase() },
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                stringResource(desc),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
 

@@ -12,6 +12,15 @@ Descrição funcional.
 
 ---
 
+## [2026-11-07] — "Como ler o extrato" com as bolinhas na legenda
+**Tipo:** refactor
+**Épico:** E24
+
+- O popup do Extrato deixou de ser um bloco de texto ("Verde: …, Âmbar: …"): agora cada desfecho
+  aparece com a própria bolinha, desenhada igual à do calendário (dentro, aguentou, passe livre,
+  pagou e o tracejado de antes do DollarBlock), com o mesmo rótulo da legenda da tela e uma
+  linha de explicação. `stat_info_calendar_body` foi substituída por strings por item.
+
 ## [2026-11-07] — Popups sem a marca no topo + "Prejuízo de hoje" aponta para o Extrato
 **Tipo:** refactor
 **Épico:** adhoc
