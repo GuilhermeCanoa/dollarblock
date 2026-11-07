@@ -12,6 +12,17 @@ Descrição funcional.
 
 ---
 
+## [2026-11-07] — Popups sem a marca no topo + "Prejuízo de hoje" aponta para o Extrato
+**Tipo:** refactor
+**Épico:** adhoc
+
+- `DollarBlockDialog` não escreve mais "DOLLARBLOCK" no topo: o `overline` virou opcional
+  (padrão: nenhum). Sobre, Sigilo e Debug mantêm só o rótulo deles, sem a marca.
+- O popup do número da Home ("Prejuízo de hoje"), quando já há apps na conta, agora explica
+  que o detalhe está no Extrato (tocar no dia mostra tempo e custo por app) e tem
+  "Abrir extrato" como ação principal ("Entendi" fica como secundária). Sem apps, segue
+  com "Entendi" + "Ver apps".
+
 ## [2026-11-07] — Moeda padrão vira dólar
 **Tipo:** regra
 **Épico:** adhoc

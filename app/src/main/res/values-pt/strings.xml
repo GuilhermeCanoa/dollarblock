@@ -25,6 +25,8 @@
     <string name="home_card_info_open_apps">Ver apps</string>
     <string name="home_info_damage_title">Prejuízo de hoje</string>
     <string name="home_info_damage_body">Seus minutos de hoje nos apps monitorados, convertidos em dinheiro: seu salário líquido mensal (%1$s por padrão — informe o seu na carteira, mais abaixo) dividido pelos 43.200 minutos do mês. Não é multa — é o preço de mercado do seu scroll.</string>
+    <string name="home_info_damage_statement_hint">Quer entender de onde saiu esse valor? Abra o Extrato e toque no dia: lá está quanto tempo você passou em cada app e quanto cada um custou.</string>
+    <string name="home_info_damage_open_statement">Abrir extrato</string>
     <string name="home_info_spent_title">Dinheiro gasto</string>
     <string name="home_info_spent_body">Tudo o que você pagou de verdade em passes do dia, desde o início. Sai direto dos seus recibos de resgate. Dinheiro real — o contrato era esse.</string>
     <string name="home_info_saved_title">Dinheiro economizado</string>
