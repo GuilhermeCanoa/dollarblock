@@ -186,7 +186,6 @@
     <string name="msg_limit_reached">सीमा पूरी। खाता यहीं बंद होता है।</string>
     <string name="msg_unlock_needed">बिल बाक़ी है।</string>
     <string name="msg_on_track">बजट में। फ़िलहाल।</string>
-    <string name="msg_time_saved_today">आज आपने %1$d मिनट बचाए। बिल: R$ 0।</string>
 
     <!-- Apps -->
     <string name="apps_title">ऐप्स</string>
@@ -291,7 +290,7 @@
     <string name="pref_about">DollarBlock के बारे में</string>
     <string name="about_body">DollarBlock उस समय पर कीमत लगाता है जिसे आपने कहा था कि आप खोना नहीं चाहते। ऐप्स आप चुनते हैं, सीमाएँ आप तय करते हैं, और सीमा पार होते ही ऐप लॉक हो जाता है — आज उसे अनलॉक करने का खर्च एक डे पास है। यहाँ कुछ भी छिपा नहीं है: यह ऐप वायरस नहीं है, आपके फ़ोन पर कब्ज़ा नहीं करता, और कभी भुगतान के लिए मजबूर नहीं करता। आप हमेशा भुगतान न करना चुन सकते हैं, और ऐप्स टैब में किसी भी ऐप की निगरानी जब चाहें बंद कर सकते हैं। हम बस वह सौदा लागू करते हैं जो आपने ख़ुद से किया था।</string>
     <string name="pref_currency">मुद्रा</string>
-    <string name="pref_currency_body">सिर्फ़ दिखाने के लिए — डे पास का शुल्क अब भी BRL में लगता है।</string>
+    <string name="pref_currency_body">सिर्फ़ दिखाने के लिए — डे पास का शुल्क आपके Google Play खाते की मुद्रा में लगता है।</string>
     <string name="pref_currency_system">स्वचालित (देश के अनुसार)</string>
     <string name="pref_currency_brl">रियाल (R$)</string>
     <string name="pref_currency_usd">डॉलर ($)</string>

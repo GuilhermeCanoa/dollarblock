@@ -4,6 +4,26 @@ Registro cronológico de mudanças funcionais significativas: features entregues
 
 **Formato:**
 ```
+## [YYYY-MM-DD] — Título curto
+**Tipo:** feature | bugfix | regra | refactor | config
+**Épico:** E[N] ou adhoc
+Descrição funcional.
+```
+
+---
+
+## [2026-11-07] — Moeda padrão vira dólar
+**Tipo:** regra
+**Épico:** adhoc
+
+- `AppCurrency.forRegion`: Brasil → BRL, Índia → INR, **qualquer outro país (EUA incluso) e
+  região desconhecida → USD** (`AppCurrency.DEFAULT`). Antes o real era o padrão do "resto do
+  mundo": um alemão ou mexicano via a conta, o extrato e o onboarding em R$.
+- `MoneySettings()` e `ProfileStats()` nascem em USD (valor exibido antes do DataStore emitir).
+- Texto da preferência de moeda corrigido: o passe é cobrado na moeda da conta Google Play,
+  não "em reais/BRL". Removida a string órfã `msg_time_saved_today` (tinha "R$ 0" fixo).
+- A cobrança não muda: o Play Billing continua cobrando na moeda local da conta Play.
+
 ## [2026-11-06] — Topo único nas quatro abas
 **Tipo:** refactor
 **Épico:** adhoc
@@ -36,14 +56,6 @@ Registro cronológico de mudanças funcionais significativas: features entregues
   (`passe_livre`). "Não" salva o limite e tranca na próxima abertura.
 - Recibos sem cobrança (cortesia e passe livre) não aparecem mais como "Pago ·".
 - A paleta, os tiles e o ícone de app da Home foram para `core/designsystem/components/HomeStyle.kt`.
-
-## [YYYY-MM-DD] — Título curto
-**Tipo:** feature | bugfix | regra | refactor | config
-**Épico:** E[N] ou adhoc
-Descrição funcional.
-```
-
----
 
 ## [2026-11-05] — Mascote da Home: mais quatro cenas
 **Tipo:** feature

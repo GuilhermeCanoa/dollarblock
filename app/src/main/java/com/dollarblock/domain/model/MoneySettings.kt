@@ -23,14 +23,18 @@ enum class AppCurrency(
 
     companion object {
         /**
-         * Moeda pela região (ISO 3166, ex. "US"): EUA → dólar, Índia → rupia; o resto do
-         * mundo, Brasil incluso, continua em real.
+         * Moeda pela região (ISO 3166, ex. "BR"): Brasil → real, Índia → rupia; qualquer
+         * outro país — EUA incluso, e também região desconhecida ("") — cai no dólar, a
+         * moeda padrão para países que o app ainda não mapeia.
          */
         fun forRegion(region: String): AppCurrency = when (region.uppercase()) {
-            "US" -> USD
+            "BR" -> BRL
             "IN" -> INR
-            else -> BRL
+            else -> DEFAULT
         }
+
+        /** Moeda padrão do app: países sem moeda própria mapeada exibem dólar. */
+        val DEFAULT: AppCurrency get() = USD
 
         fun fromCode(code: String): AppCurrency? = entries.firstOrNull { it.code.equals(code, ignoreCase = true) }
     }
@@ -41,16 +45,16 @@ enum class AppCurrency(
  * minuto de scroll e a moeda em que esses valores são exibidos.
  */
 data class MoneySettings(
-    val monthlySalary: Double = DEFAULT_MONTHLY_SALARY,
+    val monthlySalary: Double = AppCurrency.DEFAULT.referenceMonthlySalary,
     /** true quando o usuário informou o próprio salário (vs. referência padrão). */
     val salaryConfigured: Boolean = false,
-    val currency: AppCurrency = AppCurrency.BRL,
+    val currency: AppCurrency = AppCurrency.DEFAULT,
 ) {
     /** Salário de referência da moeda atual (o usado enquanto [salaryConfigured] é false). */
     val referenceMonthlySalary: Double get() = currency.referenceMonthlySalary
 
     companion object {
-        /** Referência histórica do app (BRL) quando o usuário não informa o salário. */
+        /** Referência em BRL (= [AppCurrency.BRL.referenceMonthlySalary]); o padrão do app é [AppCurrency.DEFAULT]. */
         const val DEFAULT_MONTHLY_SALARY = 3000.0
     }
 }

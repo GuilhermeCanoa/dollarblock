@@ -19,8 +19,8 @@ import javax.inject.Singleton
 /**
  * Preferência de moeda de exibição.
  *
- * - [SYSTEM]: segue o país do aparelho ([DeviceRegion]) — EUA usa Dólar, Índia usa
- *   Rupia, o resto do mundo (Brasil incluso) usa Real.
+ * - [SYSTEM]: segue o país do aparelho ([DeviceRegion]) — Brasil usa Real, Índia usa
+ *   Rupia, o resto do mundo (EUA incluso) usa Dólar.
  * - [BRL] / [USD]: força a moeda independentemente do celular.
  *
  * A moeda decide a exibição (conta/extrato), o salário de referência e o preço de

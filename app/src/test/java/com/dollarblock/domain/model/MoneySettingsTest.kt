@@ -49,14 +49,18 @@ class MoneySettingsTest {
     }
 
     @Test
-    fun `so os EUA usam dolar - preco do passe e salario de referencia em USD`() {
-        assertEquals(AppCurrency.USD, AppCurrency.forRegion("US"))
-        assertEquals(AppCurrency.USD, AppCurrency.forRegion("us"))
+    fun `brasil usa real, india rupia e o resto do mundo cai no dolar`() {
         assertEquals(AppCurrency.BRL, AppCurrency.forRegion("BR"))
+        assertEquals(AppCurrency.BRL, AppCurrency.forRegion("br"))
         assertEquals(AppCurrency.INR, AppCurrency.forRegion("IN"))
         assertEquals(AppCurrency.INR, AppCurrency.forRegion("in"))
-        assertEquals(AppCurrency.BRL, AppCurrency.forRegion("PT"))
-        assertEquals(AppCurrency.BRL, AppCurrency.forRegion(""))
+        assertEquals(AppCurrency.USD, AppCurrency.forRegion("US"))
+        // Países sem moeda própria no app e região desconhecida: padrão em dólar.
+        assertEquals(AppCurrency.USD, AppCurrency.forRegion("PT"))
+        assertEquals(AppCurrency.USD, AppCurrency.forRegion("DE"))
+        assertEquals(AppCurrency.USD, AppCurrency.forRegion("MX"))
+        assertEquals(AppCurrency.USD, AppCurrency.forRegion(""))
+        assertEquals(AppCurrency.USD, AppCurrency.DEFAULT)
         assertEquals("0.99", AppCurrency.USD.dayPassPrice)
         assertEquals("1.99", AppCurrency.BRL.dayPassPrice)
         assertEquals(4000.0, AppCurrency.USD.referenceMonthlySalary, 0.0)
@@ -68,7 +72,7 @@ class MoneySettingsTest {
         // CURRENCY_SELECTION_ENABLED = false: a preferência salva é ignorada.
         assertEquals(AppCurrency.BRL, resolveCurrency(CurrencyPreference.SYSTEM, "BR"))
         assertEquals(AppCurrency.USD, resolveCurrency(CurrencyPreference.SYSTEM, "US"))
-        assertEquals(AppCurrency.BRL, resolveCurrency(CurrencyPreference.SYSTEM, "DE"))
+        assertEquals(AppCurrency.USD, resolveCurrency(CurrencyPreference.SYSTEM, "DE"))
         assertEquals(AppCurrency.BRL, resolveCurrency(CurrencyPreference.USD, "BR"))
         assertEquals(AppCurrency.USD, resolveCurrency(CurrencyPreference.BRL, "US"))
     }
@@ -76,7 +80,10 @@ class MoneySettingsTest {
     @Test
     fun `salario padrao sem configuracao e a referencia da moeda`() {
         assertEquals(4000.0, MoneySettings(monthlySalary = 4000.0, currency = AppCurrency.USD).referenceMonthlySalary, 0.0)
-        assertEquals(3000.0, MoneySettings().referenceMonthlySalary, 0.0)
+        // Antes do DataStore emitir, o padrão é o da moeda padrão (dólar).
+        assertEquals(AppCurrency.USD, MoneySettings().currency)
+        assertEquals(4000.0, MoneySettings().referenceMonthlySalary, 0.0)
+        assertEquals(4000.0, MoneySettings().monthlySalary, 0.0)
     }
 
     @Test

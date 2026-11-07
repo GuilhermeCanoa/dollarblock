@@ -186,7 +186,6 @@
     <string name="msg_limit_reached">Limit reached. The tab closes here.</string>
     <string name="msg_unlock_needed">Bill pending.</string>
     <string name="msg_on_track">On budget. For now.</string>
-    <string name="msg_time_saved_today">You saved %1$d minutes today. Invoice: R$ 0.</string>
 
     <!-- Apps -->
     <string name="apps_title">Apps</string>
@@ -291,7 +290,7 @@
     <string name="pref_about">About DollarBlock</string>
     <string name="about_body">DollarBlock puts a price on the time you said you didn\'t want to lose. You pick the apps, you set the limits, and past the limit the app locks — unlocking it today costs a day pass. Nothing here is hidden: the app is not a virus, it doesn\'t hijack your phone, and it never forces a payment. You can always choose not to pay, and you can turn off monitoring for any app in the Apps tab whenever you want. We just enforce the deal you made with yourself.</string>
     <string name="pref_currency">Currency</string>
-    <string name="pref_currency_body">Display only — the day pass is still charged in BRL.</string>
+    <string name="pref_currency_body">Display only — the day pass is charged in your Google Play currency.</string>
     <string name="pref_currency_system">Automatic (by country)</string>
     <string name="pref_currency_brl">Real (R$)</string>
     <string name="pref_currency_usd">Dollar ($)</string>

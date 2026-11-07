@@ -209,7 +209,6 @@
     <string name="msg_limit_reached">Limite atingido. A conta fecha aqui.</string>
     <string name="msg_unlock_needed">Fatura pendente.</string>
     <string name="msg_on_track">Dentro do orçamento. Por enquanto.</string>
-    <string name="msg_time_saved_today">Você economizou %1$d minutos hoje. Fatura: R$ 0.</string>
 
     <!-- Apps -->
     <string name="apps_title">Apps</string>
@@ -312,7 +311,7 @@
     <string name="pref_about">Sobre o DollarBlock</string>
     <string name="about_body">O DollarBlock coloca um preço no tempo que você disse que não queria mais perder. Você escolhe os apps, você define os limites e, passado o limite, o app tranca — desbloquear hoje custa um passe do dia. Nada aqui é escondido: o app não é vírus, não sequestra o seu celular e nunca obriga pagamento nenhum. Você sempre pode escolher não pagar, e pode desativar a monitoria de qualquer app na aba Apps quando quiser. A gente só cumpre o combinado que você fez com você mesmo.</string>
     <string name="pref_currency">Moeda</string>
-    <string name="pref_currency_body">Só para exibição — o passe do dia continua cobrado em reais.</string>
+    <string name="pref_currency_body">Só para exibição — o passe do dia é cobrado na moeda da sua conta do Google Play.</string>
     <string name="pref_currency_system">Automática (pelo país)</string>
     <string name="pref_currency_brl">Real (R$)</string>
     <string name="pref_currency_usd">Dólar ($)</string>

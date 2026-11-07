@@ -40,7 +40,7 @@ data class ProfileStats(
     val activeLimitsCount: Int = 0,
     val moneyLostToday: Double? = null,
     val blocksToday: Int = 0,
-    val currency: AppCurrency = AppCurrency.BRL,
+    val currency: AppCurrency = AppCurrency.DEFAULT,
 )
 
 /**
