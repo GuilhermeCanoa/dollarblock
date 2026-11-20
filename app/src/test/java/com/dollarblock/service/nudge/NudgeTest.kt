@@ -66,9 +66,14 @@ class NudgeTest {
     // --- Frequência --------------------------------------------------------------------
 
     @Test
-    fun `teto diario de 2 cobrancas`() {
-        assertFalse(NudgePolicy.capReached(1))
-        assertTrue(NudgePolicy.capReached(2))
+    fun `teto diario de 1 cobranca, fechamento incluido`() {
+        assertFalse(NudgePolicy.capReached(0))
+        assertTrue(NudgePolicy.capReached(1))
+    }
+
+    @Test
+    fun `sessao longa so a partir de 45 min`() {
+        assertEquals(45, NudgePolicy.SESSION_THRESHOLD_MIN)
     }
 
     @Test

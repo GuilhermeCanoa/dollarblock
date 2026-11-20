@@ -423,8 +423,6 @@ class BlockActivity : AppCompatActivity() {
         onPaymentEvent(PaymentEvent.Completed)
         if (targetPackage.isNotEmpty()) {
             blockPreferences.grantUnlockForToday(targetPackage)
-            // Recibo do passe (E23/E24) — pelo escopo do engine: esta Activity fecha já já.
-            nudgeEngine.onPassPaid(targetPackage, appLabel, unlocksPaidToday.value)
             // No Play Billing o valor/moeda reais são os do produto no Play Console;
             // nos demais caminhos, o preço resolvido via pricing/fallback na moeda do país.
             val amount = billingManager?.priceAmount ?: dayPassPrice.value

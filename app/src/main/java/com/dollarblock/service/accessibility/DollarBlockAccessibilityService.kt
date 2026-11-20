@@ -1,16 +1,12 @@
 package com.dollarblock.service.accessibility
 
 import android.accessibilityservice.AccessibilityService
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
-import androidx.core.content.ContextCompat
 import com.dollarblock.data.local.db.MonitoredAppDao
 import com.dollarblock.data.local.db.MonitoredAppEntity
 import com.dollarblock.data.local.prefs.BlockPreferences
@@ -51,15 +47,6 @@ class DollarBlockAccessibilityService : AccessibilityService() {
     @Inject lateinit var notificationPreferences: NotificationPreferences
     @Inject lateinit var nudgeEngine: NudgeEngine
 
-    /** Instante do último desbloqueio da tela (ACTION_USER_PRESENT), para a cobrança E22. */
-    @Volatile private var lastUserPresentMs = 0L
-
-    private val userPresentReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action == Intent.ACTION_USER_PRESENT) lastUserPresentMs = System.currentTimeMillis()
-        }
-    }
-
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val handler = Handler(Looper.getMainLooper())
 
@@ -87,9 +74,6 @@ class DollarBlockAccessibilityService : AccessibilityService() {
 
     override fun onServiceConnected() {
         super.onServiceConnected()
-        ContextCompat.registerReceiver(
-            this, userPresentReceiver, IntentFilter(Intent.ACTION_USER_PRESENT), ContextCompat.RECEIVER_NOT_EXPORTED,
-        )
         Log.i(TAG, "Service connected")
     }
 
@@ -124,11 +108,11 @@ class DollarBlockAccessibilityService : AccessibilityService() {
             val app = monitoredAppDao.getByPackage(packageName)
             if (app == null || !app.isMonitored) return@launch
 
-            // Cobranças de hábito (E21/E22/C17) olham só a entrada do app, com ou sem limite.
+            // Cobranças de hábito (E21/C17) olham só a entrada do app, com ou sem limite.
             // Em corrotina própria: a leitura do histórico não pode atrasar o bloqueio abaixo.
             scope.launch {
                 runCatching {
-                    nudgeEngine.onMonitoredAppForeground(packageName, { resolveLabel(packageName) }, enteredForegroundAt, lastUserPresentMs)
+                    nudgeEngine.onMonitoredAppForeground(packageName) { resolveLabel(packageName) }
                 }
             }
 
@@ -196,7 +180,11 @@ class DollarBlockAccessibilityService : AccessibilityService() {
                 if (decision.warn) {
                     val minutesRemaining = LimitWarningPolicy.minutesRemaining(usedMillis, limitMillis)
                     notificationPreferences.markWarned(packageName, today, limitMinutes)
-                    limitWarningNotifier.notifyLimitApproaching(resolveLabel(packageName), minutesRemaining)
+                    // Teto diário somando os apps: passou dele, o app tranca sem aviso prévio.
+                    if (!LimitWarningPolicy.capReached(notificationPreferences.warningsSentOn(today))) {
+                        notificationPreferences.recordWarningSent(today)
+                        limitWarningNotifier.notifyLimitApproaching(resolveLabel(packageName), minutesRemaining)
+                    }
                 }
 
                 // Se o usuário já saiu do app rastreado, encerra o loop (nada a fazer aqui).
@@ -293,7 +281,6 @@ class DollarBlockAccessibilityService : AccessibilityService() {
 
     override fun onDestroy() {
         super.onDestroy()
-        runCatching { unregisterReceiver(userPresentReceiver) }
         handler.removeCallbacksAndMessages(null)
         scope.cancel()
     }

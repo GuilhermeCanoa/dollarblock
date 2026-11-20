@@ -303,65 +303,77 @@ private fun Hero(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
             .padding(start = heroStart, end = 24.dp, top = 34.dp, bottom = 22.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // "ⓘ" ao lado do rótulo: avisa que o bloco é tocável e explica o número.
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = stringResource(R.string.home_today_label),
-                fontFamily = Mono,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 11.sp,
-                letterSpacing = 2.5.sp,
-                color = palette.heroLabel,
+        // Só a conta (rótulo + valor + comparação) abre a explicação do número; a barra do
+        // orçamento logo abaixo tem toque próprio (abre a legenda dos trechos).
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .clickable(onClick = onClick),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            // "ⓘ" ao lado do rótulo: avisa que o bloco é tocável e explica o número.
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = stringResource(R.string.home_today_label),
+                    fontFamily = Mono,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 11.sp,
+                    letterSpacing = 2.5.sp,
+                    color = palette.heroLabel,
+                )
+                Spacer(Modifier.width(6.dp))
+                Icon(
+                    Icons.Outlined.Info,
+                    contentDescription = stringResource(R.string.home_hero_info),
+                    tint = palette.heroLabel,
+                    modifier = Modifier.size(14.dp),
+                )
+            }
+            Spacer(Modifier.height(14.dp))
+            // Sem apps ainda, a conta mostra R$ 0,00 (não um traço): é o mesmo número, só zerado.
+            BigMoney(
+                value = animatedValue.value.toDouble(),
+                currency = currency,
+                color = palette.text,
+                onInkSpan = { start, end -> onNumberSpan(heroStartPx + start, heroStartPx + end) },
             )
-            Spacer(Modifier.width(6.dp))
-            Icon(
-                Icons.Outlined.Info,
-                contentDescription = stringResource(R.string.home_hero_info),
-                tint = palette.heroLabel,
-                modifier = Modifier.size(14.dp),
-            )
+            Spacer(Modifier.height(10.dp))
+
+            if (moneyLost == null) {
+                Text(
+                    text = stringResource(R.string.home_hero_empty),
+                    fontFamily = InterFamily,
+                    fontSize = 15.sp,
+                    color = palette.heroEquiv,
+                    textAlign = TextAlign.Center,
+                )
+            } else {
+                // Sorteia a comparação uma vez por visita: "2 cafés" hoje, "9% de um Big Mac" amanhã.
+                val equivalenceSeed = rememberSaveable { Random.nextInt() }
+                HomeMetrics.equivalence(moneyLost, currency, equivalenceSeed)?.let { eq ->
+                    val itemText = (
+                        if (eq.count != null) pluralStringResource(eq.item.text.countRes, eq.count, eq.count)
+                        else stringResource(eq.item.text.fractionRes, eq.percent ?: 0)
+                        ).removePrefix("=").trim()
+                    Text(
+                        text = highlighted(stringResource(R.string.home_hero_equiv, itemText), itemText, palette.text),
+                        fontFamily = InterFamily,
+                        fontSize = 15.sp,
+                        color = palette.heroEquiv,
+                    )
+                }
+            }
         }
-        Spacer(Modifier.height(14.dp))
-        // Sem apps ainda, a conta mostra R$ 0,00 (não um traço): é o mesmo número, só zerado.
-        BigMoney(
-            value = animatedValue.value.toDouble(),
-            currency = currency,
-            color = palette.text,
-            onInkSpan = { start, end -> onNumberSpan(heroStartPx + start, heroStartPx + end) },
-        )
-        Spacer(Modifier.height(10.dp))
 
         if (moneyLost == null) {
-            Text(
-                text = stringResource(R.string.home_hero_empty),
-                fontFamily = InterFamily,
-                fontSize = 15.sp,
-                color = palette.heroEquiv,
-                textAlign = TextAlign.Center,
-            )
             EmptyBudgetBar(palette)
             Spacer(Modifier.height(18.dp))
             PickAppsChip(palette, onClick = onPickApps)
             return@Column
-        }
-
-        // Sorteia a comparação uma vez por visita: "2 cafés" hoje, "9% de um Big Mac" amanhã.
-        val equivalenceSeed = rememberSaveable { Random.nextInt() }
-        HomeMetrics.equivalence(moneyLost, currency, equivalenceSeed)?.let { eq ->
-            val itemText = (
-                if (eq.count != null) pluralStringResource(eq.item.text.countRes, eq.count, eq.count)
-                else stringResource(eq.item.text.fractionRes, eq.percent ?: 0)
-                ).removePrefix("=").trim()
-            Text(
-                text = highlighted(stringResource(R.string.home_hero_equiv, itemText), itemText, palette.text),
-                fontFamily = InterFamily,
-                fontSize = 15.sp,
-                color = palette.heroEquiv,
-            )
         }
 
         budget?.let { BudgetBar(it, visuals, palette) }
@@ -442,13 +454,24 @@ private fun highlighted(text: String, bold: String, boldColor: Color): Annotated
     append(text.substring(start + bold.length))
 }
 
+/**
+ * Barra do orçamento: soma dos limites do dia, um trecho colorido por app (cor do ícone)
+ * do tamanho do que ele já usou. Sozinha ela não se explica — por isso o toque abre, logo
+ * abaixo, a legenda de cada trecho (ícone, nome, uso de hoje / limite) e do trecho livre.
+ */
 @Composable
 private fun BudgetBar(budget: DailyBudget, visuals: Map<String, AppVisual>, palette: HomePalette) {
     val fallback = listOf(MintGlow, AlertAmber, BlockingRed, EmeraldPremium)
+    val colorOf: (Int, String) -> Color = { i, pkg -> visuals[pkg]?.color ?: fallback[i % fallback.size] }
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    val chevronTurn by animateFloatAsState(if (expanded) 180f else 0f, label = "budgetChevron")
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 4.dp, end = 4.dp, top = 22.dp),
+            .padding(top = 14.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClickLabel = stringResource(R.string.home_budget_legend_toggle)) { expanded = !expanded }
+            .padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 6.dp),
     ) {
         Row(
             modifier = Modifier
@@ -458,16 +481,16 @@ private fun BudgetBar(budget: DailyBudget, visuals: Map<String, AppVisual>, pale
                 .background(palette.track),
             horizontalArrangement = Arrangement.spacedBy(3.dp),
         ) {
-            budget.segments.forEachIndexed { i, (pkg, fraction) ->
-                if (fraction <= 0f) return@forEachIndexed
+            budget.segments.forEachIndexed { i, seg ->
+                if (seg.fraction <= 0f) return@forEachIndexed
                 Box(
                     modifier = Modifier
                         .fillMaxHeight()
-                        .weight(fraction)
-                        .background(visuals[pkg]?.color ?: fallback[i % fallback.size]),
+                        .weight(seg.fraction)
+                        .background(colorOf(i, seg.packageName)),
                 )
             }
-            val rest = 1f - budget.segments.sumOf { it.second.toDouble() }.toFloat()
+            val rest = 1f - budget.segments.sumOf { it.fraction.toDouble() }.toFloat()
             if (rest > 0.001f) Spacer(Modifier.weight(rest))
         }
         Row(
@@ -475,6 +498,7 @@ private fun BudgetBar(budget: DailyBudget, visuals: Map<String, AppVisual>, pale
                 .fillMaxWidth()
                 .padding(top = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 stringResource(R.string.home_budget_used, duration(budget.usedMinutes)),
@@ -482,13 +506,117 @@ private fun BudgetBar(budget: DailyBudget, visuals: Map<String, AppVisual>, pale
                 color = palette.muted,
                 style = TextStyle(fontFeatureSettings = "tnum"),
             )
-            Text(
-                stringResource(R.string.home_budget_limit, duration(budget.limitMinutes)),
-                fontSize = 12.sp,
-                color = palette.muted,
-                style = TextStyle(fontFeatureSettings = "tnum"),
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    stringResource(R.string.home_budget_limit, duration(budget.limitMinutes)),
+                    fontSize = 12.sp,
+                    color = palette.muted,
+                    style = TextStyle(fontFeatureSettings = "tnum"),
+                )
+                // Pista discreta de que a barra abre alguma coisa.
+                Icon(
+                    Icons.Filled.KeyboardArrowDown,
+                    contentDescription = null,
+                    tint = palette.muted,
+                    modifier = Modifier.size(16.dp).rotate(chevronTurn),
+                )
+            }
+        }
+        AnimatedVisibility(visible = expanded) {
+            BudgetLegend(budget, visuals, colorOf, palette)
+        }
+    }
+}
+
+/** O que é cada trecho da barra: um app por linha, mais o trecho livre e uma frase de leitura. */
+@Composable
+private fun BudgetLegend(
+    budget: DailyBudget,
+    visuals: Map<String, AppVisual>,
+    colorOf: (Int, String) -> Color,
+    palette: HomePalette,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 12.dp),
+    ) {
+        Box(Modifier.fillMaxWidth().height(1.dp).background(palette.divider))
+        Spacer(Modifier.height(10.dp))
+        budget.segments.forEachIndexed { i, seg ->
+            LegendRow(
+                swatch = colorOf(i, seg.packageName),
+                icon = visuals[seg.packageName]?.icon,
+                showIcon = true,
+                label = seg.appName,
+                value = stringResource(R.string.home_budget_legend_of, duration(seg.usedMinutes), duration(seg.limitMinutes)),
+                palette = palette,
             )
         }
+        if (budget.freeMinutes > 0) {
+            LegendRow(
+                swatch = palette.track,
+                icon = null,
+                showIcon = false,
+                label = stringResource(R.string.home_budget_legend_free),
+                value = duration(budget.freeMinutes),
+                palette = palette,
+            )
+        }
+        Spacer(Modifier.height(6.dp))
+        Text(
+            stringResource(R.string.home_budget_legend_footer),
+            fontFamily = InterFamily,
+            fontSize = 12.sp,
+            lineHeight = 16.sp,
+            color = palette.muted,
+        )
+    }
+}
+
+@Composable
+private fun LegendRow(
+    swatch: Color,
+    icon: ImageBitmap?,
+    showIcon: Boolean,
+    label: String,
+    value: String,
+    palette: HomePalette,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 5.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier
+                .size(width = 14.dp, height = 8.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .background(swatch),
+        )
+        Spacer(Modifier.width(10.dp))
+        if (showIcon) {
+            AppIcon(icon, size = 20, corner = 6)
+            Spacer(Modifier.width(8.dp))
+        }
+        Text(
+            label,
+            fontFamily = InterFamily,
+            fontSize = 13.sp,
+            color = palette.text,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            value,
+            fontFamily = InterFamily,
+            fontSize = 12.sp,
+            color = palette.muted,
+            style = TextStyle(fontFeatureSettings = "tnum"),
+        )
     }
 }
 

@@ -195,9 +195,12 @@ class AppsViewModel @Inject constructor(
     )
 
     init {
+        // Recarrega a lista quando um app é instalado/removido (ex.: reinstalar o Instagram).
         viewModelScope.launch {
-            installedApps.value = installedAppsProvider.getLaunchableApps()
-            loadingInstalled.value = false
+            installedAppsProvider.changes.collect {
+                installedApps.value = installedAppsProvider.getLaunchableApps()
+                loadingInstalled.value = false
+            }
         }
         viewModelScope.launch {
             weeklyUsage.value = usageStatsProvider.getWeeklyUsageByPackage()

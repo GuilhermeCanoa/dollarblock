@@ -11,6 +11,15 @@ object LimitWarningPolicy {
     const val WARNING_THRESHOLD_MS = 5 * 60_000L
 
     /**
+     * No máximo 2 avisos de limite por dia, somando todos os apps (antes era 1 por app, sem
+     * teto). Como o aviso sai quando o app entra nos últimos 5 min, os 2 primeiros do dia
+     * são justamente os apps mais perto de trancar; os demais trancam sem aviso prévio.
+     */
+    const val DAILY_CAP = 2
+
+    fun capReached(sentToday: Int): Boolean = sentToday >= DAILY_CAP
+
+    /**
      * true quando o uso está dentro da janela final de 5 min antes do limite e o aviso
      * ainda não saiu hoje para este app/limite.
      *

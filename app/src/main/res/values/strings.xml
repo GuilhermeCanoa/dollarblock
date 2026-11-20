@@ -526,17 +526,16 @@
 
     <!-- Manager's reminders (E22) — ids from the approved list; C12 was cut. -->
     <string name="nudge_channel_name">Manager\'s reminders</string>
-    <string name="nudge_channel_desc">What your screen time is costing you (at most 2 a day)</string>
+    <string name="nudge_channel_desc">What your screen time is costing you (at most 1 a day)</string>
     <string name="pref_nudges">Manager\'s reminders</string>
-    <string name="pref_nudges_desc">What your screen time is costing you (at most 2 a day)</string>
+    <string name="pref_nudges_desc">What your screen time is costing you (at most 1 a day)</string>
     <string name="nudge_title_session">Open tab: %1$s</string>
     <string name="nudge_title_projection">Statement forecast: %1$s</string>
     <string name="nudge_title_habit">Activity logged: %1$s</string>
     <string name="nudge_title_daily_close">Closing statement</string>
-    <string name="nudge_title_pass">Day pass receipt</string>
     <string name="nudge_duration_hm">%1$dh %2$02dmin</string>
     <string name="nudge_duration_m">%1$d min</string>
-    <string name="nudge_a1">30 min straight on %1$s. Every day, that adds up to about 900 km of walking a year: roughly New York to Detroit, on foot.</string>
+    <string name="nudge_a1">45 min straight on %1$s. Every day, that adds up to about 1,400 km of walking a year: roughly New York to Chicago, on foot.</string>
     <string name="nudge_a2">You opened %1$s \"just to check one thing\". That was %2$s ago.</string>
     <string name="nudge_a3">%2$s of %1$s without a break. %1$s thanks you for your dedication. So does the bill.</string>
     <string name="nudge_a4">%2$s on %1$s. That\'s a whole movie, minus the movie.</string>
@@ -565,15 +564,16 @@
     <string name="nudge_d19">Today %1$s took %2$s. It\'s not giving it back.</string>
     <string name="nudge_d20">Day closed without breaking a single limit. No one\'s handing out medals, but the books balance.</string>
     <string name="nudge_e21">First %1$s check of the day: %2$s. The tab opened before the coffee shop did.</string>
-    <string name="nudge_e22">Unlocked your phone and went straight to %1$s. Old customer reflex.</string>
-    <string name="nudge_e23">Day pass paid for %1$s. Receipt issued. We don\'t judge, we just file.</string>
-    <string name="nudge_e24">Second day pass today. You\'re officially %1$s\'s most loyal customer.</string>
 
     <!-- Home (Oct 2026 redesign) -->
     <string name="home_today_label">TODAY\'S TAB</string>
     <string name="home_hero_equiv">≈ %1$s, donated to big tech</string>
     <string name="home_budget_used">%1$s used</string>
     <string name="home_budget_limit">total limit %1$s</string>
+    <string name="home_budget_legend_toggle">show what each color means</string>
+    <string name="home_budget_legend_of">%1$s of %2$s</string>
+    <string name="home_budget_legend_free">Still available</string>
+    <string name="home_budget_legend_footer">The bar is today\'s limits added up. Each color is one app, sized by how much of it you\'ve already spent.</string>
     <string name="home_duration_hm">%1$dh%2$02d</string>
     <string name="home_duration_m">%1$d min</string>
     <string name="home_tile_attempts">Attempts today</string>

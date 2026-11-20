@@ -1,12 +1,18 @@
 package com.dollarblock.data.apps
 
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -22,12 +28,37 @@ class InstalledAppsProvider @Inject constructor(
     @ApplicationContext private val context: Context,
 ) {
     // Carregar label + ícone de ~100 apps leva segundos; sem cache, a aba Apps refazia
-    // esse trabalho a cada navegação. O cache vive enquanto o processo viver — apps
-    // instalados/removidos nesse meio-tempo só aparecem na próxima morte do processo,
-    // troca aceitável pela abertura instantânea da aba.
+    // esse trabalho a cada navegação. O cache é descartado quando um app é instalado,
+    // removido ou atualizado: o serviço de acessibilidade mantém o processo vivo por dias,
+    // então "esperar o processo morrer" deixava um app reinstalado (ex.: Instagram) fora da
+    // aba Apps indefinidamente, embora seguisse no banco e aparecendo na Home.
     @Volatile
     private var cachedApps: List<InstalledApp>? = null
     private val cacheMutex = Mutex()
+
+    private val _changes = MutableStateFlow(0)
+
+    /** Muda a cada instalação/remoção de app — quem lista apps recarrega ao coletar. */
+    val changes: StateFlow<Int> = _changes.asStateFlow()
+
+    private val packageReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            cachedApps = null
+            _changes.value++
+        }
+    }
+
+    init {
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_PACKAGE_ADDED)
+            addAction(Intent.ACTION_PACKAGE_REMOVED)
+            addAction(Intent.ACTION_PACKAGE_REPLACED)
+            addAction(Intent.ACTION_PACKAGE_CHANGED)
+            addDataScheme("package")
+        }
+        // Broadcasts de pacote vêm do sistema: chegam mesmo com NOT_EXPORTED.
+        ContextCompat.registerReceiver(context, packageReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
+    }
 
     /**
      * Hoje é o dia em que o DollarBlock foi instalado (dia local de `firstInstallTime`)?

@@ -80,4 +80,11 @@ class LimitWarningPolicyTest {
         // já estourou → mínimo 1, nunca negativo.
         assertEquals(1, LimitWarningPolicy.minutesRemaining(currentUsedMillis = limit + 60_000L, limitMillis = limit))
     }
+
+    @Test
+    fun `no maximo 2 avisos de limite por dia somando os apps`() {
+        assertFalse(LimitWarningPolicy.capReached(0))
+        assertFalse(LimitWarningPolicy.capReached(1))
+        assertTrue(LimitWarningPolicy.capReached(2))
+    }
 }

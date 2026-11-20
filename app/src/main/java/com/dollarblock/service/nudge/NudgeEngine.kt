@@ -88,23 +88,15 @@ class NudgeEngine @Inject constructor(
     }
 
     /**
-     * App monitorado entrou em foreground: "desbloqueou e foi direto" (E22), "débito
-     * automático" no horário habitual (C17) ou "primeira abertura antes das 9h" (E21).
+     * App monitorado entrou em foreground: "débito automático" no horário habitual (C17)
+     * ou "primeira abertura antes das 9h" (E21).
      */
-    suspend fun onMonitoredAppForeground(packageName: String, label: () -> String, nowMs: Long, lastUserPresentMs: Long) {
+    suspend fun onMonitoredAppForeground(packageName: String, label: () -> String) {
         val today = usageStatsProvider.currentEpochDay()
         val firstOpenTrigger = "first_open_$packageName"
         val firstOpenToday = prefs.lastFired(firstOpenTrigger) != today
         if (firstOpenToday) prefs.markFired(firstOpenTrigger, today)
 
-        val straightFromUnlock = lastUserPresentMs > 0 &&
-            nowMs - lastUserPresentMs in 0..NudgePolicy.STRAIGHT_FROM_UNLOCK_WINDOW_MS
-        if (straightFromUnlock &&
-            NudgePolicy.cooledDown(prefs.lastFired(TRIGGER_UNLOCK), today, NudgePolicy.STRAIGHT_FROM_UNLOCK_COOLDOWN_DAYS)
-        ) {
-            sendCapped(today, TRIGGER_UNLOCK) { render(Nudge.E22_STRAIGHT_FROM_UNLOCK, Facts(app = label())) }
-            return
-        }
         if (!firstOpenToday) return
 
         val nowMinute = LocalTime.now().let { it.hour * 60 + it.minute }
@@ -143,7 +135,8 @@ class NudgeEngine @Inject constructor(
         val hasLimits = monitored.any { it.dailyLimitMinutes != null }
         val top = used.maxByOrNull { it.value }?.takeIf { it.value >= 60_000L }
 
-        send(today, TRIGGER_DAILY_CLOSE, countsTowardCap = false) {
+        // Conta no teto diário: se uma cobrança já saiu hoje, o fechamento fica quieto.
+        send(today, TRIGGER_DAILY_CLOSE, countsTowardCap = true) {
             val money = moneyPreferences.settings.first()
             val rate = HomeMetrics.perMinuteRate(money.monthlySalary)
             val nudge = NudgePolicy.pick(NudgePolicy.dailyClosePool(anyExceeded, hasLimits, top != null), lastNudge())
@@ -157,19 +150,6 @@ class NudgeEngine @Inject constructor(
                     topAppTime = top?.let { duration((it.value / 60_000L).toInt()) },
                 ),
             )
-        }
-    }
-
-    /** Passe pago (não a cortesia): recibo E23 no 1º do dia, E24 no 2º; do 3º em diante, silêncio. */
-    fun onPassPaid(packageName: String, appLabel: String, passesPaidBefore: Int) {
-        val nudge = when (passesPaidBefore) {
-            0 -> Nudge.E23_PASS_FIRST
-            1 -> Nudge.E24_PASS_SECOND
-            else -> return
-        }
-        scope.launch {
-            val today = usageStatsProvider.currentEpochDay()
-            sendCapped(today, "pass_$packageName") { render(nudge, Facts(app = appLabel)) }
         }
     }
 
@@ -304,16 +284,12 @@ class NudgeEngine @Inject constructor(
             Nudge.D19_WONT_RETURN -> context.getString(R.string.nudge_d19, f.app, f.topAppTime.orEmpty())
             Nudge.D20_CLEAN_DAY -> context.getString(R.string.nudge_d20)
             Nudge.E21_EARLY_OPEN -> context.getString(R.string.nudge_e21, f.app, f.clock)
-            Nudge.E22_STRAIGHT_FROM_UNLOCK -> context.getString(R.string.nudge_e22, f.app)
-            Nudge.E23_PASS_FIRST -> context.getString(R.string.nudge_e23, f.app)
-            Nudge.E24_PASS_SECOND -> context.getString(R.string.nudge_e24, f.app)
         }
         val title = when (nudge.group) {
             Nudge.Group.SESSION -> context.getString(R.string.nudge_title_session, f.app)
             Nudge.Group.PROJECTION -> context.getString(R.string.nudge_title_projection, f.app)
             Nudge.Group.HABIT -> context.getString(R.string.nudge_title_habit, f.app)
             Nudge.Group.DAILY_CLOSE -> context.getString(R.string.nudge_title_daily_close)
-            Nudge.Group.PASS -> context.getString(R.string.nudge_title_pass)
         }
         return Message(nudge, title, body)
     }
@@ -321,7 +297,6 @@ class NudgeEngine @Inject constructor(
     private companion object {
         const val TAG = "DollarBlockNudge"
         const val NOTIFICATION_ID_BASE = 20_000
-        const val TRIGGER_UNLOCK = "straight_from_unlock"
         const val TRIGGER_EARLY = "early_open"
         const val TRIGGER_DAILY_CLOSE = "daily_close"
 

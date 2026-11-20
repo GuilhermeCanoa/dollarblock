@@ -77,14 +77,30 @@ class HomeDashboardTest {
         val budget = HomeDashboard.budget(mockup)!!
         assertEquals(97, budget.usedMinutes)
         assertEquals(165, budget.limitMinutes)
-        assertEquals(listOf("ig", "tt", "yt"), budget.segments.map { it.first })
-        assertEquals(47f / 165, budget.segments.first().second, 0.001f)
+        assertEquals(listOf("ig", "tt", "yt"), budget.segments.map { it.packageName })
+        assertEquals(47f / 165, budget.segments.first().fraction, 0.001f)
     }
 
     @Test
     fun `orcamento estourado encolhe as fatias para caber na barra`() {
         val budget = HomeDashboard.budget(listOf(app("a", 90, 30), app("b", 30, 30)))!!
-        assertEquals(1f, budget.segments.sumOf { it.second.toDouble() }.toFloat(), 0.001f)
+        assertEquals(1f, budget.segments.sumOf { it.fraction.toDouble() }.toFloat(), 0.001f)
+    }
+
+    @Test
+    fun `trecho da legenda traz nome, uso e limite do app`() {
+        val budget = HomeDashboard.budget(mockup)!!
+        val ig = budget.segments.first()
+        assertEquals(47, ig.usedMinutes)
+        assertEquals(mockup.first { it.packageName == "ig" }.dailyLimitMinutes, ig.limitMinutes)
+        assertEquals(mockup.first { it.packageName == "ig" }.appName, ig.appName)
+        assertEquals(165 - 97, budget.freeMinutes)
+    }
+
+    @Test
+    fun `orcamento estourado nao tem minutos livres`() {
+        val budget = HomeDashboard.budget(listOf(app("a", 90, 30), app("b", 30, 30)))!!
+        assertEquals(0, budget.freeMinutes)
     }
 
     @Test

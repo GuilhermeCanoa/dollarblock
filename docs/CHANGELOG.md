@@ -12,6 +12,20 @@ Descrição funcional.
 
 ---
 
+## [2026-11-19] — Legenda da barra da Home, app reinstalado volta em Apps, menos notificações
+**Tipo:** feature + bugfix + regra
+**Épico:** adhoc (spec `docs/specs/E26-ajustes-home-apps-notificacoes.md`)
+
+- **Barra da Home:** tocar na barra abre uma legenda logo abaixo, com uma linha por app (cor,
+  ícone, nome, "uso de limite"), o trecho livre e uma frase explicando a leitura. O toque na
+  conta (valor) segue abrindo o "Prejuízo de hoje" e agora não se mistura com o da barra.
+- **App reinstalado:** a lista de apps instalados se atualiza quando um app é instalado ou
+  removido. Antes ela só se renovava quando o processo morria, o que quase nunca acontece
+  com o serviço de acessibilidade ligado, então um Instagram reinstalado sumia de Apps.
+- **Notificações:** cobranças do gerente passam a no máximo 1 por dia (o fechamento das 21h
+  conta no teto); sessão longa só a partir de 45 min; cortadas E22 (desbloqueou e foi direto)
+  e E23/E24 (recibo do passe). Aviso de limite: no máximo 2 por dia somando todos os apps.
+
 ## [2026-11-07] — Extrato: hoje não leva veredito antes da meia-noite
 **Tipo:** bugfix
 **Épico:** E24

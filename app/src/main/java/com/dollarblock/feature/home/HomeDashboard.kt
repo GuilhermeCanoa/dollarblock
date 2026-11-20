@@ -23,7 +23,22 @@ data class DailyBudget(
     val usedMinutes: Int,
     val limitMinutes: Int,
     /** Fatia de cada app na barra (fração do total; a soma nunca passa de 1). */
-    val segments: List<Pair<String, Float>>,
+    val segments: List<BudgetSegment>,
+) {
+    /** Trecho cinza do fim da barra: minutos de limite que ainda sobram, somados. */
+    val freeMinutes: Int get() = (limitMinutes - usedMinutes).coerceAtLeast(0)
+}
+
+/**
+ * Um trecho da barra do orçamento: um app com limite e quanto dele já foi usado hoje.
+ * [fraction] é a largura na barra; nome/minutos/limite alimentam a legenda que abre no toque.
+ */
+data class BudgetSegment(
+    val packageName: String,
+    val appName: String,
+    val usedMinutes: Int,
+    val limitMinutes: Int,
+    val fraction: Float,
 )
 
 /** App com limite que vai trancar primeiro, e em quantos minutos. */
@@ -83,7 +98,15 @@ object HomeDashboard {
         val segments = limited
             .filter { it.usedMinutesToday > 0 }
             .sortedByDescending { it.usedMinutesToday }
-            .map { it.packageName to it.usedMinutesToday / scale }
+            .map {
+                BudgetSegment(
+                    packageName = it.packageName,
+                    appName = it.appName,
+                    usedMinutes = it.usedMinutesToday,
+                    limitMinutes = it.dailyLimitMinutes ?: 0,
+                    fraction = it.usedMinutesToday / scale,
+                )
+            }
         return DailyBudget(usedMinutes = usedTotal, limitMinutes = limitTotal, segments = segments)
     }
 

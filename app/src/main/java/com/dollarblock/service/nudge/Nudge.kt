@@ -38,12 +38,11 @@ enum class Nudge(val group: Group) {
 
     // E — hábitos e passe do dia
     E21_EARLY_OPEN(Group.HABIT),
-    E22_STRAIGHT_FROM_UNLOCK(Group.HABIT),
-    E23_PASS_FIRST(Group.PASS),
-    E24_PASS_SECOND(Group.PASS),
+    // E22 (desbloqueou e foi direto) e E23/E24 (recibo do passe) cortadas em nov/2026:
+    // excesso de notificação. O recibo do passe já aparece na própria tela de pagamento.
     ;
 
-    enum class Group { SESSION, PROJECTION, HABIT, DAILY_CLOSE, PASS }
+    enum class Group { SESSION, PROJECTION, HABIT, DAILY_CLOSE }
 }
 
 /**
@@ -119,10 +118,14 @@ object NudgeMath {
  * inclusive o aviso de limite, que é o que importa.
  */
 object NudgePolicy {
-    /** Teto diário de cobranças (o fechamento do dia e o aviso de limite ficam de fora). */
-    const val DAILY_CAP = 2
+    /**
+     * Teto diário de cobranças, fechamento das 21h incluído (o aviso de limite tem teto
+     * próprio, ver [com.dollarblock.service.accessibility.LimitWarningPolicy]). Era 2 + o
+     * fechamento por fora; reduzido em nov/2026 por excesso de notificação.
+     */
+    const val DAILY_CAP = 1
 
-    const val SESSION_THRESHOLD_MIN = 30
+    const val SESSION_THRESHOLD_MIN = 45
 
     /** Primeira abertura "antes da padaria": até 9h. */
     const val EARLY_OPEN_BEFORE_MINUTE = 9 * 60
@@ -130,12 +133,8 @@ object NudgePolicy {
     /** Fechamento do dia a partir das 21h. */
     const val DAILY_CLOSE_FROM_MINUTE = 21 * 60
 
-    /** "Desbloqueou e foi direto": app aberto até 10 s depois do desbloqueio. */
-    const val STRAIGHT_FROM_UNLOCK_WINDOW_MS = 10_000L
-
     /** Intervalo mínimo (dias) entre repetições de cada cobrança de hábito. */
     const val EARLY_OPEN_COOLDOWN_DAYS = 3
-    const val STRAIGHT_FROM_UNLOCK_COOLDOWN_DAYS = 2
     const val AUTO_DEBIT_COOLDOWN_DAYS = 7
 
     /** Abrir a até 45 min do horário habitual conta como "por volta de". */

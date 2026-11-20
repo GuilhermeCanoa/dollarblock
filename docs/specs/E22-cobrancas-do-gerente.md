@@ -30,8 +30,9 @@ tempo: seco, deadpan, sem emoji, sem motivacional). Rafael aprovou 24 frases em
   - **E22**: app monitorado aberto até 10 s depois de desbloquear a tela; no máximo 1× a cada 2 dias.
   - **D18–D20 fechamento do dia**: a partir das 21h, uma vez por dia (pelo worker de 15 min).
   - **E23/E24**: recibo do 1º e do 2º passe pago no dia (a cortesia não gera recibo).
-- R3: Teto de **2 cobranças por dia**; o fechamento do dia e o aviso de limite ficam fora
-  do teto. O sorteio nunca repete a última frase enviada quando há alternativa.
+- R3: ~~Teto de 2 cobranças por dia; o fechamento do dia fica fora do teto.~~ **Desde
+  2026-11-19 (E26): teto de 1 por dia com o fechamento incluído; sessão longa a partir de
+  45 min; E22, E23 e E24 cortadas.** O aviso de limite tem teto próprio (2/dia). O sorteio nunca repete a última frase enviada quando há alternativa.
 - R4: Canal próprio ("Cobranças do gerente") e uma chave própria no Perfil, separada do
   aviso de limite. Tocar na notificação abre o app.
 
