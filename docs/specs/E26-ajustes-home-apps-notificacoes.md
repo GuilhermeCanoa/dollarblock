@@ -1,4 +1,4 @@
-# Spec: Ajustes de uso — barra da Home, app reinstalado, menos notificações
+# Spec: Ajustes de uso — barra da Home, app reinstalado, menos notificações, swipe entre abas
 
 **Status:** done
 **Épico:** adhoc
@@ -17,6 +17,7 @@ Três problemas que o dono do produto encontrou usando o app no próprio celular
 2. **Um app desinstalado e reinstalado some da aba Apps.** O Instagram, depois de reinstalado,
    continuava na Home (que lê o banco), mas não aparecia em Apps para configurar.
 3. **Notificações demais**: até 3 cobranças do gerente mais 1 aviso de limite por app, por dia.
+4. **Trocar de aba só pelo botão.** Faltava arrastar para o lado e trocar de seção.
 
 ## Regras
 
@@ -33,6 +34,11 @@ Três problemas que o dono do produto encontrou usando o app no próprio celular
 - R4 (aviso de limite): no máximo **2 por dia somando todos os apps**. Os dois primeiros
   apps a entrar nos últimos 5 min são avisados; os outros trancam sem aviso.
 
+- R5 (swipe): arrastar para a esquerda/direita troca entre Home, Apps, Statement e Profile,
+  com a tela acompanhando o dedo. A bottom bar acompanha o arrasto e continua funcionando por
+  toque. Voltar numa aba que não é a Home leva à Home. Sub-telas (histórico) não respondem ao
+  swipe de abas.
+
 ## Tarefas
 
 - [x] T1: `BudgetSegment` (nome/uso/limite) em `HomeDashboard.budget` + `freeMinutes`, com testes.
@@ -41,6 +47,9 @@ Três problemas que o dono do produto encontrou usando o app no próprio celular
 - [x] T4: `NudgePolicy` (teto 1, 45 min), corte de E22/E23/E24 (enum, engine, strings,
       receiver de desbloqueio no serviço, chamada no `BlockActivity`).
 - [x] T5: `LimitWarningPolicy.DAILY_CAP = 2` + contador diário em `NotificationPreferences`.
+- [x] T6: `HorizontalPager` no destino `TABS_ROUTE`, `PagerState` compartilhado com a bottom
+      bar, `goToTab`, `BackHandler`; extensions `homeScreen/appsScreen/statisticsScreen/
+      profileScreen` removidas (rotas mantidas como chave de página). Testado no aparelho.
 
 ## Fora do escopo / pendências
 

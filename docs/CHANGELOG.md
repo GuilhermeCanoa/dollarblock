@@ -12,6 +12,14 @@ Descrição funcional.
 
 ---
 
+## [2026-11-19] — Swipe entre as abas
+**Tipo:** feature
+**Épico:** adhoc (spec `docs/specs/E26-ajustes-home-apps-notificacoes.md`)
+
+- Arrastar para o lado troca entre Home, Apps, Statement e Profile, com a tela acompanhando o
+  dedo; a bottom bar acompanha e segue funcionando por toque. Voltar numa aba que não é a Home
+  leva à Home. O histórico (sub-tela do Profile) continua por cima, sem swipe de abas.
+
 ## [2026-11-19] — Legenda da barra da Home, app reinstalado volta em Apps, menos notificações
 **Tipo:** feature + bugfix + regra
 **Épico:** adhoc (spec `docs/specs/E26-ajustes-home-apps-notificacoes.md`)

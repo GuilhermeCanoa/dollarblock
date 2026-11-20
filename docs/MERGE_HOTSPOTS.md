@@ -58,11 +58,12 @@ migração corrompe o banco do usuário.
 
 **Por quê:** historicamente todos editavam `DollarBlockNavHost` e `TopLevelDestination`.
 
-**Técnica (já aplicada):** cada feature declara sua rota e sua `NavGraphBuilder` extension
-no próprio pacote (`feature/<nome>/<Nome>Navigation.kt`). O `DollarBlockNavHost` só chama
-`homeScreen()`, `appsScreen()` etc. — adições viram **uma linha isolada**.
-`TopLevelDestination` (abas da bottom bar) continua compartilhado, mas referencia as
-constantes de rota das features; mexa nele só ao adicionar/remover uma aba de primeiro nível.
+**Técnica (já aplicada):** cada feature declara sua rota no próprio pacote
+(`feature/<nome>/<Nome>Navigation.kt`). Sub-telas (ex.: `historyScreen()`) seguem como
+`NavGraphBuilder` extensions da feature — adições viram **uma linha isolada** no NavHost.
+Desde nov/2026 as quatro abas vivem num `HorizontalPager` (swipe entre abas) dentro de
+`DollarBlockNavHost`: adicionar/remover uma aba de primeiro nível mexe em `TopLevelDestination`
+**e** no `when` das páginas do NavHost; mudanças *dentro* de uma aba não tocam esses arquivos.
 
 ---
 

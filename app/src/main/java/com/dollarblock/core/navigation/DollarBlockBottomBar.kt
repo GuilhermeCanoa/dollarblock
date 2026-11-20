@@ -28,8 +28,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavGraph.Companion.findStartDestination
+import kotlinx.coroutines.launch
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.dollarblock.core.designsystem.DollarBlockTheme
@@ -41,9 +42,11 @@ import com.dollarblock.core.designsystem.components.glow
  * (styleguide §4 — vidro fosco controlado + bordas iluminadas).
  */
 @Composable
-fun DollarBlockBottomBar(navController: NavHostController) {
+fun DollarBlockBottomBar(navController: NavHostController, pagerState: PagerState) {
     val backStackEntry by navController.currentBackStackEntryAsState()
-    val currentDestination = backStackEntry?.destination
+    // Numa sub-tela (ex.: histórico) nenhuma aba fica destacada, como antes.
+    val onTabs = backStackEntry?.destination?.route == TABS_ROUTE
+    val scope = rememberCoroutineScope()
     val barShape = RoundedCornerShape(28.dp)
 
     Surface(
@@ -65,20 +68,14 @@ fun DollarBlockBottomBar(navController: NavHostController) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             TopLevelDestination.entries.forEach { destination ->
-                val selected = currentDestination?.hierarchy?.any {
-                    it.route == destination.route
-                } == true
+                // currentPage vira na metade do arrasto: o destaque acompanha o swipe.
+                val selected = onTabs && pagerState.currentPage == destination.ordinal
                 BottomBarItem(
                     destination = destination,
                     selected = selected,
                     onClick = {
-                        navController.navigate(destination.route) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
+                        if (!onTabs) navController.popBackStack(TABS_ROUTE, inclusive = false)
+                        scope.launch { pagerState.goToTab(destination) }
                     },
                 )
             }

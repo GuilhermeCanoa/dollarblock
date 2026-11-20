@@ -188,9 +188,20 @@ Production (`pk_live_`/`sk_live_`, `ENVIRONMENT_PRODUCTION`, merchantId, key out
 
 Split **per feature** in `di/` to minimize merge conflicts between parallel devs (see `docs/MERGE_HOTSPOTS.md`): `DatabaseModule` provides only the `DollarBlockDatabase`; `EventsModule` provides `EventDao` + binds `EventsRepository`; `MonitoredAppModule` provides `MonitoredAppDao`/`DailyUsageDao` + binds `MonitoredAppRepository`. Add a new feature's DI in its own module file — don't edit another feature's module.
 
-### Navigation (per feature)
+### Navigation (tabs pager + per-feature sub-screens)
 
-Each feature owns a `feature/<name>/<Name>Navigation.kt` declaring its route constant (e.g. `HOME_ROUTE`) and a `NavGraphBuilder.<name>Screen()` extension. `DollarBlockNavHost` just composes them (`homeScreen()`, `appsScreen()`, …) and `TopLevelDestination` references the route constants. Adding a screen is a one-line, conflict-free change. Non-top-level (detail) screens follow the same pattern but take nav callbacks instead of appearing in `TopLevelDestination` — e.g. `historyScreen(onBack)` on `HISTORY_ROUTE`, opened from Profile via `profileScreen(onOpenHistory)`; the bottom bar simply doesn't highlight while there.
+The four top-level tabs (`TopLevelDestination`: Home, Apps, Statement, Profile) live in a
+`HorizontalPager` inside a single NavHost destination, `TABS_ROUTE`, so the user can **swipe
+left/right between tabs** as well as tap the bottom bar. The `PagerState` is hoisted in
+`MainActivity.MainTabs` and shared by `DollarBlockNavHost` and `DollarBlockBottomBar`; switch
+tabs from code with `pagerState.goToTab(TopLevelDestination.X)` (adjacent tabs animate; farther
+ones jump next to the target first so the tabs in between aren't composed). Back on a non-Home
+tab returns to Home. Each feature keeps its route constant in `feature/<name>/<Name>Navigation.kt`
+(`HOME_ROUTE`…, used as the page key). Tab ViewModels are scoped to the `TABS_ROUTE` entry and
+survive tab switches. Adding a tab means adding it to `TopLevelDestination` and to the `when` in
+`DollarBlockNavHost`. Non-top-level (detail) screens stay regular NavHost destinations registered
+by a feature extension, e.g. `historyScreen(onBack)` on `HISTORY_ROUTE`, opened from Profile; the
+bottom bar doesn't highlight while there and tapping a tab pops back to the pager.
 
 ### Parallel-dev workflow
 

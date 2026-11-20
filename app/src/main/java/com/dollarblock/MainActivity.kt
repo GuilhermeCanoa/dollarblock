@@ -41,11 +41,16 @@ import com.dollarblock.core.designsystem.components.DollarBlockDialog
 import kotlinx.coroutines.delay
 import com.dollarblock.core.navigation.DollarBlockBottomBar
 import com.dollarblock.core.navigation.DollarBlockNavHost
+import com.dollarblock.core.navigation.TABS_ROUTE
+import com.dollarblock.core.navigation.TopLevelDestination
+import com.dollarblock.core.navigation.goToTab
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import com.dollarblock.data.local.prefs.AppTheme
 import com.dollarblock.data.permissions.AppPermission
 import com.dollarblock.feature.onboarding.OnboardingScreen
 import com.dollarblock.feature.onboarding.OnboardingViewModel
-import com.dollarblock.feature.profile.PROFILE_ROUTE
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -128,6 +133,8 @@ private fun SplashOverlay() {
 @Composable
 private fun MainTabs(mainViewModel: MainViewModel) {
     val navController = rememberNavController()
+    val pagerState = rememberPagerState { TopLevelDestination.entries.size }
+    val scope = rememberCoroutineScope()
     val missingPermissions by mainViewModel.missingPermissionsNag.collectAsStateWithLifecycle()
 
     // Aviso diário de app degradado: sem as permissões a conta não mede nem bloqueia.
@@ -136,10 +143,11 @@ private fun MainTabs(mainViewModel: MainViewModel) {
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        bottomBar = { DollarBlockBottomBar(navController) },
+        bottomBar = { DollarBlockBottomBar(navController, pagerState) },
     ) { innerPadding ->
         DollarBlockNavHost(
             navController = navController,
+            pagerState = pagerState,
             modifier = Modifier.padding(innerPadding),
         )
     }
@@ -149,11 +157,8 @@ private fun MainTabs(mainViewModel: MainViewModel) {
             missing = missing,
             onFix = {
                 mainViewModel.dismissPermissionNag()
-                navController.navigate(PROFILE_ROUTE) {
-                    popUpTo(navController.graph.startDestinationId) { saveState = true }
-                    launchSingleTop = true
-                    restoreState = true
-                }
+                navController.popBackStack(TABS_ROUTE, inclusive = false)
+                scope.launch { pagerState.goToTab(TopLevelDestination.PROFILE) }
             },
             onDismiss = mainViewModel::dismissPermissionNag,
         )

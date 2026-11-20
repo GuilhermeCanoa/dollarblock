@@ -1,12 +1,4 @@
 package com.dollarblock.feature.apps
 
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
-
-/** Rota da aba Apps. Fonte única — referenciada pela bottom bar e pelo NavHost. */
+/** Rota da aba Apps. Fonte única — chave da página no pager das abas (ver `core/navigation/DollarBlockNavHost`). */
 const val APPS_ROUTE = "apps"
-
-/** Registra a tela Apps no grafo. Adicione/edite aqui sem tocar no NavHost compartilhado. */
-fun NavGraphBuilder.appsScreen(onOpenProfile: () -> Unit) {
-    composable(APPS_ROUTE) { AppsScreen(onOpenProfile = onOpenProfile) }
-}
