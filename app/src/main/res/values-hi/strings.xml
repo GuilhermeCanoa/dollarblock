@@ -666,4 +666,45 @@
     <string name="block_footer_understand">ब्लॉक को समझें</string>
     <string name="block_footer_billing">शुल्क Google Play लेता है</string>
     <string name="pay_day_pass_with_price">डे पास का भुगतान करें · %1$s</string>
+
+    <!-- E27 — estatística na tela de bloqueio, portinha e parabéns por recusar -->
+    <plurals name="block_stat_streak">
+        <item quantity="one">%2$s के लिए %1$d दिन बिना पास भुगतान के।</item>
+        <item quantity="other">%2$s के लिए लगातार %1$d दिन बिना पास भुगतान के।</item>
+    </plurals>
+    <string name="block_stat_attempts">आज %2$s खोलने की कोशिश नंबर %1$d।</string>
+    <string name="block_stat_overage">आज अनुबंध से %1$s ज़्यादा।</string>
+    <string name="block_stat_first_today">आज की पहली कोशिश। दर्ज किया गया।</string>
+    <string name="block_stat_usage">आज %2$s पर %1$s। अनुबंध: %3$s।</string>
+    <string name="block_stat_countdown">%1$s में मुफ़्त वापस। आधी रात कुछ नहीं लेती।</string>
+    <string name="block_stat_month_saved">इस महीने %1$s आपके पास रहे।</string>
+    <string name="block_exit_door">बाहर</string>
+    <string-array name="celebration_titles">
+        <item>बिल अस्वीकार।</item>
+        <item>बैलेंस सुरक्षित।</item>
+        <item>निकासी नामंज़ूर। खाताधारक द्वारा।</item>
+        <item>कोई लेन-देन दर्ज नहीं।</item>
+        <item>लेन-देन सफलतापूर्वक रद्द।</item>
+        <item>काउंटर आपके बिना बंद हुआ।</item>
+        <item>प्रस्ताव अस्वीकार।</item>
+        <item>खाता व्यवस्थित।</item>
+    </string-array>
+    <string-array name="celebration_bodies">
+        <item>इस बार %1$s को कुछ नहीं मिला।</item>
+        <item>%1$s कल मुफ़्त लौटेगा। पैसा जहाँ है वहीं रहेगा।</item>
+        <item>दुर्लभ। मैनेजर ने नोट कर लिया।</item>
+        <item>%1$s को दान अगली सूचना तक निलंबित।</item>
+        <item>%1$s आपकी विज़िट का शुक्रिया करता है। बैंक उससे ज़्यादा।</item>
+        <item>आपने कीमत देखी और पैसा रखा। स्टेटमेंट में दर्ज है।</item>
+        <item>%1$s ने और स्क्रीन टाइम ऑफ़र किया। आपने मना किया। कोई जुर्माना नहीं।</item>
+        <item>बिल ठुकराने पर ब्याज नहीं मिलता, पर बाकी दिन मिल जाता है।</item>
+    </string-array>
+    <string name="celebration_overline">अस्वीकृति रसीद</string>
+    <string name="celebration_ok">दर्ज</string>
+    <string name="celebration_open_statement">स्टेटमेंट देखें</string>
+    <string name="celebration_saved_label">इस महीने बचाया</string>
+    <plurals name="celebration_refused_count">
+        <item quantity="one">इस महीने %d बिल अस्वीकार</item>
+        <item quantity="other">इस महीने %d बिल अस्वीकार</item>
+    </plurals>
 </resources>

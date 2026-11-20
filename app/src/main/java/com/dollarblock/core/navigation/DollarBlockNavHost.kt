@@ -39,6 +39,8 @@ fun DollarBlockNavHost(
     navController: NavHostController,
     pagerState: PagerState,
     modifier: Modifier = Modifier,
+    statementDayRequest: Long? = null,
+    onStatementDayHandled: () -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
     val toTab = { tab: TopLevelDestination -> scope.launch { pagerState.goToTab(tab) } }
@@ -63,7 +65,11 @@ fun DollarBlockNavHost(
                         onOpenProfile = { toTab(TopLevelDestination.PROFILE) },
                     )
                     TopLevelDestination.APPS -> AppsScreen(onOpenProfile = { toTab(TopLevelDestination.PROFILE) })
-                    TopLevelDestination.STATISTICS -> StatisticsScreen(onOpenProfile = { toTab(TopLevelDestination.PROFILE) })
+                    TopLevelDestination.STATISTICS -> StatisticsScreen(
+                        onOpenProfile = { toTab(TopLevelDestination.PROFILE) },
+                        requestedDay = statementDayRequest,
+                        onRequestedDayHandled = onStatementDayHandled,
+                    )
                     TopLevelDestination.PROFILE -> ProfileScreen(onOpenHistory = { navController.navigate(HISTORY_ROUTE) })
                 }
             }

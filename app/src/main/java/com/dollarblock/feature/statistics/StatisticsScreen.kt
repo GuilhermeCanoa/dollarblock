@@ -35,6 +35,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -93,9 +94,18 @@ import java.util.Locale
 fun StatisticsScreen(
     modifier: Modifier = Modifier,
     onOpenProfile: () -> Unit = {},
+    /** Dia a abrir já na folha do dia (E27 — vindo da tela de bloqueio); consumido uma vez. */
+    requestedDay: Long? = null,
+    onRequestedDayHandled: () -> Unit = {},
     viewModel: StatisticsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    LaunchedEffect(requestedDay) {
+        if (requestedDay != null) {
+            viewModel.selectDay(requestedDay)
+            onRequestedDayHandled()
+        }
+    }
     val palette = homePalette()
     val scrollState = rememberScrollState()
     val statusBarPx = WindowInsets.statusBars.getTop(LocalDensity.current).toFloat()

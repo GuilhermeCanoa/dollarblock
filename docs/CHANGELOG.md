@@ -12,6 +12,23 @@ Descrição funcional.
 
 ---
 
+## [2026-11-20] — Tela de bloqueio com estatística e saída pelo app
+**Tipo:** feature
+**Épico:** E27 (spec `docs/specs/E27-bloqueio-estatisticas-e-porta.md`)
+
+- A tela de bloqueio mostra uma estatística real acima dos botões, igual nas 3 cenas e
+  escolhida pela situação (`pickBlockStat`): sequência de dias sem passe pago, nº da
+  tentativa de hoje, excedente grande, 1ª tentativa; senão sorteia entre uso/limite,
+  contagem até a meia-noite e o guardado no mês. Não repete o tipo da abertura anterior.
+  Carrega depois do 1º frame (ADR-001), com altura reservada e fade.
+- Tocar na estatística abre o app: guardado no mês → Home; as outras → Extrato com o dia de
+  hoje aberto.
+- "Ficar com meu dinheiro" agora abre o app com um parabéns (8 variações de frase, sem repetir
+  a anterior, guardado do mês contando até o valor e "Ver extrato"), no máximo 1 a cada 2 h
+  (`CelebrationPolicy.INTERVAL_MS`). Dentro da janela, vai ao launcher como antes.
+- Nova portinha "Sair" no canto superior direito: sempre leva ao launcher (o botão voltar
+  também).
+
 ## [2026-11-19] — Swipe entre as abas
 **Tipo:** feature
 **Épico:** adhoc (spec `docs/specs/E26-ajustes-home-apps-notificacoes.md`)

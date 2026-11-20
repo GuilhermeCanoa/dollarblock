@@ -673,4 +673,45 @@
     <string name="block_footer_understand">Understand the block</string>
     <string name="block_footer_billing">charged by Google Play</string>
     <string name="pay_day_pass_with_price">Pay for the day pass · %1$s</string>
+
+    <!-- E27 — estatística na tela de bloqueio, portinha e parabéns por recusar -->
+    <plurals name="block_stat_streak">
+        <item quantity="one">%1$d day without a paid pass for %2$s.</item>
+        <item quantity="other">%1$d days in a row without a paid pass for %2$s.</item>
+    </plurals>
+    <string name="block_stat_attempts">Attempt #%1$d to open %2$s today.</string>
+    <string name="block_stat_overage">%1$s over contract today.</string>
+    <string name="block_stat_first_today">First attempt today. Noted.</string>
+    <string name="block_stat_usage">%1$s of %2$s today. Contract: %3$s.</string>
+    <string name="block_stat_countdown">Back for free in %1$s. Midnight doesn\'t charge.</string>
+    <string name="block_stat_month_saved">%1$s stayed with you this month.</string>
+    <string name="block_exit_door">Exit</string>
+    <string-array name="celebration_titles">
+        <item>Bill declined.</item>
+        <item>Balance preserved.</item>
+        <item>Withdrawal denied. By the account holder.</item>
+        <item>No transactions recorded.</item>
+        <item>Transaction cancelled successfully.</item>
+        <item>The till closed without you.</item>
+        <item>Offer declined.</item>
+        <item>Account in order.</item>
+    </string-array>
+    <string-array name="celebration_bodies">
+        <item>%1$s got nothing this time.</item>
+        <item>%1$s comes back tomorrow, for free. The money stays put.</item>
+        <item>Rare. The manager took note.</item>
+        <item>Donations to %1$s are suspended until further notice.</item>
+        <item>%1$s thanks you for visiting. The bank thanks you more.</item>
+        <item>You saw the price and kept the money. It\'s on the statement.</item>
+        <item>%1$s offered more screen time. You passed. No penalty.</item>
+        <item>Declining the bill earns no interest, but it earns the rest of the day.</item>
+    </string-array>
+    <string name="celebration_overline">Refusal receipt</string>
+    <string name="celebration_ok">Noted</string>
+    <string name="celebration_open_statement">See statement</string>
+    <string name="celebration_saved_label">Kept this month</string>
+    <plurals name="celebration_refused_count">
+        <item quantity="one">%d bill declined this month</item>
+        <item quantity="other">%d bills declined this month</item>
+    </plurals>
 </resources>

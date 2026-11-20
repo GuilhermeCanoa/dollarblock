@@ -40,10 +40,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import com.dollarblock.BuildConfig
-import com.dollarblock.MainActivity
 import com.dollarblock.R
 import com.dollarblock.core.designsystem.DollarBlockTheme
 import com.dollarblock.core.designsystem.components.DollarBlockDialog
+import com.dollarblock.core.navigation.AppLaunchRequest
+import com.dollarblock.core.navigation.TopLevelDestination
+import com.dollarblock.data.local.prefs.CelebrationPreferences
 import com.dollarblock.data.local.prefs.BlockPreferences
 import com.dollarblock.data.local.prefs.deviceCurrency
 import com.dollarblock.data.repository.PricingRepository
@@ -70,6 +72,13 @@ import com.dollarblock.feature.blocking.scene.MascotHeroScene
 import com.dollarblock.feature.blocking.scene.StampScene
 import com.dollarblock.feature.blocking.scene.controlsPaddingFor
 import com.dollarblock.feature.blocking.scene.rememberBlockSceneClock
+import com.dollarblock.feature.blocking.stats.BlockExitDoor
+import com.dollarblock.feature.blocking.stats.BlockStatLine
+import com.dollarblock.feature.blocking.stats.BlockStatRotation
+import com.dollarblock.feature.blocking.stats.BlockStatShown
+import com.dollarblock.feature.blocking.stats.BlockStatTarget
+import com.dollarblock.feature.blocking.stats.BlockStatsLoader
+import com.dollarblock.feature.celebration.CelebrationPolicy
 import com.dollarblock.service.nudge.NudgeEngine
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.ResolvableApiException
@@ -104,6 +113,23 @@ class BlockActivity : AppCompatActivity() {
 
     @Inject
     lateinit var nudgeEngine: NudgeEngine
+
+    @Inject
+    lateinit var blockStatsLoader: BlockStatsLoader
+
+    @Inject
+    lateinit var celebrationPreferences: CelebrationPreferences
+
+    /** A estatística desta abertura (E27); null até os dados chegarem, depois do 1º frame. */
+    private val blockStat = MutableStateFlow<BlockStatShown?>(null)
+
+    /**
+     * Se recusar a fatura agora leva ao app com o parabéns (E27, P4). Começa liberado e é
+     * corrigido assim que a preferência é lida — um toque antes disso no máximo antecipa
+     * um parabéns.
+     */
+    @Volatile
+    private var celebrationDue = true
 
     // Caminho Stripe/Google Pay (E9) — só inicializado quando PaymentConfig.PROVIDER
     // é STRIPE_GOOGLE_PAY; mantido para reuso futuro (E16).
@@ -200,6 +226,10 @@ class BlockActivity : AppCompatActivity() {
             }
         }
         lifecycleScope.launch { unlocksPaidToday.value = eventsRepository.unlocksPaidToday() }
+        lifecycleScope.launch {
+            celebrationDue = CelebrationPolicy.isDue(celebrationPreferences.lastShownAt(), System.currentTimeMillis())
+        }
+        loadBlockStat()
 
         onBackPressedDispatcher.addCallback(
             this,
@@ -214,6 +244,7 @@ class BlockActivity : AppCompatActivity() {
                 val paidToday by unlocksPaidToday.collectAsState()
                 val price by dayPassPrice.collectAsState()
                 val playPrice by billingPrice.collectAsState()
+                val stat by blockStat.collectAsState()
                 BlockScreen(
                     scene = scene,
                     sceneStartAtSeconds = sceneStartAtSeconds,
@@ -232,7 +263,10 @@ class BlockActivity : AppCompatActivity() {
                     onPay = ::startPayment,
                     onSimulatePayment = { onPaymentSuccess(PaymentMethod.SIMULATED) },
                     onCourtesyUnlock = ::onCourtesyUnlock,
-                    onGoHome = ::goHome,
+                    onKeepMoney = ::onKeepMoney,
+                    onExit = ::goHome,
+                    stat = stat,
+                    onStatClick = ::openFromStat,
                 )
             }
         }
@@ -452,6 +486,50 @@ class BlockActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * A estatística desta abertura (E27). Lida depois do primeiro frame; o pequeno atraso dá
+     * tempo de o serviço gravar esta tentativa antes da contagem. Falhar só deixa a linha vazia.
+     */
+    private fun loadBlockStat() {
+        if (targetPackage.isEmpty()) return
+        lifecycleScope.launch {
+            delay(STAT_LOAD_DELAY_MS)
+            val data = runCatching { blockStatsLoader.load(targetPackage) }
+                .onFailure { Log.w(TAG, "Block stat unavailable", it) }
+                .getOrNull() ?: return@launch
+            val kind = BlockStatRotation.next(targetPackage, data.input, SystemClock.elapsedRealtime(), Random.Default)
+            blockStat.value = BlockStatShown(kind, data, appLabel)
+        }
+    }
+
+    /**
+     * "Ficar com meu dinheiro" (E27, P1/P4): leva ao app com o parabéns quando já passou a
+     * janela de [CelebrationPolicy.INTERVAL_MS] desde o último; senão vai ao launcher.
+     */
+    private fun onKeepMoney() {
+        if (!celebrationDue) {
+            goHome()
+            return
+        }
+        openApp(AppLaunchRequest(TopLevelDestination.HOME, celebrateAppLabel = appLabel))
+    }
+
+    /** Toque na estatística (E27, P3): abre o app onde o número mora. */
+    private fun openFromStat(target: BlockStatTarget) {
+        openApp(
+            when (target) {
+                BlockStatTarget.HOME -> AppLaunchRequest(TopLevelDestination.HOME)
+                BlockStatTarget.STATEMENT_TODAY ->
+                    AppLaunchRequest(TopLevelDestination.STATISTICS, openStatementToday = true)
+            },
+        )
+    }
+
+    private fun openApp(request: AppLaunchRequest) {
+        startActivity(AppLaunchRequest.intent(this, request))
+        finish()
+    }
+
     private fun goHome() {
         startActivity(
             Intent(Intent.ACTION_MAIN)
@@ -467,15 +545,6 @@ class BlockActivity : AppCompatActivity() {
     private fun toast(resId: Int) =
         Toast.makeText(this, resId, Toast.LENGTH_SHORT).show()
 
-    @Suppress("unused")
-    private fun openDollarBlock() {
-        startActivity(
-            Intent(this, MainActivity::class.java)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK),
-        )
-        finish()
-    }
-
     companion object {
         private const val TAG = "DollarBlockPay"
 
@@ -487,6 +556,9 @@ class BlockActivity : AppCompatActivity() {
         /** Só debug: força a cena da tela (A, B ou C) para revisar cada uma por adb. */
         const val EXTRA_SCENE = "extra_scene"
         private const val STATE_SCENE = "block_scene"
+
+        /** Espera antes de ler a estatística: o registro desta tentativa corre em paralelo. */
+        private const val STAT_LOAD_DELAY_MS = 250L
     }
 }
 
@@ -505,7 +577,10 @@ private fun BlockScreen(
     onPay: () -> Unit,
     onSimulatePayment: () -> Unit,
     onCourtesyUnlock: () -> Unit,
-    onGoHome: () -> Unit,
+    onKeepMoney: () -> Unit,
+    onExit: () -> Unit,
+    stat: BlockStatShown?,
+    onStatClick: (BlockStatTarget) -> Unit,
 ) {
     // Mensagem do recibo sorteada por situação (1ª fatura do dia, 2ª, 3ª+), para a
     // tela não repetir o mesmo texto a cada bloqueio.
@@ -576,6 +651,11 @@ private fun BlockScreen(
                     .graphicsLayer { alpha = clock.controlsAlpha() },
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
+                BlockStatLine(
+                    stat = stat,
+                    onClick = onStatClick,
+                    modifier = Modifier.padding(bottom = 10.dp),
+                )
                 BlockControls(
                     appLabel = appLabel,
                     payLabel = payLabel,
@@ -587,7 +667,7 @@ private fun BlockScreen(
                     onPay = onPay,
                     onSimulatePayment = onSimulatePayment,
                     onCourtesyUnlock = onCourtesyUnlock,
-                    onGoHome = onGoHome,
+                    onGoHome = onKeepMoney,
                 )
             }
             BlockFooter(
@@ -596,6 +676,15 @@ private fun BlockScreen(
                 modifier = Modifier.padding(top = 10.dp, bottom = 6.dp),
             )
         }
+        // A portinha (E27): sai para o launcher sem passar pelo app, sempre.
+        BlockExitDoor(
+            onClick = onExit,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+                .padding(top = 4.dp, end = 8.dp)
+                .graphicsLayer { alpha = clock.controlsAlpha() },
+        )
         if (showEthicsDialog) {
             DollarBlockDialog(
                 onDismissRequest = { showEthicsDialog = false },

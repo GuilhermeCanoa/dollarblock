@@ -1,5 +1,6 @@
 package com.dollarblock
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
@@ -23,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -41,7 +43,10 @@ import com.dollarblock.core.designsystem.components.DollarBlockDialog
 import kotlinx.coroutines.delay
 import com.dollarblock.core.navigation.DollarBlockBottomBar
 import com.dollarblock.core.navigation.DollarBlockNavHost
+import com.dollarblock.core.navigation.AppLaunchRequest
 import com.dollarblock.core.navigation.TABS_ROUTE
+import com.dollarblock.feature.celebration.CelebrationHost
+import java.time.LocalDate
 import com.dollarblock.core.navigation.TopLevelDestination
 import com.dollarblock.core.navigation.goToTab
 import androidx.compose.foundation.pager.rememberPagerState
@@ -64,8 +69,14 @@ import dagger.hilt.android.AndroidEntryPoint
  */
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
+
+    /** Pedido vindo da tela de bloqueio (E27): aba, dia do Extrato, parabéns. Consumido uma vez. */
+    private var launchRequest by mutableStateOf<AppLaunchRequest?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Recriada (rotação, processo restaurado): o pedido já foi atendido.
+        if (savedInstanceState == null) launchRequest = AppLaunchRequest.from(intent)
         enableEdgeToEdge()
         setContent {
             val mainViewModel: MainViewModel = hiltViewModel()
@@ -88,12 +99,22 @@ class MainActivity : AppCompatActivity() {
                         onFinished = { },
                         modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing),
                     )
-                    true -> MainTabs(mainViewModel)
+                    true -> MainTabs(
+                        mainViewModel = mainViewModel,
+                        launchRequest = launchRequest,
+                        onLaunchRequestHandled = { launchRequest = null },
+                    )
                 }
 
                 SplashOverlay()
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        AppLaunchRequest.from(intent)?.let { launchRequest = it }
     }
 }
 
@@ -131,11 +152,28 @@ private fun SplashOverlay() {
 }
 
 @Composable
-private fun MainTabs(mainViewModel: MainViewModel) {
+private fun MainTabs(
+    mainViewModel: MainViewModel,
+    launchRequest: AppLaunchRequest?,
+    onLaunchRequestHandled: () -> Unit,
+) {
     val navController = rememberNavController()
     val pagerState = rememberPagerState { TopLevelDestination.entries.size }
     val scope = rememberCoroutineScope()
     val missingPermissions by mainViewModel.missingPermissionsNag.collectAsStateWithLifecycle()
+    var statementDayRequest by remember { mutableStateOf<Long?>(null) }
+    var celebrateAppLabel by rememberSaveable { mutableStateOf<String?>(null) }
+
+    // Chegando da tela de bloqueio (E27): vai à aba pedida, abre o dia de hoje no Extrato e/ou
+    // agenda o parabéns.
+    LaunchedEffect(launchRequest) {
+        val request = launchRequest ?: return@LaunchedEffect
+        navController.popBackStack(TABS_ROUTE, inclusive = false)
+        pagerState.scrollToPage(request.tab.ordinal)
+        if (request.openStatementToday) statementDayRequest = LocalDate.now().toEpochDay()
+        request.celebrateAppLabel?.let { celebrateAppLabel = it }
+        onLaunchRequestHandled()
+    }
 
     // Aviso diário de app degradado: sem as permissões a conta não mede nem bloqueia.
     // Re-checa a cada retorno ao foreground; o ViewModel limita a 1 exibição por dia.
@@ -148,7 +186,21 @@ private fun MainTabs(mainViewModel: MainViewModel) {
         DollarBlockNavHost(
             navController = navController,
             pagerState = pagerState,
+            statementDayRequest = statementDayRequest,
+            onStatementDayHandled = { statementDayRequest = null },
             modifier = Modifier.padding(innerPadding),
+        )
+    }
+
+    celebrateAppLabel?.let { label ->
+        CelebrationHost(
+            appLabel = label,
+            onDone = { celebrateAppLabel = null },
+            onOpenStatement = {
+                navController.popBackStack(TABS_ROUTE, inclusive = false)
+                statementDayRequest = LocalDate.now().toEpochDay()
+                scope.launch { pagerState.goToTab(TopLevelDestination.STATISTICS) }
+            },
         )
     }
 
