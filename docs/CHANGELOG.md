@@ -12,6 +12,19 @@ Descrição funcional.
 
 ---
 
+## [2026-11-26] — Release com R8 (minify + shrink de recursos)
+**Tipo:** config
+**Épico:** E10 (T9)
+
+- Build de release passa a rodar R8: `isMinifyEnabled = true` + `isShrinkResources = true`.
+  Atende ao aviso do Play Console "A otimização de código DEX está abaixo do nosso limite"
+  (ofuscação 0%, prazo fev/2027). AAB caiu de 14,6 MB para 6,8 MB.
+- `proguard-rules.pro` mantém só número de linha/arquivo para stack traces; o `mapping.txt`
+  vai dentro do AAB (`BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map`) e o
+  Play desofusca Falhas e ANRs sozinho.
+- `smoke-test-emulator.ps1 -Release` instala e testa o APK de release (R8). Passa a ser o
+  smoke test obrigatório ao gerar versão (regra no topo do CLAUDE.md).
+
 ## [2026-11-26] — Release 1.0.2 + versão no "Sobre"
 **Tipo:** config
 **Épico:** E8 (fechamento)

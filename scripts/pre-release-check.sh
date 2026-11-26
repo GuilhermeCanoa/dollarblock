@@ -10,7 +10,7 @@
 #
 # Ao gerar uma versao para a Play Store, o smoke test de UI tambem e OBRIGATORIO
 # (ver a regra no topo do CLAUDE.md):
-#   powershell -File scripts/smoke-test-emulator.ps1
+#   powershell -File scripts/smoke-test-emulator.ps1 -Release
 #
 # Sai com status != 0 se qualquer etapa falhar — dá para usar em CI.
 
@@ -118,10 +118,10 @@ echo "════════════════════════�
 echo ""
 if [ "$BUILD_BUNDLE" = "1" ]; then
   echo "⚠️  FALTA A ETAPA 2 — obrigatória para publicar (regra no topo do CLAUDE.md):"
-  echo "      powershell -File scripts/smoke-test-emulator.ps1"
+  echo "      powershell -File scripts/smoke-test-emulator.ps1 -Release"
   echo ""
   echo "    Não suba o AAB antes do smoke test passar."
 else
   echo "Valida a UI de ponta a ponta (precisa de um emulador rodando):"
-  echo "  powershell -File scripts/smoke-test-emulator.ps1"
+  echo "  powershell -File scripts/smoke-test-emulator.ps1 -Release"
 fi

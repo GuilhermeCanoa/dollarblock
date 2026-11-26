@@ -15,9 +15,13 @@ artefato ou dizer que está pronto:
 # 1. Obrigatório — testes, versão, assinatura e AAB conferido
 sh scripts/pre-release-check.sh --bundle
 
-# 2. Obrigatório — valida a UI de ponta a ponta (precisa de um emulador rodando)
-powershell -File scripts/smoke-test-emulator.ps1
+# 2. Obrigatório — valida a UI de ponta a ponta NA BUILD DE RELEASE (R8) (precisa de um emulador rodando)
+powershell -File scripts/smoke-test-emulator.ps1 -Release
 ```
+
+> O release roda com R8 (`isMinifyEnabled`/`isShrinkResources`): classe removida ou renomeada
+> só quebra na build de release. Por isso, ao gerar versão, o smoke test vale com `-Release`.
+> Sem a flag ele testa o debug, que serve para o dia a dia, mas não vale para liberar versão.
 
 Regras de execução:
 
@@ -84,6 +88,20 @@ Run these after the app is installed and registered; re-run if the value reverts
 - Open an app without knowing the Activity: `adb shell monkey -p <pkg> -c android.intent.category.LAUNCHER 1`.
 - After `am start` on a freshly built Home, Flows (apps/blocked/events) take ~2–4 s to emit — wait before taking validation screenshots.
 
+### Testar o R8 num celular real sem perder dados
+
+O build type `minified` é o release (R8, `BuildConfig.DEBUG = false`) assinado com a chave de
+**debug**: instala por cima do app de debug sem `pm clear` nem desinstalar.
+
+```bash
+./gradlew :app:assembleMinified --console=plain --no-daemon
+adb -s <serial> install -r app/build/outputs/apk/minified/app-minified.apk
+```
+
+> Nunca rode o smoke test num celular real: ele apaga os dados do app (o script recusa
+> serial que não seja `emulator-*`). Em Samsung, `am force-stop com.dollarblock` desliga o
+> serviço de acessibilidade — reabra o app com `am start`, sem force-stop.
+
 ### Run tests
 
 ```bash
@@ -112,7 +130,8 @@ configura um limite, estoura o limite e valida a tela de bloqueio, a saída de c
 (E17) e o extrato, tudo por `adb`:
 
 ```bash
-powershell -File scripts/smoke-test-emulator.ps1
+powershell -File scripts/smoke-test-emulator.ps1            # debug (dia a dia)
+powershell -File scripts/smoke-test-emulator.ps1 -Release   # release com R8 — o que vale para gerar versão
 ```
 
 > No emulador não existe Play Store, então o Billing nunca fica pronto — é exatamente o

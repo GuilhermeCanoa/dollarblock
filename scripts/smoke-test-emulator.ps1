@@ -5,9 +5,14 @@
 # que a tela de bloqueio aparece com a saída de cortesia (E17) — porque no emulador não há
 # Play Store, o Billing nunca fica pronto e o app cai exatamente no cenário de falha.
 #
-# Uso:  powershell -File scripts/smoke-test-emulator.ps1
+# Uso:  powershell -File scripts/smoke-test-emulator.ps1            # build debug (dia a dia)
+#       powershell -File scripts/smoke-test-emulator.ps1 -Release   # build release com R8 (obrigatório ao gerar versão)
 #
 # Requer um emulador já rodando (`emulator -avd <nome>`). Sai com código != 0 se algo falhar.
+# -Release instala o APK de release (minificado/ofuscado pelo R8, assinado com a chave de
+# release): é o único jeito de pegar classe removida ou renomeada pelo R8 antes da loja.
+
+param([switch]$Release)
 
 # NAO usar "Stop": o adb escreve mensagens normais ("1 file pulled") na stderr e o
 # PowerShell 5.1 as transforma em erro, abortando o script no meio do teste.
@@ -69,8 +74,16 @@ Push-Location (Split-Path $PSScriptRoot -Parent)
 if (-not $env:JAVA_HOME -and (Test-Path "C:\Program Files\Android\Android Studio\jbr")) {
     $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
 }
-& .\gradlew.bat :app:installDebug --console=plain --no-daemon | Select-Object -Last 3
-if ($LASTEXITCODE -ne 0) { Write-Host "installDebug falhou" -ForegroundColor Red; exit 1 }
+if ($Release) {
+    # Debug e release têm assinaturas diferentes: o Android recusa instalar por cima.
+    & $adb uninstall $pkg *>$adbLog
+    $task = ":app:installRelease"
+} else {
+    $task = ":app:installDebug"
+}
+Write-Host "  build: $(if ($Release) { 'release (R8)' } else { 'debug' })"
+& .\gradlew.bat $task --console=plain --no-daemon | Select-Object -Last 3
+if ($LASTEXITCODE -ne 0) { Write-Host "$task falhou" -ForegroundColor Red; exit 1 }
 Pop-Location
 
 Step "Permissões e estado limpo"

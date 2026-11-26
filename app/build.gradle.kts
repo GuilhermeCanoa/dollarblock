@@ -48,7 +48,11 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // R8: ofusca + otimiza + remove código e recursos não usados. Exigido pelo Play
+            // Console (otimização de DEX). O mapping.txt vai dentro do AAB e o Play usa para
+            // desofuscar stack traces em Falhas e ANRs.
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
@@ -56,6 +60,14 @@ android {
             if (localProps.getProperty("RELEASE_STORE_FILE") != null) {
                 signingConfig = signingConfigs.getByName("release")
             }
+        }
+        // Mesmo código do release (R8, BuildConfig.DEBUG = false), assinado com a chave de
+        // debug: instala POR CIMA do app de debug sem apagar os dados. Serve para testar o
+        // R8 num celular de verdade (`:app:installMinified`). Não vai para a loja.
+        create("minified") {
+            initWith(getByName("release"))
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += "release"
         }
     }
 

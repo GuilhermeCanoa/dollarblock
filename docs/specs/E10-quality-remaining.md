@@ -36,7 +36,7 @@ O E10 é transversal e foi entregue na fatia de workflow (DI por feature, navega
 - [ ] T8: Auditar `HomeScreen`, `AppsScreen`, `StatisticsScreen`, `ProfileScreen` com TalkBack — adicionar `contentDescription` faltantes.
 
 **Release build**
-- [ ] T9: Configurar `buildTypes.release` em `app/build.gradle.kts` com `minifyEnabled = true` e regras ProGuard básicas (Room, Hilt, Compose).
+- [x] T9: Configurar `buildTypes.release` em `app/build.gradle.kts` com `minifyEnabled = true` e regras ProGuard básicas (Room, Hilt, Compose). — feito em 2026-11-26: `isMinifyEnabled` + `isShrinkResources`, só `-keepattributes SourceFile,LineNumberTable` (as libs trazem as próprias regras); mapping.txt vai no AAB. Smoke test ganhou `-Release`.
 - [ ] T10: Documentar processo de assinatura em `docs/RELEASE.md` (sem commitar a keystore).
 
 **CI (futuro)**
