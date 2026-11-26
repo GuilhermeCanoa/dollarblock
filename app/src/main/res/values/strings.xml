@@ -291,6 +291,7 @@
     <string name="pref_history_value">Every block and every bailout</string>
     <string name="pref_about">About DollarBlock</string>
     <string name="about_body">DollarBlock puts a price on the time you said you didn\'t want to lose. You pick the apps, you set the limits, and past the limit the app locks — unlocking it today costs a day pass. Nothing here is hidden: the app is not a virus, it doesn\'t hijack your phone, and it never forces a payment. You can always choose not to pay, and you can turn off monitoring for any app in the Apps tab whenever you want. We just enforce the deal you made with yourself.</string>
+    <string name="about_version">Version %1$s</string>
     <string name="pref_currency">Currency</string>
     <string name="pref_currency_body">Display only — the day pass is charged in your Google Play currency.</string>
     <string name="pref_currency_system">Automatic (by country)</string>

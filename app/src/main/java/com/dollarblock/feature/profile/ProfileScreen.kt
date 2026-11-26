@@ -668,7 +668,8 @@ private fun AboutDialog(onDismiss: () -> Unit) {
         onDismissRequest = onDismiss,
         overline = stringResource(R.string.app_slogan),
         title = stringResource(R.string.pref_about),
-        body = stringResource(R.string.about_body),
+        body = stringResource(R.string.about_body) + "\n\n" +
+            stringResource(R.string.about_version, BuildConfig.VERSION_NAME),
         confirmText = stringResource(R.string.home_card_info_ok),
         onConfirm = onDismiss,
     )

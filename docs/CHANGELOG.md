@@ -12,6 +12,14 @@ Descrição funcional.
 
 ---
 
+## [2026-11-26] — Release 1.0.2 + versão no "Sobre"
+**Tipo:** config
+**Épico:** E8 (fechamento)
+
+- O diálogo "Sobre" (Perfil) agora mostra a versão do app ("Versão 1.0.2"), para suporte.
+- Spec E8 marcado como `done` (T7 descartado: não há mais bloqueio manual).
+- versionCode 14 / versionName 1.0.2.
+
 ## [2026-11-20] — Tela de bloqueio com estatística e saída pelo app
 **Tipo:** feature
 **Épico:** E27 (spec `docs/specs/E27-bloqueio-estatisticas-e-porta.md`)

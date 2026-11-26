@@ -312,6 +312,7 @@
     <string name="pref_history_value">Cada bloqueio e cada resgate</string>
     <string name="pref_about">Sobre o DollarBlock</string>
     <string name="about_body">O DollarBlock coloca um preço no tempo que você disse que não queria mais perder. Você escolhe os apps, você define os limites e, passado o limite, o app tranca — desbloquear hoje custa um passe do dia. Nada aqui é escondido: o app não é vírus, não sequestra o seu celular e nunca obriga pagamento nenhum. Você sempre pode escolher não pagar, e pode desativar a monitoria de qualquer app na aba Apps quando quiser. A gente só cumpre o combinado que você fez com você mesmo.</string>
+    <string name="about_version">Versão %1$s</string>
     <string name="pref_currency">Moeda</string>
     <string name="pref_currency_body">Só para exibição — o passe do dia é cobrado na moeda da sua conta do Google Play.</string>
     <string name="pref_currency_system">Automática (pelo país)</string>

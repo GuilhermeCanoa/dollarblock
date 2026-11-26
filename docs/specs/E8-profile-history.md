@@ -1,9 +1,9 @@
 # Spec: E8 — Profile & Histórico
 
-**Status:** draft
+**Status:** done
 **Épico:** E8
 **Data de criação:** 2026-06-23
-**Última atualização:** 2026-06-23
+**Última atualização:** 2026-11-26
 
 ---
 
@@ -23,15 +23,15 @@ Depende de E5-blocking-refactor para exibir razão do bloqueio no histórico (ma
 
 ## Tarefas
 
-- [ ] T1: Criar `ProfileViewModel` com flows de `PermissionsProvider` (status das 4 permissões).
-- [ ] T2: Atualizar `ProfileScreen` para consumir o ViewModel — remover dados hardcoded de permissões.
-- [ ] T3: Criar `HistoryScreen` em `feature/profile/history/` com lazy list de `RecentEvent`.
-- [ ] T4: Criar `HistoryViewModel` consumindo `EventsRepository.recentEvents()`.
-- [ ] T5: Adicionar navegação para `HistoryScreen` a partir do Profile (botão "Ver histórico").
-- [ ] T6: Adicionar `HistoryNavigation.kt` e registrar no `DollarBlockNavHost`.
-- [ ] T7: Diferenciar visualmente `BlockReason.MANUAL` vs `BlockReason.DAILY_LIMIT` no item de lista do histórico.
-- [ ] T8: Adicionar seção "Sobre" com versão do app.
-- [ ] T9: Validar no emulador: permissões refletem estado real, histórico lista eventos reais.
+- [x] T1: Criar `ProfileViewModel` com flows de `PermissionsProvider` (status das 4 permissões).
+- [x] T2: Atualizar `ProfileScreen` para consumir o ViewModel — remover dados hardcoded de permissões.
+- [x] T3: Criar `HistoryScreen` em `feature/profile/history/` com lazy list de `RecentEvent`.
+- [x] T4: Criar `HistoryViewModel` consumindo `EventsRepository.recentEvents()`.
+- [x] T5: Adicionar navegação para `HistoryScreen` a partir do Profile (botão "Ver histórico").
+- [x] T6: Adicionar `HistoryNavigation.kt` e registrar no `DollarBlockNavHost`.
+- [x] ~~T7~~ (não se aplica: o bloqueio manual saiu, `BlockReason` só tem `DAILY_LIMIT`): Diferenciar visualmente `BlockReason.MANUAL` vs `BlockReason.DAILY_LIMIT` no item de lista do histórico.
+- [x] T8: Adicionar seção "Sobre" com versão do app.
+- [x] T9: Validar no emulador: permissões refletem estado real, histórico lista eventos reais.
 
 ## Critérios de aceite
 
@@ -45,3 +45,8 @@ Depende de E5-blocking-refactor para exibir razão do bloqueio no histórico (ma
 - `RecentEvent` já é um modelo de domínio em `domain/model/` — verificar se precisa de campo `reason` ou se é derivado do tipo de evento.
 - A tela de Histórico pode ser uma rota separada (`history`) ou uma seção dentro do ProfileScreen com lazy column — preferir rota separada para manter o padrão de navegação por feature.
 - **Próximo épico a ser implementado** após E5-blocking-refactor estar concluído.
+
+
+## Fechamento (2026-11-26)
+
+Implementado ao longo de E8/E19/E26 (ProfileViewModel, HistoryScreen em `HISTORY_ROUTE`, permissões reais re-checadas no resume). T8 concluído na release 1.0.2: o diálogo "Sobre" mostra `BuildConfig.VERSION_NAME`. T7 descartado — não há mais bloqueio manual.
